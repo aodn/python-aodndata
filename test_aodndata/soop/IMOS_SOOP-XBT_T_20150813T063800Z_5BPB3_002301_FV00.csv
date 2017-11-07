@@ -1,0 +1,48 @@
+Project:,Integrated Marine Observing System (IMOS)
+Source:,XBT Data
+Latitude:,-34.1206896552
+Longitude: ,151.49862069
+Date/Time:,13/08/2015 06:38
+This file Created:,Wed, 02 Mar 2016 18:08:37
+Platform Code:,5BPB3
+Vessel Name:,Patricia-Schulte
+XBT Recorder Type:,72,See WMO code table 4770 for the information corresponding to the value 
+XBT Probe Type Fallrate Equation:,52,See WMO code table 4770 for the information corresponding to the value 
+Comment,For more information on how to acknowlege distribute and cite this dataset please refer to the IMOS website http://imos.org.au
+Metadata:,https://catalogue-123.aodn.org.au/geonetwork/srv/en/metadata.show?uuid=35234913-aa3c-48ec-b9a4-77f822f66ef8
+
+Depth Units:,Metre
+
+Temperature Units:,Degrees Celsius
+
+Depth,Temperature
+4.0,18.765
+17.5,18.765
+21.5,18.67
+38.5,18.625
+45.5,18.495
+71.0,18.405
+75.0,18.325
+84.0,15.665
+87.5,15.14
+105.5,14.2
+108.5,14.15
+117.0,13.81
+121.0,13.945
+132.5,13.31
+138.5,13.325
+151.5,13.115
+159.0,12.81
+165.5,12.79
+170.5,12.92
+186.0,12.91
+193.0,12.73
+200.0,12.73
+203.5,12.56
+218.0,12.465
+223.0,12.27
+228.5,12.285
+231.5,12.185
+243.0,12.3
+265.5,12.34
+268.0,12.395

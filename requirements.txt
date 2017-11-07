@@ -1,0 +1,2 @@
+aodncore
+matplotlib==1.5.1
