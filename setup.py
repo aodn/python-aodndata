@@ -39,7 +39,6 @@ package_root = os.path.dirname(os.path.realpath(__file__))
 requirements_txt = os.path.join(package_root, 'requirements.txt')
 
 requires = [str(r.req) for r in parse_requirements(requirements_txt, session=False)]
-tests_require = ['mock']
 
 # enable use of side-by-side aodncore package for testing
 aodncore_path = os.path.join(os.path.dirname(package_root), 'aodncore')
@@ -57,6 +56,5 @@ setup(
     zip_safe=False,
     install_requires=requires,
     test_suite='test_aodndata',
-    tests_require=tests_require,
     entry_points=ENTRY_POINTS
 )
