@@ -3,8 +3,8 @@ import unittest
 
 from aodncore.pipeline import PipelineFilePublishType
 from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidInputFileError, InvalidFileContentError
+from aodncore.testlib import HandlerTestCase
 from aodndata.common.generic import GenericHandler
-from test_aodncore.testlib import HandlerTestCase
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 NOT_NC = os.path.join(TEST_ROOT, 'not_a_netcdf_file.nc')

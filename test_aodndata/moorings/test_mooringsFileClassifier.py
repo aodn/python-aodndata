@@ -4,8 +4,8 @@ import unittest
 from tempfile import mkdtemp
 
 from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError
+from aodncore.testlib import BaseTestCase, make_test_file
 from aodndata.moorings.classifiers import MooringsFileClassifier
-from test_aodncore.testlib import BaseTestCase, make_test_file
 
 
 class TestMooringFileClassifier(BaseTestCase):

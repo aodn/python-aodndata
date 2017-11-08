@@ -2,8 +2,8 @@ import os
 import unittest
 
 from aodncore.pipeline.exceptions import InvalidFileFormatError
+from aodncore.testlib import HandlerTestCase
 from aodndata.common.asyncupload import AsyncUploadHandler
-from test_aodncore.testlib import HandlerTestCase
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 MAP_MANIFEST_FILE = os.path.join(TEST_ROOT, 'test.map_manifest')

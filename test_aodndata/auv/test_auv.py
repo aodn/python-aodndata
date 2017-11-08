@@ -1,10 +1,10 @@
 import os
 import shutil
 import unittest
-
-from aodndata.auv.handler import AuvHandler
 from shutil import copyfile
-from test_aodncore.testlib import HandlerTestCase
+
+from aodncore.testlib import HandlerTestCase
+from aodndata.auv.handler import AuvHandler
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 THUMBNAIL = os.path.join(TEST_ROOT, 'PR_20170526_080852_065_LC16.jpg')

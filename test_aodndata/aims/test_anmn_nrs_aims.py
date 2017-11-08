@@ -2,8 +2,8 @@ import os
 import unittest
 
 from aodncore.pipeline import PipelineFileCheckType, PipelineFilePublishType
+from aodncore.testlib import HandlerTestCase
 from aodndata.aims.anmn_nrs import AnmnNrsAimsHandler
-from test_aodncore.testlib import HandlerTestCase
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_NC = os.path.join(TEST_ROOT,

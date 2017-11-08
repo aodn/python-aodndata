@@ -1,9 +1,9 @@
 import os
 import unittest
-
-from aodndata.aatams.aatams_nrt import AatamsNrtHandler
 from shutil import copyfile
-from test_aodncore.testlib import HandlerTestCase
+
+from aodncore.testlib import HandlerTestCase
+from aodndata.aatams.aatams_nrt import AatamsNrtHandler
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_AATAMS-SATTAG_TSP_20090208T184000Z_Q9900180_FV00.nc')

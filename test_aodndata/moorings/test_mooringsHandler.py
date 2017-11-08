@@ -3,8 +3,8 @@ import unittest
 
 from aodncore.pipeline import PipelineFilePublishType, PipelineFileCheckType
 from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidFileContentError, InvalidFileNameError
+from aodncore.testlib import HandlerTestCase, make_zip
 from aodndata.moorings.handlers import MooringsHandler
-from test_aodncore.testlib import HandlerTestCase, make_zip
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 BAD_NC = os.path.join(TEST_ROOT,

@@ -1,9 +1,9 @@
 import os
 import unittest
-
-from aodndata.soop.soop_xbt_nrt import SoopXbtNrtHandler
 from shutil import copyfile
-from test_aodncore.testlib import HandlerTestCase
+
+from aodncore.testlib import HandlerTestCase
+from aodndata.soop.soop_xbt_nrt import SoopXbtNrtHandler
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_CSV = os.path.join(TEST_ROOT, 'IMOS_SOOP-XBT_T_20150813T063800Z_5BPB3_002301_FV00.csv')
