@@ -7,8 +7,8 @@ author: Besnard, Laurent
 
 import unittest
 
+from aodncore.testlib import BaseTestCase
 from aodndata.soop.ship_callsign import ship_callsign
-from test_aodncore.testlib import BaseTestCase
 
 
 class TestShipCallSign(BaseTestCase):

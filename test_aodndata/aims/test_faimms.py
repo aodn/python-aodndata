@@ -3,7 +3,7 @@ import os
 
 from aodncore.pipeline import PipelineFileCheckType, PipelineFilePublishType
 from aodndata.aims.faimms import FaimmsHandler
-from test_aodncore.testlib import HandlerTestCase
+from aodncore.testlib import HandlerTestCase
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_NC = os.path.join(TEST_ROOT,

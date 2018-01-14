@@ -1,8 +1,8 @@
 import os
 import unittest
 
+from aodncore.testlib import HandlerTestCase
 from aodndata.argo.handler import ArgoHandler
-from test_aodncore.testlib import HandlerTestCase
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 RSYNC_MANIFEST_FILE = os.path.join(TEST_ROOT, 'test_argo_add.rsync_manifest')
