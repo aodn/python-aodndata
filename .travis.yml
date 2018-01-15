@@ -1,0 +1,16 @@
+language: python
+python:
+  - "2.7"
+
+addons:
+  apt:
+    packages:
+    - libudunits2-0
+
+install:
+  - wget --content-disposition http://imos-binary.s3-website-ap-southeast-2.amazonaws.com/jobs/aodncore_prod/aodncore_prod-latest.whl
+  - pip install aodncore_prod-*.whl
+  - pip install -r requirements.txt
+
+script:
+  - python setup.py test
