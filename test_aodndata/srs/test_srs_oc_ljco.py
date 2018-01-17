@@ -1,9 +1,10 @@
-import unittest
 import os
+import unittest
 
 from aodncore.pipeline import PipelineFileCheckType, PipelineFilePublishType
+from aodncore.testlib import HandlerTestCase
+
 from aodndata.srs.srs_oc_ljco import SrsOcLjcoHandler
-from test_aodncore.testlib import HandlerTestCase
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 NC_FILE = os.path.join(TEST_ROOT,
