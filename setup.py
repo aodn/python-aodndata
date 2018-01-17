@@ -1,5 +1,4 @@
 import os
-import sys
 
 from pip.req import parse_requirements
 from setuptools import setup, find_packages
@@ -39,10 +38,6 @@ package_root = os.path.dirname(os.path.realpath(__file__))
 requirements_txt = os.path.join(package_root, 'requirements.txt')
 
 requires = [str(r.req) for r in parse_requirements(requirements_txt, session=False)]
-
-# enable use of side-by-side aodncore package for testing
-aodncore_path = os.path.join(os.path.dirname(package_root), 'aodncore')
-sys.path.insert(0, aodncore_path)
 
 setup(
     name=PACKAGE_NAME,
