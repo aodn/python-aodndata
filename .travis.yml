@@ -14,6 +14,9 @@ before_install:
   - python get_latest_artifact.py --extension .whl --job compliance_checker_prod
   - python get_latest_artifact.py --extension .whl --job cc_plugin_imos_prod
 
+env:
+  - MPLBACKEND=agg
+
 install:
   - pip install compliance_checker-*.whl
   - pip install cc_plugin_imos-*.whl
