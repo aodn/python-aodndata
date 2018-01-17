@@ -103,3 +103,7 @@ ENV/
 .idea/**/sqlDataSources.xml
 .idea/**/dynamic.xml
 .idea/**/uiDesigner.xml
+
+# Ignore the virtual environment created by the setup_virtualenv.sh script
+.python-aodndata-download-cache
+python-aodndata-virtualenv
