@@ -5,6 +5,7 @@ from aodncore.pipeline import PipelineFilePublishType
 from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidInputFileError, InvalidFileContentError
 from aodncore.testlib import HandlerTestCase
 from aodndata.common.generic import GenericHandler
+from aodndata.moorings.classifiers import dest_path_anmn_nrs_realtime
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 NOT_NC = os.path.join(TEST_ROOT, 'not_a_netcdf_file.nc')
@@ -30,23 +31,23 @@ class TestGenericHandler(HandlerTestCase):
         self.run_handler_with_exception(ComplianceCheckFailedError, BAD_NC,
                                         include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
                                         check_params={'checks': ['cf', 'imos:1.4']},
-                                        dest_path_function='dest_path_anmn_nrs_realtime')
+                                        dest_path_function=dest_path_anmn_nrs_realtime)
 
     def test_bad_name_netcdf(self):
         self.run_handler_with_exception(InvalidInputFileError, BAD_NC,
                                         include_regexes=['IMOS_ANMN-NRS_.*realtime\.nc'],
-                                        dest_path_function='dest_path_anmn_nrs_realtime')
+                                        dest_path_function=dest_path_anmn_nrs_realtime)
 
     def test_missing_attribute_for_dest_path(self):
         self.run_handler_with_exception(InvalidFileContentError, BAD_NC,
                                         include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
-                                        dest_path_function='dest_path_anmn_nrs_realtime')
+                                        dest_path_function=dest_path_anmn_nrs_realtime)
 
     def test_good_netcdf(self):
         handler = self.run_handler(GOOD_NC,
                                    include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
                                    check_params={'checks': ['cf', 'imos:1.3']},
-                                   dest_path_function='dest_path_anmn_nrs_realtime')
+                                   dest_path_function=dest_path_anmn_nrs_realtime)
 
         self.assertEqual(len(handler.file_collection), 1)
         for f in handler.file_collection:
@@ -60,7 +61,7 @@ class TestGenericHandler(HandlerTestCase):
         self.run_handler_with_exception(ComplianceCheckFailedError, ZIP_FILE,
                                         include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
                                         check_params={'checks': ['cf', 'imos:1.3']},
-                                        dest_path_function='dest_path_anmn_nrs_realtime')
+                                        dest_path_function=dest_path_anmn_nrs_realtime)
 
     def test_good_zip(self):
         handler = self.run_handler(ZIP_FILE, dest_path_function='dest_path_testing')
