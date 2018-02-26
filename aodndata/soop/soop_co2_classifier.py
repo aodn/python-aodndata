@@ -3,12 +3,10 @@ from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileConten
 from ship_callsign import ship_callsign_list, ship_callsign
 import datetime
 
-VALID_PROJECT = ['IMOS', 'FutureReefMap', 'SOOP-CO2_RT']
-VESSEL_CODE = {'AA': 'VNAA',
-               'IN': 'VLMJ'}
-
-
 class SoopCo2FileClassifier(FileClassifier):
+    VALID_PROJECT = ['IMOS', 'FutureReefMap', 'SOOP-CO2_RT']
+    VESSEL_CODE = {'AA': 'VNAA',
+                   'IN': 'VLMJ'}
 
     @classmethod
     def def_project(cls, src_file):
@@ -40,7 +38,7 @@ class SoopCo2FileClassifier(FileClassifier):
 
         dir_list = []
         project = cls.def_project(src_file)
-        if project not in VALID_PROJECT:
+        if project not in cls.VALID_PROJECT:
             raise InvalidFileNameError(
                 "Invalid project name '{project}'. "
                 "Project should be IMOS, SOOP-CO2_RT or Future_Reef_MAP".format(project=project))
@@ -73,10 +71,6 @@ class SoopCo2FileClassifier(FileClassifier):
             att_list = cls._get_nc_att(src_file.src_path, ['cruise_id', 'time_coverage_start'])
             year = att_list[1][:4]
             cruise_id = att_list[0]
-            if not cruise_id:
-                raise InvalidFileContentError(
-                    "File '{name}' is missing cruise_id attribute".format(name=src_file.name)
-                )
             dir_list.extend([year, cruise_id])
 
         if project == 'SOOP-CO2_RT':
@@ -104,8 +98,8 @@ class SoopCo2FileClassifier(FileClassifier):
         data_type = 'REALTIME'
         dir_list.extend([project, facility, sub_facility])
         fields = cls._get_file_name_fields(src_file.name, min_fields=2)
-        if fields[0] in VESSEL_CODE:
-            ship_code = VESSEL_CODE[fields[0]]
+        if fields[0] in cls.VESSEL_CODE:
+            ship_code = cls.VESSEL_CODE[fields[0]]
         else:
             raise InvalidFileNameError(
                 "File {file} has an invalid vessel code or is not a valid SOOP-CO2 realtime file".format(

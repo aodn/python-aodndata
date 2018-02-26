@@ -1,4 +1,4 @@
-from aodncore.pipeline import HandlerBase, PipelineFile, PipelineFilePublishType, PipelineFileCheckType
+from aodncore.pipeline import HandlerBase, PipelineFile, PipelineFilePublishType, PipelineFileCheckType, FileType
 from aodncore.pipeline.exceptions import InvalidInputFileError
 import soop_co2_nrt_nc_generator
 from soop_co2_classifier import SoopCo2FileClassifier
@@ -27,11 +27,11 @@ class SoopCo2Handler(HandlerBase):
 
         """
         # Delayed mode file submitted as a zip archive
-        if re.match(self.file_extension, '.zip'):
-            nc_file = self.file_collection.filter_by_attribute_value('extension', '.nc')
+        if self.file_extension == '.zip':
+            nc_file = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
             if len(nc_file) != 1:
                 raise InvalidInputFileError(
-                    "Expecting one netCDF file in ZIP archive '{zip}'".format(zip=self.file_collection.src_path)
+                    "Expecting one netCDF file in ZIP archive '{zip}'".format(zip=os.path.basename(self.input_file))
                 )
 
             # first process the NetCDF file to set the destination path for the file collection
@@ -44,12 +44,12 @@ class SoopCo2Handler(HandlerBase):
             # SOOP-CO2 DM and FRMAP .txt,.pdf or/and .xml files. Set check type to NONEMPTY and publish type to UPLOAD_ONLY
             non_nc_files = self.file_collection.filter_by_attribute_id('check_type', PipelineFileCheckType.NO_ACTION)
             for non_nc in non_nc_files:
-                non_nc.check_type = PipelineFileCheckType.NONEMPTY_CHECK
+                non_nc.check_type = PipelineFileCheckType.FORMAT_CHECK
                 non_nc.publish_type = PipelineFilePublishType.UPLOAD_ONLY
                 non_nc.dest_path = os.path.join(set_nc_dest_path, non_nc.name)
 
         elif self.input_file.endswith('dat.txt'):
-            # Single text or NetCDF file
+            # Single text file
             # Realtime files (*dat.txt)
             rt_file = self.file_collection[0]
             nrt_nc_file_path = soop_co2_nrt_nc_generator.process_co2_rt(rt_file)
@@ -63,18 +63,18 @@ class SoopCo2Handler(HandlerBase):
             set_nc_dest_path = SoopCo2FileClassifier.dest_path(nrt_nc_file)
             nrt_nc_file.dest_path = os.path.join(set_nc_dest_path, nrt_nc_file.name)
 
-        elif re.match(self.file_extension, '.nc'):
+        elif self.file_type is FileType.NETCDF:
             # single NetCDF file
-            for f in self.file_collection:
-                f.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-                f.check_type = PipelineFileCheckType.NC_COMPLIANCE_CHECK
-                nc_dest_path = SoopCo2FileClassifier.dest_path(f)
-                f.dest_path = os.path.join(nc_dest_path, f.name)
+            nc = self.file_collection[0]
+            nc.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+            nc.check_type = PipelineFileCheckType.NC_COMPLIANCE_CHECK
+            nc_dest_path = SoopCo2FileClassifier.dest_path(nc)
+            nc.dest_path = os.path.join(nc_dest_path, nc.name)
 
         else:
             raise InvalidInputFileError(
-                "File format '{file}' is invalid should be a SOOP-CO2 realtime file (*dat.txt) \
-                or a Delayed mode NetCDF file.".format(file=self.input_file)
+                "File format '{file}' is invalid. Should be a SOOP-CO2 realtime file (*dat.txt) " 
+                "or a Delayed Mode zip archive or NetCDF file.".format(file=self.input_file)
             )
 
     dest_path = SoopCo2FileClassifier.dest_path
