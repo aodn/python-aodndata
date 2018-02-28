@@ -23,7 +23,7 @@ ENTRY_POINTS = {
         'SrsGhrsstHanlder = aodndata.srs.srs_ghrsst:SrsGhrsstHandler',
         'SrsOcBodBawHandler = aodndata.srs.srs_oc_bodbaw:SrsOcBodBawHandler',
         'SrsOcLjcoHandler = aodndata.srs.srs_oc_ljco:SrsOcLjcoHandler'
-        'SoopCo2Handler = aodn.soop.soop_co2:SoopCo2Handler'
+        'SoopCo2Handler = aodndata.soop.soop_co2:SoopCo2Handler'
 
     ],
     'pipeline.path_functions': [

@@ -2,6 +2,7 @@ from aodncore.pipeline import FileClassifier
 from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError, InvalidFileFormatError
 from ship_callsign import ship_callsign_list, ship_callsign
 import datetime
+import os
 
 class SoopCo2FileClassifier(FileClassifier):
     VALID_PROJECT = ['IMOS', 'FutureReefMap', 'SOOP-CO2_RT']
@@ -19,6 +20,8 @@ class SoopCo2FileClassifier(FileClassifier):
              (RT) IN_2017-165-0000dat.txt
               <Vessel_code>_yyyy-ddd-hhmmdat.tx
               :type src_file: object
+        return: destination relative path to destination folder.
+        eg: 'IMOS/SOOP/SOOP-CO2/VNAA_Aurora-Australis/2017/AA1617_V3/'
         """
 
         if src_file.name.endswith('.nc'):
@@ -89,7 +92,8 @@ class SoopCo2FileClassifier(FileClassifier):
         Generate archive path for RT file based on vessel_code
             eg:IN_2017-165-0000dat.txt
               <Vessel_code>_yyyy-ddd-hhmmdat.txt
-        :return: relative archive path
+        :return: relative archive path- full path, including file name
+        eg: 'IMOS/SOOP/SOOP-CO2/VLMJ_Investigator/REALTIME/2018/1/IN_2018-022-0000dat.txt'
         """
         dir_list = []
         project = 'IMOS'
@@ -97,13 +101,13 @@ class SoopCo2FileClassifier(FileClassifier):
         sub_facility = 'SOOP-CO2'
         data_type = 'REALTIME'
         dir_list.extend([project, facility, sub_facility])
-        fields = cls._get_file_name_fields(src_file.name, min_fields=2)
+        fields = cls._get_file_name_fields(os.path.basename(src_file), min_fields=2)
         if fields[0] in cls.VESSEL_CODE:
             ship_code = cls.VESSEL_CODE[fields[0]]
         else:
             raise InvalidFileNameError(
                 "File {file} has an invalid vessel code or is not a valid SOOP-CO2 realtime file".format(
-                    file=src_file.name)
+                    file=os.path.basename(src_file))
             )
         platform = "%s_%s" % (ship_code, ship_callsign(ship_code))
         dir_list.extend([platform, data_type])
@@ -112,12 +116,13 @@ class SoopCo2FileClassifier(FileClassifier):
         jday = int(fields[1][5:8])
         if not (jday in range(0, 366)) or year < 2017:
             raise InvalidFileNameError(
-                "Failed extracting valid [year, day] from file {file}".format(file=src_file.name)
+                "Failed extracting valid [year, day] from file {file}".format(file=os.path.basename(src_file))
             )
 
         # Determine month from julian day (1-365). Leap year taken into account
         year_to_ordinal = datetime.date(year, 1, 1).toordinal() + jday - 1
         month = datetime.date.fromordinal(year_to_ordinal).month
         dir_list.append(month)
+        dir_list.append(os.path.basename(src_file))
 
         return cls._make_path(dir_list)

@@ -99,5 +99,6 @@ class TestSoopCo2Handler(HandlerTestCase):
         # we also expect this to succeed, since the test file is known be CF compliant
         self.run_handler(GOOD_NC, check_params={'checks': ['cf']})
 
-        if __name__ == '__main__':
+
+if __name__ == '__main__':
             unittest.main()

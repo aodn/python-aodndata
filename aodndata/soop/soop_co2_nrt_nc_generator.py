@@ -56,20 +56,19 @@ VESSEL = {
     'IN': 'VLMJ'}
 
 
-def process_co2_rt(self):
+def process_co2_rt(realtime_file, temp_dir):
     """
     Read in data from co2 realtime file and produce a netcdf file
     """
     # Parse data into dataframe
-    (dataf, platform_code) = read_realtime_file(self)
+    (dataf, platform_code) = read_realtime_file(realtime_file)
     # format data
     (dtime, time) = get_time_formatted(dataf)
     # generate nc file name
     netcdf_filename = create_netcdf_filename(platform_code, dtime)
-    tmpdir = mkdtemp()
-    netcdf_file_path = os.path.join(tmpdir, "%s.nc") % netcdf_filename
+    netcdf_file_path = os.path.join(temp_dir, "%s.nc") % netcdf_filename
 
-    create_netcdf(netcdf_file_path, dataf, dtime, time, self.src_path, platform_code)
+    create_netcdf(netcdf_file_path, dataf, dtime, time, realtime_file.src_path, platform_code)
 
     return netcdf_file_path
 
