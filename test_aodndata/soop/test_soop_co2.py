@@ -7,8 +7,8 @@ from aodncore.pipeline.exceptions import ComplianceCheckFailedError
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.nc')
-NOT_A_NETCDF = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170831T074045Z_VLMJ_FV01.nc')
-GOOD_RT = os.path.join(TEST_ROOT, 'IN_2018-022-0000dat.txt')
+# NOT_A_NETCDF = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170831T074045Z_VLMJ_FV01.nc')
+# GOOD_RT = os.path.join(TEST_ROOT, 'IN_2018-022-0000dat.txt')
 GOOD_FRMAP = os.path.join(TEST_ROOT, 'FutureReefMap_GST_20150518T124011Z_9V2768_FV01.nc')
 GOOD_ZIP = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.zip')
 
@@ -39,25 +39,25 @@ class TestSoopCo2Handler(HandlerTestCase):
                          'IMOS/SOOP/SOOP-CO2/VNAA_Aurora-Australis/2017/AA1617_V3/IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.nc')
         self.assertTrue(f.is_stored)
 
-    def test_good_co2rt_file(self):
-        # we expect this to succeed, so if the handler experiences an error, it is considered a
-        # "failed test"
-        handler = self.run_handler(GOOD_RT)
-
-        self.assertEqual(len(handler.file_collection), 1)
-        txt_file = handler.file_collection.filter_by_attribute_value('extension', '.txt')
-        nc_file = handler.file_collection.filter_by_attribute_value('extension', '.nc')
-
-        for t in txt_file:
-            self.assertEqual(t.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
-            self.assertEqual(t.archive_path,
-                             'IMOS/SOOP/SOOP-CO2/VLMJ_Investigator/REALTIME/2018/1/' + t.name)
-            self.assertTrue(t.is_archived)
-
-        for nc in nc_file:
-            self.assertEqual(nc.dest_path,
-                             'IMOS/SOOP/SOOP-CO2/VLMJ_Investigator/REALTIME/2018/1/' + nc.name)
-            self.assertTrue(nc.is_stored)
+    # def test_good_co2rt_file(self):
+    #     # we expect this to succeed, so if the handler experiences an error, it is considered a
+    #     # "failed test"
+    #     handler = self.run_handler(GOOD_RT)
+    #
+    #     self.assertEqual(len(handler.file_collection), 1)
+    #     txt_file = handler.file_collection.filter_by_attribute_value('extension', '.txt')
+    #     nc_file = handler.file_collection.filter_by_attribute_value('extension', '.nc')
+    #
+    #     for t in txt_file:
+    #         self.assertEqual(t.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+    #         self.assertEqual(t.archive_path,
+    #                          'IMOS/SOOP/SOOP-CO2/VLMJ_Investigator/REALTIME/2018/1/' + t.name)
+    #         self.assertTrue(t.is_archived)
+    #
+    #     for nc in nc_file:
+    #         self.assertEqual(nc.dest_path,
+    #                         'IMOS/SOOP/SOOP-CO2/VLMJ_Investigator/REALTIME/2018/1/' + nc.name)
+    #         self.assertTrue(nc.is_stored)
 
     def test_frmap_file(self):
         # test future Reef Map processing
