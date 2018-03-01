@@ -40,5 +40,5 @@ class AuvHandler(HandlerBase):
             return os.path.join('IMOS/AUV', self.get_campaign_name(), self.get_dive_name(), 'hydro_netcdf',
                                 os.path.basename(filepath))
         elif self.manifest_type() == 'dive' or self.manifest_type() == 'pdfreports':
-            rel_path = os.path.relpath(filepath, os.path.join(self.relative_path_root, 'AUV', 'AUV_DOWNLOAD_CAMPAIGN'))
+            rel_path = filepath.split("AUV/AUV_DOWNLOAD_CAMPAIGN/", 1)[1]
             return os.path.join('IMOS/AUV', rel_path)
