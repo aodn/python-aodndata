@@ -22,7 +22,7 @@ ENTRY_POINTS = {
         'SrsAltHandler = aodndata.srs.srs_altimetry:SrsAltHandler',
         'SrsGhrsstHanlder = aodndata.srs.srs_ghrsst:SrsGhrsstHandler',
         'SrsOcBodBawHandler = aodndata.srs.srs_oc_bodbaw:SrsOcBodBawHandler',
-        'SrsOcLjcoHandler = aodndata.srs.srs_oc_ljco:SrsOcLjcoHandler'
+        'SrsOcLjcoHandler = aodndata.srs.srs_oc_ljco:SrsOcLjcoHandler',
         'SoopCo2Handler = aodndata.soop.soop_co2:SoopCo2Handler'
 
     ],
