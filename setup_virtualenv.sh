@@ -3,7 +3,6 @@
 set -eu
 
 AODNCORE_ARTIFACT=aodncore_prod
-CC_ARTIFACT=compliance_checker_prod
 CC_PLUGIN_ARTIFACT=cc_plugin_imos_prod
 
 GET_LATEST_ARTIFACT_URL=https://raw.githubusercontent.com/aodn/utilities/master/jenkins/get_latest_artifact.py
@@ -16,7 +15,6 @@ function populate_local_repo() {
     mkdir -p ${WHEEL_CACHE_DIR}
     pushd ${WHEEL_CACHE_DIR} >/dev/null
     wget --quiet ${GET_LATEST_ARTIFACT_URL}
-    python get_latest_artifact.py --extension .whl --job ${CC_ARTIFACT}
     python get_latest_artifact.py --extension .whl --job ${CC_PLUGIN_ARTIFACT}
     python get_latest_artifact.py --extension .whl --job ${AODNCORE_ARTIFACT}
     popd >/dev/null
@@ -29,10 +27,9 @@ function setup_virtualenv() {
     VIRTUALENV_PIP="${VIRTUALENV_DIR}/bin/pip"
 
     echo "Installing dependencies into virtual environment..."
-    ${VIRTUALENV_PIP} install --quiet --upgrade ${WHEEL_CACHE_DIR}/compliance_checker-*.whl
-    ${VIRTUALENV_PIP} install --quiet -c constraints.txt --upgrade ${WHEEL_CACHE_DIR}/cc_plugin_imos-*.whl
-    ${VIRTUALENV_PIP} install --quiet -c constraints.txt --upgrade ${WHEEL_CACHE_DIR}/aodncore-*.whl
-    ${VIRTUALENV_PIP} install --quiet -c constraints.txt -r requirements.txt
+    ${VIRTUALENV_PIP} install --quiet --upgrade ${WHEEL_CACHE_DIR}/cc_plugin_imos-*.whl
+    ${VIRTUALENV_PIP} install --quiet --upgrade ${WHEEL_CACHE_DIR}/aodncore-*.whl
+    ${VIRTUALENV_PIP} install --quiet -r requirements.txt
 }
 
 populate_local_repo
