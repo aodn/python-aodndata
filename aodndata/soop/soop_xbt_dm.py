@@ -62,13 +62,12 @@ def create_plot(netcdfFilePath, output_dir):
 
     # Modify the values which we don't want to plot to replace them with the Fillvalue
     temp_values[~i_good_data] = sea_water_temperature._FillValue
-    indexGoodData1D = list(itertools.chain(*i_good_data)) == True
 
     # new XBT files dont have a FillValue att for DEPTH since DEPTH is a
     # dimension. However previous files do. Need to handle both case if we do
     # some reprocessing
     if hasattr(depth, '_FillValue'):
-        depth_values[~indexGoodData1D] = depth._FillValue
+        depth_values[~i_good_data] = depth._FillValue
         depth_values = ma.masked_values(depth_values, F.variables['DEPTH']._FillValue)
 
     # Modify the mask in order to change the boolean, since some previous non Fillvalue data are now Fillvalue
