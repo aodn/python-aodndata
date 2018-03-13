@@ -1,4 +1,7 @@
 # python-aodndata
+
+[![Build Status](https://travis-ci.org/aodn/python-aodndata.png?branch=master)](https://travis-ci.org/aodn/python-aodndata)
+
 This repository holds per-facility Python pipeline code, for example handlers, destination path functions and any other code specific to a given facility and/or pipeline.
 
 The code extends the [aodncore](https://github.com/aodn/python-aodncore) project which is treated as an upstream library, providing primarily the HandlerBase parent class, which provides all of the common handler capabilities and essentially implements the entire "generic handler".
