@@ -1,19 +1,12 @@
 import os
 
-from aodncore.pipeline import HandlerBase
+from aodncore.pipeline.exceptions import InvalidFileNameError
 
-
-class SoopXbtNrtHandler(HandlerBase):
-    def __init__(self, *args, **kwargs):
-        super(SoopXbtNrtHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.manifest']
-
-    def dest_path(self, filepath):
-        """The dest_path has already been added to the PipelineFile by the MapManifestResolveRunner, so simply validate
-            that the object contains valid dest_path attribute
-
-        :param filepath: filepath for which to retrieve the destination path from the corresponding PipelineFile
-        :return: string containing the dest_path attribute of the PipelineFile corresponding with filepath
-        """
+def dest_path_soop_xbt_nrt(filepath):
+    " return the path of a CSV SOOP XBT NRT file stored in $WIP_DIR containing the string sbddata"
+    try:
         rel_path = filepath.split("sbddata/", 1)[1]
-        return os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME', rel_path)
+    except IndexError:
+        raise InvalidFileNameError(
+            'invalid file name {filepath}. Subdirectory \'sbddata\' not found in path, unable to split'.format(filepath=filepath))
+    return os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME', rel_path)

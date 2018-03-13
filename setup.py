@@ -20,7 +20,6 @@ ENTRY_POINTS = {
         'SoopAsfSstHandler = aodndata.soop.soop_asf_sst:SoopAsfSstHandler',
         'SoopTrvHandler = aodndata.soop.soop_trv:SoopTrvHandler',
         'SoopXbtDmHandler = aodndata.soop.soop_xbt_dm:SoopXbtDmHandler',
-        'SoopXbtNrtHandler = aodndata.soop.soop_xbt_nrt:SoopXbtNrtHandler',
         'SrsAltHandler = aodndata.srs.srs_altimetry:SrsAltHandler',
         'SrsGhrsstHanlder = aodndata.srs.srs_ghrsst:SrsGhrsstHandler',
         'SrsOcBodBawHandler = aodndata.srs.srs_oc_bodbaw:SrsOcBodBawHandler',
@@ -30,7 +29,8 @@ ENTRY_POINTS = {
     ],
     'pipeline.path_functions': [
         'dest_path_aatams_sattag_qc_ctd = aodndata.aatams:dest_path_aatams_sattag_qc_ctd',
-        'dest_path_anmn_nrs_realtime = aodndata.moorings.classifiers:dest_path_anmn_nrs_realtime'
+        'dest_path_anmn_nrs_realtime = aodndata.moorings.classifiers:dest_path_anmn_nrs_realtime',
+        'dest_path_soop_xbt_nrt = aodndata.soop.soop_xbt_nrt:dest_path_soop_xbt_nrt'
     ]
 }
 
