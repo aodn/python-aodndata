@@ -30,6 +30,9 @@ ENTRY_POINTS = {
     'pipeline.path_functions': [
         'dest_path_aatams_sattag_qc_ctd = aodndata.aatams:dest_path_aatams_sattag_qc_ctd',
         'dest_path_anmn_nrs_realtime = aodndata.moorings.classifiers:dest_path_anmn_nrs_realtime',
+        'dest_path_cars = aodndata.csiro.cars:dest_path_cars',
+        'dest_path_sstaars = aodndata.csiro.sstaars:dest_path_sstaars',
+        'dest_path_oa = aodndata.csiro.ocean_acidification:dest_path_oa',
         'dest_path_soop_xbt_nrt = aodndata.soop.soop_xbt_nrt:dest_path_soop_xbt_nrt'
     ]
 }
