@@ -11,10 +11,9 @@ class SrsAltHandler(HandlerBase):
 
     def dest_path(self, filepath):
         srs_alt_dir = os.path.join('IMOS', 'SRS', 'ALTIMETRY', 'calibration_validation')
-        netcdf_file_obj = Dataset(filepath, mode='r')
-        site_code = netcdf_file_obj.site_code
-        instrument = netcdf_file_obj.instrument
-        netcdf_file_obj.close()
+        with Dataset(filepath, mode='r') as n:
+            site_code = n.site_code
+            instrument = n.instrument
 
         if instrument == 'SBE37':
             product_type = 'CTD_timeseries'
@@ -23,7 +22,7 @@ class SrsAltHandler(HandlerBase):
         elif instrument == 'Aquad':
             product_type = 'Velocity'
         else:
-            return None
+            raise ValueError("unknown instrument '{instrument}'".format(instrument=instrument))
 
         return os.path.join(srs_alt_dir, site_code, product_type,
                             os.path.basename(filepath))
