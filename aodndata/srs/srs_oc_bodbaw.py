@@ -26,7 +26,7 @@ class SrsOcBodBawHandler(HandlerBase):
             '^IMOS_SRS-OC-BODBAW_X_([0-9]+T[0-9]+)Z_(.*)-(suspended_matter|pigment|backscattering|absorption).*_END-([0-9]+T[0-9]+)Z\.(nc|csv|png)$',
             filename)
         if m is None:
-            return None
+            raise ValueError("file name not matching regex to deduce dest_path")
 
         product_type = m.group(3)
         if 'absorption' in product_type:
