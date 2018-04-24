@@ -23,7 +23,7 @@ class SrsOcLjcoHandler(HandlerBase):
                       netcdf_filename)
 
         if m is None:
-            return None
+            raise ValueError("file name not matching regex to deduce dest_path")
 
         product_type_ls = re.compile('ACS|EcoTriplet|BB9|HyperOCR|WQM')
         product_type_netcdf = product_type_ls.findall(netcdf_filename)
@@ -32,7 +32,7 @@ class SrsOcLjcoHandler(HandlerBase):
         product_temp_netcdf = product_temp_ls.findall(netcdf_filename)
 
         if product_type_netcdf == [] or product_temp_netcdf == []:
-            return None
+            raise ValueError("can not find matching instrument or time coverage from filename")
         product_dir = '%s-%s' % (product_type_netcdf[0], product_temp_netcdf[0])
 
         year = int(m.group(2)[0:4])
