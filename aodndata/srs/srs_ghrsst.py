@@ -65,6 +65,14 @@ class SrsGhrsstHandler(HandlerBase):
             return os.path.join(ghrsst_prefix_path, 'L3P', '14d', os.path.basename(filepath)[0:4],
                                 os.path.basename(filepath))
 
+        if 'L4' in filepath and 'RAMSSA' in filepath:
+            return os.path.join(ghrsst_prefix_path, 'L4', 'RAMSSA', os.path.basename(filepath)[0:4],
+                                os.path.basename(filepath))
+
+        if 'L4' in filepath and 'GAMSSA' in filepath:
+            return os.path.join(ghrsst_prefix_path, 'L4', 'GAMSSA', os.path.basename(filepath)[0:4],
+                                os.path.basename(filepath))
+
         file_info = SrsGhrsstHandler.get_info_nc(filepath)
 
         if file_info['sat_number'] is None:
