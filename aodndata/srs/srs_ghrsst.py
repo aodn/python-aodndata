@@ -3,6 +3,7 @@ import re
 from datetime import datetime
 
 from aodncore.pipeline import HandlerBase
+from aodncore.pipeline.exceptions import InvalidFileNameError
 
 
 class SrsGhrsstHandler(HandlerBase):
@@ -14,16 +15,22 @@ class SrsGhrsstHandler(HandlerBase):
     def get_info_nc(filepath):
 
         if 'L3S' in os.path.basename(filepath) or 'L3C' in os.path.basename(filepath):
-            info_re = re.compile(
-                r'^([0-9]{14})-ABOM-(L3S|L3C)_.*-AVHRR(.*)_D-(1d|3d|6d|14d|1m)_(day|night|dn).*.nc$')
-            info_re_match = info_re.findall(os.path.basename(filepath))[0]
-            day_time = info_re_match[4]
-
+            try:
+                info_re = re.compile(
+                    r'^([0-9]{14})-ABOM-(L3S|L3C)_.*-AVHRR(.*)_D-(1d|3d|6d|14d|1m)_(day|night|dn).*.nc$')
+                info_re_match = info_re.findall(os.path.basename(filepath))[0]
+                day_time = info_re_match[4]
+            except Exception:
+                raise InvalidFileNameError("file name not matching regex to deduce dest_path of L3S/L3C files")
         elif 'L3U' in os.path.basename(filepath):
-            info_re = re.compile(
-                r'^([0-9]{14})-ABOM-(L3U)_.*-AVHRR(.*)_D-(Asc|Des)(.*Southern)?.nc$')
-            info_re_match = info_re.findall(os.path.basename(filepath))[0]
-            day_time = None
+            try:
+                info_re = re.compile(r'^([0-9]{14})-ABOM-(L3U)_.*-AVHRR(.*)_D-(Asc|Des)(.*Southern)?.nc$')
+                info_re_match = info_re.findall(os.path.basename(filepath))[0]
+                day_time = None
+            except Exception:
+                raise InvalidFileNameError("file name not matching regex to deduce dest_path of L3U files")
+        else:
+            raise InvalidFileNameError("Unknown product in file name not matching regex to deduce dest_path")
 
         prod_lev = info_re_match[1]
         temporal_extent = info_re_match[3]

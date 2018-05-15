@@ -3,6 +3,7 @@ import unittest
 
 from aodncore.pipeline import PipelineFileCheckType, PipelineFilePublishType
 from aodncore.testlib import HandlerTestCase
+from aodncore.pipeline.exceptions import InvalidFileNameError
 
 from aodndata.srs.srs_ghrsst import SrsGhrsstHandler
 
@@ -63,6 +64,13 @@ SRS_VARIOUS = {'19950309232523-ABOM-L3U_GHRSST-SSTskin-AVHRR09_D-Des_Southern.nc
                '20180101120000-ABOM-L4_GHRSST-SSTfnd-GAMSSA-28km-GLOB-v02.0-fv01.0.nc': 'SRS/SST/ghrsst/L4/GAMSSA/2018'
                }
 
+SRS_BAD = {'19950309232523-ABOM-UNKNOWN_GHRSST-SSTskin-AVHRR09_D-Des_Southern.nc',
+           '19950309232523-ABOM-L3U_GHRSST-SSTskin-AVHRR09_D-Des_South.nc',
+           '20151130152000-ABOM-L3C_GHRSST-SSTskin-AVHRR19_D-10d_night.nc',
+           '20151130152000-ABOM-L3C_GHRSST-SSTskin-AVHRR19_D-10d_UNKNOWNDAYTIME.nc',
+           '20131011153743-ABOM-L3U_GHRSST-SSTskin-AVHRR19_D-UNKNOWN_Southern.nc',
+           'bad.nc'}
+
 
 class TestSrsGhrsstHandler(HandlerTestCase):
     def setUp(self):
@@ -109,15 +117,22 @@ class TestSrsGhrsstHandler(HandlerTestCase):
 
     def test_l4_path(self):
         dest_path = SrsGhrsstHandler.dest_path(SRS_L4_RAMSSA)
-        self.assertEqual(dest_path, os.path.join('IMOS/SRS/SST/ghrsst/L4/RAMSSA/2018/', os.path.basename(SRS_L4_RAMSSA)))
+        self.assertEqual(dest_path,
+                         os.path.join('IMOS/SRS/SST/ghrsst/L4/RAMSSA/2018/', os.path.basename(SRS_L4_RAMSSA)))
 
         dest_path = SrsGhrsstHandler.dest_path(SRS_L4_GAMSSA)
-        self.assertEqual(dest_path, os.path.join('IMOS/SRS/SST/ghrsst/L4/GAMSSA/2018/', os.path.basename(SRS_L4_GAMSSA)))
+        self.assertEqual(dest_path,
+                         os.path.join('IMOS/SRS/SST/ghrsst/L4/GAMSSA/2018/', os.path.basename(SRS_L4_GAMSSA)))
 
     def test_various_path(self):
         for nc_file in SRS_VARIOUS.keys():
             dest_path = SrsGhrsstHandler.dest_path(nc_file)
             self.assertEqual(dest_path, os.path.join('IMOS', SRS_VARIOUS[nc_file], nc_file))
+
+    def test_various_bad_path(self):
+        for nc_file in SRS_BAD:
+            with self.assertRaises(InvalidFileNameError):
+                SrsGhrsstHandler.dest_path(nc_file)
 
 
 if __name__ == '__main__':
