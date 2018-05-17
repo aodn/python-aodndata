@@ -25,6 +25,7 @@ ENTRY_POINTS = {
         'SrsOcBodBawHandler = aodndata.srs.srs_oc_bodbaw:SrsOcBodBawHandler',
         'SrsOcGriddedHandler = aodndata.srs.srs_oc_gridded:SrsOcGriddedHandler',
         'SrsOcLjcoHandler = aodndata.srs.srs_oc_ljco:SrsOcLjcoHandler',
+        'SrsOcSoopRadHandler = aodndata.srs.srs_oc_soop_rad:SrsOcSoopRadHandler',
         'SoopCo2Handler = aodndata.soop.soop_co2:SoopCo2Handler'
 
     ],
