@@ -3,6 +3,7 @@ import unittest
 
 from aodncore.pipeline import PipelineFileCheckType, PipelineFilePublishType
 from aodncore.testlib import HandlerTestCase
+from aodncore.pipeline.exceptions import InvalidFileNameError
 
 from aodndata.srs.srs_ghrsst import SrsGhrsstHandler
 
@@ -14,6 +15,8 @@ SRS_L3C_1D_DAY = '20170101032000-ABOM-L3C_GHRSST-SSTskin-AVHRR19_D-1d_day.nc'
 SRS_L3U = '19940101052414-ABOM-L3U_GHRSST-SSTskin-AVHRR11_D-Asc.nc'
 SRS_L3P = '20140101-ABOM-L3P_GHRSST-SSTsubskin-AVHRR_MOSAIC_01km-AO_DAAC.nc'
 SRS_L3C_1DS_NGT = '20170101171000-ABOM-L3C_GHRSST-SSTskin-AVHRR19_D-1d_night_Southern.nc'
+SRS_L4_RAMSSA = '20180502120000-ABOM-L4_GHRSST-SSTfnd-RAMSSA-09km-AUS-v02.0-fv01.0.nc'
+SRS_L4_GAMSSA = '20180101120000-ABOM-L4_GHRSST-SSTfnd-GAMSSA-28km-GLOB-v02.0-fv01.0.nc'
 
 SRS_VARIOUS = {'19950309232523-ABOM-L3U_GHRSST-SSTskin-AVHRR09_D-Des_Southern.nc': 'SRS/SST/ghrsst/L3U-S/n09/1995',
                '20151204200948-ABOM-L3U_GHRSST-SSTskin-AVHRR19_D-Des_Southern.nc': 'SRS/SST/ghrsst/L3U-S/n19/2015',
@@ -56,8 +59,17 @@ SRS_VARIOUS = {'19950309232523-ABOM-L3U_GHRSST-SSTskin-AVHRR09_D-Des_Southern.nc
                '20151130152000-ABOM-L3C_GHRSST-SSTskin-AVHRR19_D-1d_night.nc': 'SRS/SST/ghrsst/L3C-1d/ngt/n19/2015',
                '20131011153743-ABOM-L3U_GHRSST-SSTskin-AVHRR19_D-Des_Southern.nc': 'SRS/SST/ghrsst/L3U-S/n19/2013',
                '20151201185911-ABOM-L3U_GHRSST-SSTskin-AVHRR19_D-Des.nc': 'SRS/SST/ghrsst/L3U/n19/2015',
-               '20140428-ABOM-L3P_GHRSST-SSTsubskin-AVHRR_MOSAIC_01km-AO_DAAC.nc': 'SRS/SST/ghrsst/L3P/14d/2014'
+               '20140428-ABOM-L3P_GHRSST-SSTsubskin-AVHRR_MOSAIC_01km-AO_DAAC.nc': 'SRS/SST/ghrsst/L3P/14d/2014',
+               '20180502120000-ABOM-L4_GHRSST-SSTfnd-RAMSSA-09km-AUS-v02.0-fv01.0.nc': 'SRS/SST/ghrsst/L4/RAMSSA/2018',
+               '20180101120000-ABOM-L4_GHRSST-SSTfnd-GAMSSA-28km-GLOB-v02.0-fv01.0.nc': 'SRS/SST/ghrsst/L4/GAMSSA/2018'
                }
+
+SRS_BAD = {'19950309232523-ABOM-UNKNOWN_GHRSST-SSTskin-AVHRR09_D-Des_Southern.nc',
+           '19950309232523-ABOM-L3U_GHRSST-SSTskin-AVHRR09_D-Des_South.nc',
+           '20151130152000-ABOM-L3C_GHRSST-SSTskin-AVHRR19_D-10d_night.nc',
+           '20151130152000-ABOM-L3C_GHRSST-SSTskin-AVHRR19_D-10d_UNKNOWNDAYTIME.nc',
+           '20131011153743-ABOM-L3U_GHRSST-SSTskin-AVHRR19_D-UNKNOWN_Southern.nc',
+           'bad.nc'}
 
 
 class TestSrsGhrsstHandler(HandlerTestCase):
@@ -79,7 +91,6 @@ class TestSrsGhrsstHandler(HandlerTestCase):
         self.assertTrue(f.is_stored)
 
     def test_l3s_1ds_path(self):
-        # test with southern in path
         dest_path = SrsGhrsstHandler.dest_path(SRS_L3S_1DS_DAY)
         self.assertEqual(dest_path,
                          os.path.join('IMOS/SRS/SST/ghrsst/L3S-1dS/dn/2017', os.path.basename(SRS_L3S_1DS_DAY)))
@@ -97,19 +108,31 @@ class TestSrsGhrsstHandler(HandlerTestCase):
                          os.path.join('IMOS/SRS/SST/ghrsst/L3C-1dS/ngt/n19/2017', os.path.basename(SRS_L3C_1DS_NGT)))
 
     def test_l3u_path(self):
-        # test with sat number in path
         dest_path = SrsGhrsstHandler.dest_path(SRS_L3U)
         self.assertEqual(dest_path, os.path.join('IMOS/SRS/SST/ghrsst/L3U/n11/1994', os.path.basename(SRS_L3U)))
 
     def test_l3p_path(self):
-        # test with sat number in path
         dest_path = SrsGhrsstHandler.dest_path(SRS_L3P)
         self.assertEqual(dest_path, os.path.join('IMOS/SRS/SST/ghrsst/L3P/14d/2014/', os.path.basename(SRS_L3P)))
+
+    def test_l4_path(self):
+        dest_path = SrsGhrsstHandler.dest_path(SRS_L4_RAMSSA)
+        self.assertEqual(dest_path,
+                         os.path.join('IMOS/SRS/SST/ghrsst/L4/RAMSSA/2018/', os.path.basename(SRS_L4_RAMSSA)))
+
+        dest_path = SrsGhrsstHandler.dest_path(SRS_L4_GAMSSA)
+        self.assertEqual(dest_path,
+                         os.path.join('IMOS/SRS/SST/ghrsst/L4/GAMSSA/2018/', os.path.basename(SRS_L4_GAMSSA)))
 
     def test_various_path(self):
         for nc_file in SRS_VARIOUS.keys():
             dest_path = SrsGhrsstHandler.dest_path(nc_file)
             self.assertEqual(dest_path, os.path.join('IMOS', SRS_VARIOUS[nc_file], nc_file))
+
+    def test_various_bad_path(self):
+        for nc_file in SRS_BAD:
+            with self.assertRaises(InvalidFileNameError):
+                SrsGhrsstHandler.dest_path(nc_file)
 
 
 if __name__ == '__main__':
