@@ -10,6 +10,7 @@ from aodndata.version import __version__
 ENTRY_POINTS = {
     'pipeline.handlers': [
         'AatamsNrtHandler = aodndata.aatams.aatams_nrt:AatamsNrtHandler',
+        'AnfogHandler = aodndata.anfog.handlers:AnfogHandler',
         'AnmnNrsAimsHandler = aodndata.aims.anmn_nrs:AnmnNrsAimsHandler',
         'AuvHandler = aodndata.auv.handler:AuvHandler',
         'ArgoHandler = aodndata.argo.handler:ArgoHandler',
