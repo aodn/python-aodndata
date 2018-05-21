@@ -2,6 +2,7 @@ import os
 import unittest
 
 from aodncore.testlib import HandlerTestCase
+
 from aodndata.argo.handler import ArgoHandler
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
@@ -15,7 +16,7 @@ class TestArgoHandler(HandlerTestCase):
 
     def test_rsync_manifest_file(self):
         handler = self.handler_class(RSYNC_MANIFEST_FILE)
-        handler.relative_path_root = TEST_ROOT
+        handler.resolve_params = {'relative_path_root': os.path.join(TEST_ROOT, 'Argo/dac')}
         handler.run()
 
 
