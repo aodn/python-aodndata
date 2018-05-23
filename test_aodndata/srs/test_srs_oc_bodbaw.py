@@ -8,7 +8,7 @@ from aodndata.srs.srs_oc_bodbaw import SrsOcBodBawHandler
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 NC_FILE = os.path.join(TEST_ROOT,
-                       'IMOS_SRS-OC-BODBAW_X_20150114T033000Z_Lucinda2015-suspended_matter_FV02_END-20151210T034500Z.nc')
+                       'IMOS_SRS-OC-BODBAW_X_20091109T000500Z_SB2009_11-absorption-CDOM_FV02_END-20100722T042400Z_C-20180522T160601Z.nc')
 CSV_FILE = os.path.join(TEST_ROOT,
                         'IMOS_SRS-OC-BODBAW_X_20010102T072900Z_au0106-pigment_FV02_END-20010308T033800Z_C-20170101T000000Z.csv')
 PNG_FILE = os.path.join(TEST_ROOT,
@@ -23,16 +23,16 @@ class TestSrsOcBodBawHandler(HandlerTestCase):
     def test_netcdf(self):
         handler = self.run_handler(NC_FILE,
                                    include_regexes=['IMOS_SRS-OC-BODBAW_X_.*\.nc'],
-                                   # check_params={'checks': ['cf', 'imos:1.4']}
+                                   check_params={'checks': ['cf'],
+                                                 'criteria': 'lenient'}
                                    )
 
         f = handler.file_collection[0]
-        ## TODO; mod NC to pass checker
-        # self.assertEqual(f.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+        self.assertEqual(f.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
         self.assertEqual(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertEqual(f.dest_path,
-                         os.path.join('IMOS/SRS/OC/BODBAW/2015_cruise-Lucinda2015/suspended_matter/',
-                                      'IMOS_SRS-OC-BODBAW_X_20150114T033000Z_Lucinda2015-suspended_matter_FV02_END-20151210T034500Z.nc'))
+                         os.path.join('IMOS/SRS/OC/BODBAW/2009_cruise-SB2009_11/absorption/',
+                                      'IMOS_SRS-OC-BODBAW_X_20091109T000500Z_SB2009_11-absorption-CDOM_FV02_END-20100722T042400Z.nc'))
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
 
