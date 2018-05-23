@@ -1,10 +1,11 @@
 import os
 import re
-import pandas
 
+import pandas
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFileCheckType, FileType, \
     PipelineFileCollection, PipelineFile
-from aodncore.pipeline.exceptions import InvalidInputFileError, PipelineSystemError
+from aodncore.pipeline.exceptions import InvalidInputFileError, PipelineSystemError, InvalidFileContentError
+
 from aodndata.anfog.classifiers import AnfogFileClassifier
 
 
@@ -46,7 +47,7 @@ class AnfogHandler(HandlerBase):
 
         if self.file_type is FileType.ZIP:
             # First work out whether data in ZIP is Delayed mode or RT
-            mode = AnfogFileClassifier.set_data_mode(self)
+            mode = self.get_data_mode()
             if mode is None:
                 raise InvalidInputFileError("Could not work out the data mode (DM, RT) from Zip content {name}.".
                                             format(name=os.path.basename(self.input_file)))
@@ -60,10 +61,11 @@ class AnfogHandler(HandlerBase):
             # => Check for validity done by looking up in mission listing
             # set_mission_status will raise an error if deployment code not in listing
             nc = self.file_collection[0]
-            deployment = AnfogFileClassifier.get_deployment_code(nc)
+            deployment = AnfogFileClassifier.get_deployment_code(nc.src_path)
             platform = AnfogFileClassifier.get_platform(nc.name)
             self.set_mission_status(deployment, platform, 'check')
-            nc_dest_path = AnfogFileClassifier.dest_path(nc, 'DM')
+            nc.check_type = PipelineFileCheckType.NC_COMPLIANCE_CHECK
+            nc_dest_path = AnfogFileClassifier.dest_path(nc)
             nc.dest_path = os.path.join(nc_dest_path, nc.name)
         elif self.input_file.endswith('_status.txt'):
             # handles status file of the form MISSIONID_mission.txt (ex: Yamba20150601_mission.txt)
@@ -86,8 +88,8 @@ class AnfogHandler(HandlerBase):
             )
         else:
             fv01 = is_dm_netcdf[0]
-            # first process the FV01 NetCDF file to set the destination path for the file collection
-            destination = AnfogFileClassifier.dest_path(fv01, 'DM')
+            # first process the FV01 NetCDF file to set the path for the file collection to their the destination folder
+            destination = AnfogFileClassifier.dest_path(fv01)
             fv01.dest_path = os.path.join(destination, fv01.name)
             fv01.check_type = PipelineFileCheckType.NC_COMPLIANCE_CHECK
 
@@ -97,9 +99,12 @@ class AnfogHandler(HandlerBase):
             if results:
                 self.handle_previous_version('DM', destination, 'update')
             else:
-                path_to_rt_folder = AnfogFileClassifier.dest_path(fv01, 'RT')
+                #  RT and DM folder hierarchy similar except that RT has additional level
+                #  add REALTIME folder in the destination path
+                path_to_rt_folder = AnfogFileClassifier.make_rt_path(destination)
+
                 self.handle_previous_version('DM', path_to_rt_folder, 'delayed_mode')
-                deployment = AnfogFileClassifier.get_deployment_code(fv01)
+                deployment = AnfogFileClassifier.get_deployment_code(fv01.src_path)
                 platform = AnfogFileClassifier.get_platform(fv01.name)
                 self.set_mission_status(deployment, platform, 'delayed _mode')
 
@@ -108,15 +113,15 @@ class AnfogHandler(HandlerBase):
             # jpg,kml and QC_Report.pdf -> S3
             # TODO revisit set_attribute  implement in collection classmethod
             raw = self.file_collection.filter_by_attribute_regex('name', '.*rawfiles.zip$')
-            AnfogFileClassifier.set_attributes_per_file_type(raw, 'archive', destination)
+            self.set_attributes_per_file_type(raw, 'archive', destination)
             fv00 = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.FV00_REGEX)
-            AnfogFileClassifier.set_attributes_per_file_type(fv00, 'archive', destination)
+            self.set_attributes_per_file_type(fv00, 'archive', destination)
             jpg = self.file_collection.filter_by_attribute_value('extension', '.jpg')
-            AnfogFileClassifier.set_attributes_per_file_type(jpg, 'S3upload', destination)
+            self.set_attributes_per_file_type(jpg, 'S3upload', destination)
             pdf = self.file_collection.filter_by_attribute_value('extension', '.pdf')
-            AnfogFileClassifier.set_attributes_per_file_type(pdf, 'S3upload', destination)
+            self.set_attributes_per_file_type(pdf, 'S3upload', destination)
             kml = self.file_collection.filter_by_attribute_value('extension', '.kml')
-            AnfogFileClassifier.set_attributes_per_file_type(kml, 'S3upload', destination)
+            self.set_attributes_per_file_type(kml, 'S3upload', destination)
 
     def process_zip_rt(self):
         """
@@ -135,17 +140,17 @@ class AnfogHandler(HandlerBase):
             )
         else:
             fv00 = is_rt_netcdf[0]
-            destination = AnfogFileClassifier.dest_path(fv00, 'RT')
+            destination = AnfogFileClassifier.dest_path(fv00)
             fv00.dest_path = os.path.join(destination, fv00.name)
             fv00.check_type = PipelineFileCheckType.FORMAT_CHECK
             # Check if on S3 mission exist
             # -if yes: need to delete previous netcdf file
             # -if not: add new entry in Harvestmissionfile.csv ;
-            response = self.state_query.query_storage(destination)
-            if response:  # directory exists, contains files that need to be deleted
+            results = self.state_query.query_storage(destination)
+            if results:  # directory exists, contains files that need to be deleted
                 self.handle_previous_version('RT', destination, 'in_progress')
             else:  # path doesn't exist, mission is new
-                deployment = AnfogFileClassifier.get_deployment_code(fv00)
+                deployment = AnfogFileClassifier.get_deployment_code(fv00.src_path)
                 platform = AnfogFileClassifier.get_platform(fv00.name)
                 self.set_mission_status(deployment, platform, 'in_progress')
 
@@ -218,5 +223,48 @@ class AnfogHandler(HandlerBase):
                     self.file_collection.add(previous_file)
                     previous_file.dest_path = os.path.join(path, previous_file.name)
                     previous_file.publish_type = PipelineFilePublishType.DELETE
+
+    def get_data_mode(self):
+        """Based on ZIP content, define the data mode - DM or RT
+            - DM : one FV01 + one or more FV00 (ancillary material)
+            - RT : one FV00, images (unit???_*.png) and *position_summary.txt
+        """
+        # Since both DM and RT zip contain FV00 files, first look in zip for .png or position_summary.txt file
+        # If present => content is RT material
+        # If not => check netcdf file name
+        png = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RT_PNG_REGEX)
+        position_txtfile = self.file_collection.filter_by_attribute_regex('name',
+                                                                          AnfogFileClassifier.RT_POSITION_SUMMARY)
+        if png or position_txtfile:
+            return 'RT'
+        elif self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.ANFOG_RT_REGEX):
+            # Should have matched RT condition in initial test
+            raise InvalidFileContentError(
+                "Missing some ancillary files(PNGs or summary position file) in ZIP archive {name}".format(
+                    name=os.path.basename(self.input_file)))
+
+        elif self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX):
+            return 'DM'
+        else:
+            raise InvalidInputFileError(
+                "Expecting one NetCDF file in ZIP archive '{zip}'".format(
+                    zip=os.path.basename(self.input_file))
+            )
+
+    @staticmethod
+    def set_attributes_per_file_type(filecollection, destination, path):
+        """
+        Set check_type,publish_type and dest_path or archive_path attribute
+           to a collection of file of the same type/format according to its destination
+           destination is either 'S3upload' or 'archive'
+        """
+        for f in filecollection:
+            f.check_type = PipelineFileCheckType.FORMAT_CHECK
+            if destination == 'S3upload':
+                f.publish_type = PipelineFilePublishType.UPLOAD_ONLY
+                f.dest_path = os.path.join(path, f.name)
+            elif destination == 'archive':
+                f.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
+                f.archive_path = os.path.join(path, f.name)
 
     dest_path = AnfogFileClassifier.dest_path

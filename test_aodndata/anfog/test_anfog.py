@@ -1,15 +1,15 @@
 import os
 import unittest
+
 from shutil import copyfile
 from aodncore.pipeline import PipelineFileCheckType, PipelineFilePublishType, FileType
 from aodncore.testlib import HandlerTestCase
 from aodndata.anfog.handlers import AnfogHandler
+from aodncore.util import extract_zip
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 TEST_MISSION_LIST = os.path.join(TEST_ROOT, 'HarvestmissionList.csv')
-GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_ANFOG_BCEOPSTUV_20180204T050812Z_SL248_FV01_timeseries_END-20180226T222617Z.nc')
-TEST_DM_STATUS = os.path.join(TEST_ROOT,
-                              'IMOS_ANFOG_BCEOPSTUV_20180204T050812Z_SL248_FV01_timeseries_END-20180226T222617Z.zip')
+GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_ANFOG_BCEOPSTUV_20180503T080042Z_SL210_FV01_timeseries_END-20180505T054942Z.nc')
 GOOD_DSTG = os.path.join(TEST_ROOT, 'DSTO_MD_CEPSTUV_20130706T122916Z_SL090_FV01_timeseries_END-20130715T040955Z.nc')
 GOOD_ZIP_DM = os.path.join(TEST_ROOT, 'BassStrait20160302.zip')
 GOOD_ZIP_RT = os.path.join(TEST_ROOT, 'Forster20180205.zip')
@@ -50,8 +50,8 @@ class TestAnfogHandler(HandlerTestCase):
         self.assertEqual(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
 
         self.assertEqual(f.dest_path,
-                          'IMOS/ANFOG/slocum_glider/Forster20180205/'
-                          'IMOS_ANFOG_BCEOPSTUV_20180204T050812Z_SL248_FV01_timeseries_END-20180226T222617Z.nc')
+                         'IMOS/ANFOG/slocum_glider/TwoRocks20180503a/'
+                         'IMOS_ANFOG_BCEOPSTUV_20180503T080042Z_SL210_FV01_timeseries_END-20180505T054942Z.nc')
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
 
@@ -130,6 +130,7 @@ class TestAnfogHandler(HandlerTestCase):
         self.assertEqual(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
+
 
 if __name__ == '__main__':
     unittest.main()
