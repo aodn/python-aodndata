@@ -1,6 +1,6 @@
 import os
 
-from aodncore.pipeline import HandlerBase
+from aodncore.pipeline import HandlerBase, PipelineFilePublishType
 
 
 class ArgoHandler(HandlerBase):
@@ -10,6 +10,14 @@ class ArgoHandler(HandlerBase):
 
         relative_path_root = os.path.join(self._config.pipeline_config['global']['wip_dir'], 'Argo/dac')
         self.resolve_params = {'relative_path_root': relative_path_root}
+        self.include_regexes = ['.*\.nc']
+
+    def preprocess(self):
+        """ set NO_ACTION to non NetCDF files"""
+        self.file_collection.set_publish_types_from_regexes(addition_type=PipelineFilePublishType.NO_ACTION,
+                                                            deletion_type=PipelineFilePublishType.NO_ACTION,
+                                                            include_regexes='.*',
+                                                            exclude_regexes='.*\.nc')
 
     def dest_path(self, filepath):
         """The dest_path has already been added to the PipelineFile by the MapManifestResolveRunner, so simply validate
