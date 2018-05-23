@@ -44,7 +44,7 @@ class SoopBaHandler(HandlerBase):
             destination = SoopBaFileClassifier.dest_path(nc)
             nc.dest_path = os.path.join(destination, nc.name)
 
-            #  delete previous version base on filetype/extension
+            # based on file type/extension,  add  previous verions of files to filecollection with attribute DELETE
             # netcdf file have to be deleted since filename contains creation date=>never overwritten
             results = self.state_query.query_storage(destination)
             if results:
@@ -70,7 +70,7 @@ class SoopBaHandler(HandlerBase):
             destination = SoopBaFileClassifier.dest_path(nc)
             nc.dest_path = os.path.join(destination, nc.name)
 
-            #  delete previous version base on filetype/extension
+            # add  previous verions of netcdf file to filecollection with attribute DELETE
             # netcdf file have to be deleted since filename contains creation date=>never overwritten
             results = self.state_query.query_storage(destination)
             if results:

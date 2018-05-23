@@ -3,13 +3,19 @@ import unittest
 
 from aodncore.pipeline import PipelineFilePublishType, FileType
 from aodncore.testlib import HandlerTestCase
-
+from aodncore.pipeline.exceptions import InvalidInputFileError, InvalidFileContentError
 from aodndata.soop.soop_ba import SoopBaHandler
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_NC = os.path.join(TEST_ROOT,
-                       'IMOS_SOOP-BA_A_20160116T152139Z_VKAD_FV02_Antarctic-Discovery-ES60-38_END-20160129T062056Z_C-20170227T055245Z.nc')
+                       'IMOS_SOOP-BA_A_20160116T152139Z_VKAD_FV02_Antarctic-Discovery'
+                       '-ES60-38_END-20160129T062056Z_C-20170227T055245Z.nc')
+
+BAD_NC = os.path.join(TEST_ROOT,
+                      'IMOS_SOOP-BA_A_20160116T152139Z_VKAD_FV02_Antarctic-Discovery'
+                      '-ES60-38_END-20160129T062056Z_C-20170227T055245Z_BAD.nc')
 GOOD_ZIP = os.path.join(TEST_ROOT, 'Antarctic-Discovery_20160116-20160129.zip')
+BAD_ZIP = os.path.join(TEST_ROOT, 'Antarctic-Discovery_20160116-20160129_BAD.zip')
 
 
 class TestSoopBaHandler(HandlerTestCase):
@@ -61,6 +67,14 @@ class TestSoopBaHandler(HandlerTestCase):
                          'IMOS/SOOP/SOOP-BA/raw/VKAD_Antarctic-Discovery/Antarctic-Discovery_20160116-20160129/'
                          + raw.name)
         self.assertEqual(raw.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+
+    def test_bad_zip(self):
+        """ test with missing netcdf in ZIP archive"""
+        self.run_handler_with_exception(InvalidInputFileError, BAD_ZIP)
+
+    def test_bad_nc(self):
+        """Test with invalid netcdf missing a report_id"""
+        self.run_handler_with_exception(InvalidFileContentError, BAD_NC)
 
 
 if __name__ == '__main__':

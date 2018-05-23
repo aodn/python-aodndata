@@ -50,8 +50,14 @@ class SoopBaFileClassifier(FileClassifier):
 
     @classmethod
     def get_deployment_id(cls, src_file, ship_code):
-        # harmonise way shipcallsign are written in  deployment codes: replace underscore by hyphen
-        # deployment_id format : shipcallsign_datestart-dateend
+        """
+        harmonise way shipcallsign are written in  deployment codes: replace underscore by hyphen
+        deployment_id format : shipcallsign_datestart-dateend
+        get_nc_att will raise a n exception if the attribute is missing
+        :param src_file:
+        :param ship_code:
+        :return: deployment_id
+        """
 
         deployment_id = cls._get_nc_att(src_file.src_path, 'deployment_id')
         name_parts = deployment_id.split('_')
