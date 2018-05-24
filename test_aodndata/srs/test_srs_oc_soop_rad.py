@@ -10,6 +10,9 @@ TEST_ROOT = os.path.join(os.path.dirname(__file__))
 NC_FILE = os.path.join(TEST_ROOT,
                        'IMOS_SRS-OC_F_20180214T012503Z_VMQ9273_FV01_DALEC_END-20180214T054433Z.nc')
 
+NC_FILE_FV02 = os.path.join(TEST_ROOT,
+                       'IMOS_SRS-OC_F_20130730T010221Z_VMQ9273_FV02_DALEC_20130730T082813Z_C-20180522T055535Z.nc')
+
 NC_FILE_CREATION_DATE = os.path.join(TEST_ROOT,
                                      'IMOS_SRS-OC_F_20180214T012503Z_VMQ9273_FV01_DALEC_END-20180214T054433Z_C-20180101T000000Z.nc')
 
@@ -36,6 +39,11 @@ class TestSrsOcSoopRadHandler(HandlerTestCase):
         dest_path = SrsOcSoopRadHandler.dest_path(NC_FILE_CREATION_DATE)
         self.assertEqual(dest_path,
                          os.path.join('IMOS/SRS/OC/radiometer/VMQ9273_Solander/2018', os.path.basename(NC_FILE)))
+
+        dest_path = SrsOcSoopRadHandler.dest_path(NC_FILE_FV02)
+        self.assertEqual(dest_path,
+                         os.path.join('IMOS/SRS/OC/radiometer/VMQ9273_Solander/2013/fv02-products',
+                                      'IMOS_SRS-OC_F_20130730T010221Z_VMQ9273_FV02_DALEC_20130730T082813Z.nc'))
 
     def test_bad_netcdf(self):
         with self.assertRaises(InvalidFileNameError):
