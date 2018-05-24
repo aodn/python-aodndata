@@ -66,13 +66,12 @@ class AnfogFileClassifier(FileClassifier):
         IMOS/ANFOG/platform/deployment_code/
         in a REALTIME path like :
         IMOS/ANFOG/REALTIME/platform/deployment_code/ """
-        hierarchy = path.split('/')
-        assert len(hierarchy) == 4, "Path should have 4 parts "
-        rt_path = []
-        rt_path.extend([hierarchy[0], hierarchy[1]])
-        rt_path.append('REALTIME')
-        rt_path.extend([hierarchy[2], hierarchy[3]])
+        try:
+            org, facility, platform, deployment_code = path.split('/')
+        except ValueError:
+            raise ValueError("path '{path}' must have 4 parts".format(path=path))
 
+        rt_path = [org, facility, 'REALTIME', platform, deployment_code]
         return cls._make_path(rt_path)
 
     @classmethod
