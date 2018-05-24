@@ -96,7 +96,7 @@ class AnfogHandler(HandlerBase):
             # if path exist => update, delete previous DM version;
             #        if not =>  new mission, clear RT data
             results = self.state_query.query_storage(destination)
-            if results:
+            if destination in results:
                 self.handle_previous_version('DM', destination, 'update')
             else:
                 #  RT and DM folder hierarchy similar except that RT has additional level
@@ -147,7 +147,7 @@ class AnfogHandler(HandlerBase):
             # -if yes: need to delete previous netcdf file
             # -if not: add new entry in Harvestmissionfile.csv ;
             results = self.state_query.query_storage(destination)
-            if results:  # directory exists, contains files that need to be deleted
+            if destination in results:  # directory exists, contains files that need to be deleted
                 self.handle_previous_version('RT', destination, 'in_progress')
             else:  # path doesn't exist, mission is new
                 deployment = AnfogFileClassifier.get_deployment_code(fv00.src_path)
