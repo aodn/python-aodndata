@@ -76,23 +76,24 @@ class AnfogFileClassifier(FileClassifier):
         return cls._make_path(rt_path)
 
     @classmethod
-    def dest_path(cls, src_file):
+    def get_destination(cls, src_path):
+        name = os.path.basename(src_path)
         dir_list = []
-        fields = cls._get_file_name_fields(src_file.name)
-        platform = cls.get_platform(src_file.name)
-        deployment_code = cls.get_deployment_code(src_file.src_path)
+        fields = cls._get_file_name_fields(name)
+        platform = cls.get_platform(name)
+        deployment_code = cls.get_deployment_code(src_path)
 
-        if re.match(cls.NRL_REGEX, src_file.name):
+        if re.match(cls.NRL_REGEX, name):
             project = cls.NRL_BASE
             dir_list.append(project)
-        elif re.match(cls.DSTG_REGEX, src_file.name):
+        elif re.match(cls.DSTG_REGEX, name):
             project = cls.DSTG_BASE
             dir_list.append(project)
         else:  # IMOS ANFOG RT or DM
             project = fields[0]
             facility = fields[1]
             dir_list.extend([project, facility])
-            if re.match(cls.ANFOG_RT_REGEX, src_file.name):
+            if re.match(cls.ANFOG_RT_REGEX, name):
                 data_type = 'REALTIME'
                 dir_list.append(data_type)
 
