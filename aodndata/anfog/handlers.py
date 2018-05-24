@@ -198,22 +198,22 @@ class AnfogHandler(HandlerBase):
         for filename in previous_file_list.iteritems():
             if filename.endswith('.nc'):
                 previous_file = PipelineFile(filename)
-                self.file_collection.add(previous_file)
                 previous_file.dest_path = os.path.join(destination, previous_file.name)
                 previous_file.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
+                self.file_collection.add(previous_file)
             else:
                 if mode == 'RT' and re.match(AnfogFileClassifier.RT_PNG_TRANSECT_REGEX, filename):
                     # delete plot of transect results
                     previous_file = PipelineFile(filename)
-                    self.file_collection.add(previous_file)
                     previous_file.dest_path = os.path.join(destination, previous_file.name)
                     previous_file.publish_type = PipelineFilePublishType.DELETE_ONLY
+                    self.file_collection.add(previous_file)
                 elif mode == 'DM' and mission_status == 'delayed_mode':
                     # clear all RT files
                     previous_file = PipelineFile(filename)
-                    self.file_collection.add(previous_file)
                     previous_file.dest_path = os.path.join(destination, previous_file.name)
                     previous_file.publish_type = PipelineFilePublishType.DELETE_ONLY
+                    self.file_collection.add(previous_file)
 
     def get_data_mode(self):
         """Based on ZIP content, define the data mode - DM or RT
@@ -248,9 +248,9 @@ class AnfogHandler(HandlerBase):
         # jpg,kml and QC_Report.pdf -> S3
 
         # construct collection of files to archive
-        archive_collection = PipelineFileCollection()
         raw = self.file_collection.filter_by_attribute_regex('name', '.*rawfiles.zip$')
         fv00 = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.FV00_REGEX)
+        archive_collection = PipelineFileCollection()
         archive_collection.update(raw)
         archive_collection.update(fv00)
 

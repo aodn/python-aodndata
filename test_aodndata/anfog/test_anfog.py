@@ -54,6 +54,7 @@ class TestAnfogHandler(HandlerTestCase):
                          'IMOS_ANFOG_BCEOPSTUV_20180503T080042Z_SL210_FV01_timeseries_END-20180505T054942Z.nc')
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
+        self.assertTrue(f.is_harvested)
 
     def test_good_anfog_dm_zip(self):
 
@@ -83,6 +84,7 @@ class TestAnfogHandler(HandlerTestCase):
                              'IMOS/ANFOG/slocum_glider/BassStrait20160302/' + nc.name)
             self.assertTrue(nc.is_stored)
             self.assertTrue(nc.is_checked)
+            self.assertTrue(nc.is_harvested)
 
     def test_good_anfog_rt_zip(self):
 
@@ -104,6 +106,7 @@ class TestAnfogHandler(HandlerTestCase):
             self.assertEqual(nc.dest_path,
                              'IMOS/ANFOG/REALTIME/slocum_glider/Forster20180205/' + nc.name)
             self.assertTrue(nc.is_stored)
+            self.assertTrue(nc.is_harvested)
 
     def test_dstg(self):
         # test future Reef Map processing
@@ -117,6 +120,7 @@ class TestAnfogHandler(HandlerTestCase):
         self.assertEqual(f.dest_path,
                          'Department_of_Defence/DSTG/slocum_glider/TalismanSaberB20130706/' + f.name)
         self.assertTrue(f.is_stored)
+        self.assertTrue(f.is_harvested)
 
     def test_good_file_with_compliance_check(self):
         # we also expect this to succeed, since the test file is known be CF compliant
@@ -130,6 +134,7 @@ class TestAnfogHandler(HandlerTestCase):
         self.assertEqual(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
+        self.assertTrue(f.is_harvested)
 
 
 if __name__ == '__main__':
