@@ -18,6 +18,7 @@ ENTRY_POINTS = {
         'GenericHandler = aodndata.common.generic:GenericHandler',
         'MooringsHandler = aodndata.moorings.handlers:MooringsHandler',
         'SoopAsfSstHandler = aodndata.soop.soop_asf_sst:SoopAsfSstHandler',
+        'SoopBaHandler = aodndata.soop.soop_ba:SoopBaHandler',
         'SoopTrvHandler = aodndata.soop.soop_trv:SoopTrvHandler',
         'SoopXbtDmHandler = aodndata.soop.soop_xbt_dm:SoopXbtDmHandler',
         'SrsAltHandler = aodndata.srs.srs_altimetry:SrsAltHandler',
