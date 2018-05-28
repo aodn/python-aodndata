@@ -90,7 +90,7 @@ class SoopBaHandler(HandlerBase):
             r = re.compile(".*.nc$")
             prev_file = filter(r.match, keylist)
             assert len(prev_file) == 1, "Found more than one previous versions of the netcdf file. Aborting "
-            self.add_to_collection(prev_file[0], PipelineFilePublishType.DELETE_UNHARVEST)
+            self.add_previous_version_file_to_collection(prev_file[0], PipelineFilePublishType.DELETE_UNHARVEST)
         else:
             # check previous file widcard :
             # can be '.inf', '.nc.png','.pitch.csv','.roll.csv',.gps.csv'
@@ -105,11 +105,11 @@ class SoopBaHandler(HandlerBase):
             prev_file = filter(r.match, keylist)
             assert len(
                 prev_file) == 0, 'Found more than one previous versions of the extension %s. Aborting' % extension
-            self.add_to_collection(prev_file[0], PipelineFilePublishType.DELETE_ONLY)
+            self.add_previous_version_file_to_collection(prev_file[0], PipelineFilePublishType.DELETE_ONLY)
 
-    def add_to_collection(self, prev_file, publish_type):
+    def add_previous_version_file_to_collection(self, prev_file, publish_type):
         """add a previous  version file to the a file collection with the relevant attributes"""
-        file_to_delete = PipelineFile(prev_file)
+        file_to_delete = PipelineFile(prev_file, is_deletion=True)
         self.file_collection.add(file_to_delete)
         file_to_delete.dest_path = prev_file
         file_to_delete.publish_type = publish_type
