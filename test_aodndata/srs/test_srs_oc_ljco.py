@@ -13,6 +13,9 @@ NC_FILE_ACS = os.path.join(TEST_ROOT,
 NC_FILE_DALEC = os.path.join(TEST_ROOT,
                              'IMOS_SRS-OC-LJCO_F_20170320T230011Z_LJCO_FV01_DALEC_20170321T001305Z.nc')
 
+NC_FILE_DALEC_FV02 = os.path.join(TEST_ROOT,
+                             'IMOS_SRS-OC-LJCO_F_20160526T231433Z_LJCO_FV02_DALEC_20160527T045958Z_C-20180522T044032Z.nc')
+
 NC_FILE_BAD_NAME_1 = os.path.join(TEST_ROOT,
                                   'IMOS_SRS-OC-LJCO_F_20170320T230011Z_LJCO_FV01_TEST_20170321T001305Z.nc')
 
@@ -59,6 +62,10 @@ class TestSrsOcLjcoHandler(HandlerTestCase):
         handler = self.run_handler(NC_FILE_DALEC)
         f = handler.file_collection[0]
         self.assertEqual(f.dest_path, os.path.join('IMOS/SRS/OC/LJCO/DALEC/2017/03/', os.path.basename(NC_FILE_DALEC)))
+
+        self.assertEqual(SrsOcLjcoHandler.dest_path(NC_FILE_DALEC_FV02),
+                         os.path.join('IMOS/SRS/OC/LJCO/DALEC/2016/05/fv02-products',
+                                      'IMOS_SRS-OC-LJCO_F_20160526T231433Z_LJCO_FV02_DALEC_20160527T045958Z.nc'))
 
     def test_good_netcdf_path(self):
         self.assertEqual(SrsOcLjcoHandler.dest_path(NC_FILE_WQM_HOURLY),
