@@ -48,7 +48,7 @@ class SoopBaHandler(HandlerBase):
             # netcdf file have to be deleted since filename contains creation date=>never overwritten
             results = self.state_query.query_storage(destination)
             if results:
-                self.get_previous_version(results, nc.name)
+                self.get_previous_version(results, destination, nc.name)
 
             non_nc_files = PipelineFileCollection(f for f in self.file_collection if f.file_type is not FileType.NETCDF)
             for non_nc in non_nc_files:
@@ -61,7 +61,7 @@ class SoopBaHandler(HandlerBase):
                     non_nc.publish_type = PipelineFilePublishType.UPLOAD_ONLY
                     non_nc.dest_path = os.path.join(destination, non_nc.name)
                     if results:
-                        self.get_previous_version(results, non_nc.name)
+                        self.get_previous_version(results, destination, non_nc.name)
 
         else:  # singe netcdf file
             netcdf = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
@@ -74,44 +74,52 @@ class SoopBaHandler(HandlerBase):
             # netcdf file have to be deleted since filename contains creation date=>never overwritten
             results = self.state_query.query_storage(destination)
             if results:
-                self.get_previous_version(results, nc.name)
+                self.get_previous_version(results, destination, nc.name)
 
-    def get_previous_version(self, previous_file_list, input_file):
+    def get_previous_version(self, previous_file_list, path, input_file_name):
         """
             Find previous version of each incoming file based on its type/extension and
             add them to the filecollection with the correct publish type
             extension can be: .inf', '.nc.png','.pitch.csv','.roll.csv',.gps.csv'
             inputs: previous_file_list : dictionary containing file listing(full path) and metadata from destination
                   input_file :  file basename
-                  destination : full destination path
+                   path : full destination path
         """
         keylist = previous_file_list.keys()
-        if input_file.endswith('.nc'):
+        if input_file_name.endswith('.nc'):
             r = re.compile(".*.nc$")
             prev_file = filter(r.match, keylist)
             assert len(prev_file) == 1, "Found more than one previous versions of the netcdf file. Aborting "
-            self.add_to_collection(prev_file[0], PipelineFilePublishType.DELETE_UNHARVEST)
+            self.add_previous_version_file_to_collection(prev_file[0], path, PipelineFilePublishType.DELETE_UNHARVEST)
         else:
+            # Either the uploded file name has the same name published file => no action, file will be overwritten
+            # OR Sort file per wildcard and work out which one to delete (
             # check previous file widcard :
             # can be '.inf', '.nc.png','.pitch.csv','.roll.csv',.gps.csv'
-            previous_version_extension = input_file.split('.')[1:]
-            p = previous_version_extension
-            if len(p) > 1:
-                extension = "%s%s%s%s%s" % ('.*.', p[0], '.', p[1], '$')
+            if input_file_name in previous_file_list.values():
+                pass
             else:
-                extension = "%s%s%s" % ('.*.', p[0], '$')
+                previous_version_extension = input_file_name.split('.')[1:]
+                p = previous_version_extension
+                if len(p) > 1:
+                    extension = "%s%s%s%s%s" % ('.*.', p[0], '.', p[1], '$')
+                else:
+                    extension = "%s%s%s" % ('.*.', p[0], '$')
 
-            r = re.compile(extension)
-            prev_file = filter(r.match, keylist)
-            assert len(
-                prev_file) == 0, 'Found more than one previous versions of the extension %s. Aborting' % extension
-            self.add_to_collection(prev_file[0], PipelineFilePublishType.DELETE_ONLY)
+                r = re.compile(extension)
+                prev_file = filter(r.match, keylist)
 
-    def add_to_collection(self, prev_file, publish_type):
+                assert len(
+                    prev_file) <= 1, 'Found more than one previous versions of the extension %s. Aborting' % extension
+                if prev_file == 1:
+                    self.add_previous_version_file_to_collection(prev_file[0], path,
+                                                                 PipelineFilePublishType.DELETE_ONLY)
+
+    def add_previous_version_file_to_collection(self, prev_file, path, publish_type):
         """add a previous  version file to the a file collection with the relevant attributes"""
-        file_to_delete = PipelineFile(prev_file)
+        file_to_delete = PipelineFile(prev_file, is_deletion=True)
         self.file_collection.add(file_to_delete)
-        file_to_delete.dest_path = prev_file
+        file_to_delete.dest_path = os.path.join(path, os.path.basename(prev_file))
         file_to_delete.publish_type = publish_type
 
     dest_path = SoopBaFileClassifier.dest_path
