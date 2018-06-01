@@ -5,6 +5,40 @@ from datetime import datetime
 from aodncore.pipeline import HandlerBase
 from aodncore.pipeline.exceptions import InvalidFileNameError
 
+SRS_OC_GRIDDED_VARIABLES = ['chl_gsm', 'chl_oc3', 'chl_oc4', 'dt', 'ipar', 'K_490', 'l2_flags',
+                               'nanop_brewin2010at', 'nanop_brewin2012in', 'npp_vgpm_eppley_gsm',
+                               'npp_vgpm_eppley_oc3', 'npp_vgpm_eppley_oc4', 'owtd', 'par', 'picop_brewin2010at',
+                               'picop_brewin2012in', 'sst', 'sst_quality', 'tsm_clark16', 'tsm_clark']
+
+OC_VARIABLES = '|'.join(SRS_OC_GRIDDED_VARIABLES)
+OC_GRIDDED_PREFIX_PATH = 'IMOS/SRS/OC/gridded'
+
+RJOHNSON_FILE_PATTERN = re.compile(r"""
+                                ^(?P<data_parameter_code>A|S)
+                                (?P<nc_time_cov_start>[0-9]{14})\.L3m_
+                                (?P<time_coverage_resolution>8D|MO)_
+                                SO_Chl_9km\.Johnson_SO_Chl\.nc$
+                                """, re.VERBOSE)
+
+IMOS_OC_FILE_PATTERN = re.compile(r"""
+                                ^(?P<data_parameter_code>A|S)\.
+                                (?P<time_coverage_resolution>P1D|P1H)\.
+                                (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)\.
+                                (?P<sat_pass>aust|overpass)\.
+                                (?P<oc_variable>%s)\.nc$
+                                """ % OC_VARIABLES, re.VERBOSE)
+
+
+def get_fields_from_filename(filename, pattern=IMOS_OC_FILE_PATTERN):
+    m = pattern.match(os.path.basename(filename))
+    if m is None:
+        raise InvalidFileNameError(
+            "file name: \"{filename}\" not matching regex to deduce dest_path".format(
+                filename=os.path.basename(filename)))
+
+    fields = m.groupdict()
+    return fields
+
 
 class SrsOcGriddedHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
@@ -13,50 +47,43 @@ class SrsOcGriddedHandler(HandlerBase):
 
     @staticmethod
     def dest_path(filepath):
-        gridded_oc_prefix_path = 'IMOS/SRS/OC/gridded'
-        srs_oc_gridded_variables_ls = ['chl_gsm', 'chl_oc3', 'chl_oc4', 'dt', 'ipar', 'K_490', 'l2_flags',
-                                     'nanop_brewin2010at', 'nanop_brewin2012in', 'npp_vgpm_eppley_gsm',
-                                     'npp_vgpm_eppley_oc3', 'npp_vgpm_eppley_oc4', 'owtd', 'par', 'picop_brewin2010at',
-                                     'picop_brewin2012in', 'sst', 'sst_quality', 'tsm_clark16', 'tsm_clark']
-        oc_variables = '|'.join(srs_oc_gridded_variables_ls)
+        file_basename = os.path.basename(filepath)
 
-        if 'P1D' in filepath or 'P1H' in filepath :
-            m = re.search(r'^(A|S)\.(P1D|P1H)\.([0-9]{8}T[0-9]{6}Z)\.(aust|overpass)\.(%s)\.nc$' % oc_variables, filepath)
-            if m is None:
-                raise InvalidFileNameError("file name: \"{filename}\" not matching regex to deduce dest_path for srs oc gridded seawifs/aqua".format(filename=os.path.basename(filepath)))
-            else:
-                nc_time_cov_start = datetime.strptime(m.group(3), '%Y%m%dT%H%M%SZ')
+        # NON CONTRIBUTED DATA SET
+        if IMOS_OC_FILE_PATTERN.match(file_basename):
+            fields = get_fields_from_filename(filepath, pattern=IMOS_OC_FILE_PATTERN)
+            nc_time_cov_start = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%dT%H%M%SZ')
+            data_parameter_code = fields['data_parameter_code']
 
-                if m.group(1) == 'A':
-                    product_name = 'aqua'
-                elif m.group(1) == 'S':
-                    product_name = 'seawifs'
+            if data_parameter_code == 'A':
+                product_name = 'aqua'
+            elif data_parameter_code == 'S':
+                product_name = 'seawifs'
 
-                path = os.path.join(gridded_oc_prefix_path, product_name, m.group(2),
-                                    '%d' % nc_time_cov_start.year, '%02d' % nc_time_cov_start.month,
-                                    os.path.basename(filepath))
-                return path
+            path = os.path.join(OC_GRIDDED_PREFIX_PATH, product_name, fields['time_coverage_resolution'],
+                                '%d' % nc_time_cov_start.year, '%02d' % nc_time_cov_start.month,
+                                os.path.basename(filepath))
+            return path
 
-        elif 'Johnson' in filepath:
-            m = re.search(r'^(A|S)([0-9]{14})\.L3m_(8D|MO)_SO_Chl_9km\.Johnson_SO_Chl\.nc$', filepath)
+        # CONTRIBUTED DATA SET
+        elif RJOHNSON_FILE_PATTERN.match(file_basename):
+            fields = get_fields_from_filename(filepath, pattern=RJOHNSON_FILE_PATTERN)
+            data_parameter_code = fields['data_parameter_code']
+            time_coverage_resolution =  fields['time_coverage_resolution']
 
-            if m is None:
-                raise InvalidFileNameError(
-                    "file name: \"{filename}\" not matching regex to deduce dest_path for srs oc gridded contributed data set".format(filename=os.path.basename(filepath)))
-            else:
+            if data_parameter_code == 'A':
+                product_name = 'aqua'
+            elif data_parameter_code == 'S':
+                product_name = 'seawifs'
 
-                if m.group(1) == 'A':
-                    product_name = 'aqua'
-                elif m.group(1) == 'S':
-                    product_name = 'seawifs'
+            if time_coverage_resolution == '8D':
+                time_cov = '8d'
+            elif time_coverage_resolution == 'MO':
+                time_cov = '1m'
 
-                if m.group(3) == '8D':
-                    time_cov = '8d'
-                elif m.group(3) == 'MO':
-                    time_cov = '1m'
-
-                return os.path.join(gridded_oc_prefix_path, 'contributed', 'SO-Johnson',
-                                    'chl', time_cov, product_name, os.path.basename(filepath))
+            return os.path.join(OC_GRIDDED_PREFIX_PATH, 'contributed', 'SO-Johnson',
+                                'chl', time_cov, product_name, file_basename)
 
         else:
-            raise InvalidFileNameError("file name: \"{filename}\" not matching regex to deduce dest_path".format(filename=os.path.basename(filepath)))
+            raise InvalidFileNameError("file name: \"{filename}\" not matching regex to deduce dest_path".
+                                       format(filename=file_basename))

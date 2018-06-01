@@ -126,13 +126,13 @@ class TestSrsGhrsstHandler(HandlerTestCase):
 
     def test_various_path(self):
         for nc_file in SRS_VARIOUS.keys():
-            dest_path = SrsGhrsstHandler.dest_path(nc_file)
+            dest_path = SrsGhrsstHandler.dest_path(os.path.join(TEST_ROOT, nc_file))
             self.assertEqual(dest_path, os.path.join('IMOS', SRS_VARIOUS[nc_file], nc_file))
 
     def test_various_bad_path(self):
         for nc_file in SRS_BAD:
             with self.assertRaises(InvalidFileNameError):
-                SrsGhrsstHandler.dest_path(nc_file)
+                SrsGhrsstHandler.dest_path(os.path.join(TEST_ROOT, nc_file))
 
 
 if __name__ == '__main__':
