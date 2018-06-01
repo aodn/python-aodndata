@@ -85,10 +85,9 @@ class SoopBaHandler(HandlerBase):
                   input_file :  file basename
                    path : full destination path
         """
-        keylist = previous_file_list.keys()
         if input_file_name.endswith('.nc'):
             r = re.compile(".*.nc$")
-            prev_file = filter(r.match, keylist)
+            prev_file = filter(r.match, previous_file_list.keys())
             assert len(prev_file) == 1, "Found more than one previous versions of the netcdf file. Aborting "
             self.add_previous_version_file_to_collection(prev_file[0], path, PipelineFilePublishType.DELETE_UNHARVEST)
         else:
@@ -96,7 +95,7 @@ class SoopBaHandler(HandlerBase):
             # OR Sort file per wildcard and work out which one to delete (
             # check previous file widcard :
             # can be '.inf', '.nc.png','.pitch.csv','.roll.csv',.gps.csv'
-            if input_file_name in previous_file_list.values():
+            if input_file_name in previous_file_list.keys():
                 pass
             else:
                 previous_version_extension = input_file_name.split('.')[1:]
@@ -107,11 +106,11 @@ class SoopBaHandler(HandlerBase):
                     extension = "%s%s%s" % ('.*.', p[0], '$')
 
                 r = re.compile(extension)
-                prev_file = filter(r.match, keylist)
+                prev_file = filter(r.match, previous_file_list.keys())
 
                 assert len(
                     prev_file) <= 1, 'Found more than one previous versions of the extension %s. Aborting' % extension
-                if prev_file == 1:
+                if len(prev_file) == 1:
                     self.add_previous_version_file_to_collection(prev_file[0], path,
                                                                  PipelineFilePublishType.DELETE_ONLY)
 
