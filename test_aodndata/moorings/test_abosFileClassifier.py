@@ -1,16 +1,16 @@
 #!/usr/bin/env python
-"""Unit tests for ABOSFileClassifier class"""
+"""Unit tests for AbosFileClassifier class"""
 
 import os
 import shutil
 import unittest
 from tempfile import mkdtemp
 
-from dest_path import ABOSFileClassifier, FileClassifierException
-from test_file_classifier import make_test_file
+from aodncore.testlib import BaseTestCase, make_test_file
+from aodndata.moorings.classifiers import AbosFileClassifier
 
 
-class TestABOSFileClassifier(unittest.TestCase):
+class TestAbosFileClassifier(BaseTestCase):
     """Unit tests for ABOS dest_path.py
 
     Test cases:
@@ -21,6 +21,7 @@ class TestABOSFileClassifier(unittest.TestCase):
     * SOTS/SAZ CTD_timeseries
     * SOTS/SAZ Velocity
     * SOTS/SAZ Sediment_traps
+    * SOTS sediment trap images
     * Pulse DM
     * Pulse RT
     * FluxPulse RT
@@ -46,7 +47,7 @@ class TestABOSFileClassifier(unittest.TestCase):
                        TEMP={},
                        DEPTH={}
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/DA/EAC5/Temperature')
         self.assertEqual(dest_filename, filename)
 
@@ -60,7 +61,7 @@ class TestABOSFileClassifier(unittest.TestCase):
                        PRES_REL={},
                        DEPTH={}
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/DA/EAC5/CTD_timeseries')
         self.assertEqual(dest_filename, filename)
 
@@ -75,7 +76,7 @@ class TestABOSFileClassifier(unittest.TestCase):
                                   'time_coverage_end': '2013-10-08T19:00:00Z'
                                   },
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2012')
         self.assertEqual(dest_filename, filename)
 
@@ -90,7 +91,7 @@ class TestABOSFileClassifier(unittest.TestCase):
                        CNDC={},
                        DOX1={}
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/DA/TOTTEN1/Biogeochem_timeseries')
         self.assertEqual(dest_filename, filename)
 
@@ -107,7 +108,7 @@ class TestABOSFileClassifier(unittest.TestCase):
                        CDIR={},
                        TEMP={}
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/DA/TOTTEN1/Velocity')
         self.assertEqual(dest_filename, filename)
 
@@ -123,7 +124,7 @@ class TestABOSFileClassifier(unittest.TestCase):
                                   'time_coverage_end': '2011-08-04T05:30:00Z'
                                   },
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2010')
         self.assertEqual(dest_filename, filename)
 
@@ -139,9 +140,20 @@ class TestABOSFileClassifier(unittest.TestCase):
                                   'time_coverage_end': '2015-02-10T04:39:01Z'
                                   },
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2012')
         self.assertEqual(dest_filename, filename)
+
+    def test_sots_images_zip(self):
+        filename = 'images_SAZ47-15-2012.zip'
+        testfile = os.path.join(self.tempdir, filename)
+        dest_path = AbosFileClassifier.dest_path(testfile)
+        self.assertEqual(os.path.join('IMOS/ABOS/SOTS/images/', filename), dest_path)
+
+        filename = 'images_SAZ47-17-2015.zip'
+        testfile = os.path.join(self.tempdir, filename)
+        dest_path = AbosFileClassifier.dest_path(testfile)
+        self.assertEqual(os.path.join('IMOS/ABOS/SOTS/images/', filename), dest_path)
 
     def test_pulse_delayed(self):
         filename = 'IMOS_ABOS-SOTS_20130507T080000Z_Pulse_FV01_Pulse-10-2013_END-20131013T210000Z_C-20160315T000000Z.nc'
@@ -153,7 +165,7 @@ class TestABOSFileClassifier(unittest.TestCase):
                                   'time_coverage_end': '2013-10-13T21:00:00Z'
                                   }
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2013')
         self.assertEqual(dest_filename, filename)
 
@@ -164,7 +176,7 @@ class TestABOSFileClassifier(unittest.TestCase):
                                   'platform_code': 'Pulse',
                                   'time_coverage_start': '2015-03-25T11:00:00Z'}
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2015/real-time')
         self.assertEqual(dest_filename, filename)
 
@@ -177,7 +189,7 @@ class TestABOSFileClassifier(unittest.TestCase):
                                   'time_coverage_start': '2016-03-16T14:00:00Z',
                                   'time_coverage_end': '2017-10-02T00:00:00Z'}
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2016/real-time')
         self.assertEqual(dest_filename, filename)
 
@@ -189,7 +201,7 @@ class TestABOSFileClassifier(unittest.TestCase):
                                   'time_coverage_start': '2015-01-01T00:00:00Z',
                                   'time_coverage_end': '2015-12-12T00:00:00Z'},
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2014')
         self.assertEqual(dest_filename, filename)
 
@@ -199,18 +211,18 @@ class TestABOSFileClassifier(unittest.TestCase):
         make_test_file(testfile, {'time_coverage_start': '2015-01-01T00:00:00Z',
                                   'time_coverage_end': '2015-01-01T23:30:00Z'},
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2015/real-time')
         self.assertEqual(dest_filename, filename)
 
-    def test_one_day_delayed(self):
+    def test_sofs_one_day_delayed(self):
         filename = 'IMOS_ABOS-ASFS_CMST_20150101T000000Z_SOFS_FV02_C-20171002T000000Z.nc'
         testfile = os.path.join(self.tempdir, filename)
         make_test_file(testfile, {'data_mode': 'D',
                                   'time_coverage_start': '2015-01-01T00:00:00Z',
                                   'time_coverage_end': '2015-01-01T23:30:00Z'},
                        )
-        dest_dir, dest_filename = os.path.split(ABOSFileClassifier.dest_path(testfile))
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2015')
         self.assertEqual(dest_filename, filename)
 

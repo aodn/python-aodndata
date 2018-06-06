@@ -1,6 +1,7 @@
 import os
 import re
 
+from datetime import timedelta
 from netCDF4 import Dataset
 
 from aodncore.pipeline import FileClassifier
@@ -132,7 +133,10 @@ class MooringsFileClassifier(FileClassifier):
         return cls._make_path(dir_list)
 
 
-class ABOSFileClassifier(MooringFileClassifier):
+class AbosFileClassifier(MooringsFileClassifier):
+
+    FACILITY = 'ABOS'
+    SAZ_IMAGES_ZIP_PATTERN = re.compile(r"images_SAZ47-\d{2}-(?P<year>\d{4})\.zip$")
 
     @classmethod
     def _get_data_category(cls, input_file):
@@ -155,7 +159,9 @@ class ABOSFileClassifier(MooringFileClassifier):
         if var_names.intersection(cls.TEMP_VAR):
             return 'Temperature'
 
-        cls._error("Could not determine data category for '%s'" % input_file)
+        raise InvalidFileContentError(
+            "Could not determine data category for '{name}'".format(name=input_file)
+        )
 
     @classmethod
     def _get_product_level(cls, input_file):
@@ -226,11 +232,13 @@ class ABOSFileClassifier(MooringFileClassifier):
     @classmethod
     def dest_path(cls, input_file):
         """
-        Destination object path for an ABOS netCDF file. Of the form:
+        Destination object path for an ABOS file. Of the form:
 
           'IMOS/ABOS/DA/<platform_code>/<data_category>/<product_level>'
           or
-          'IMOS/ABOS/SOTS/<year_of_deployment>/<delivery_mode>'
+          'IMOS/ABOS/SOTS/<year_of_deployment>/<product_type>'
+          or
+          'IMOS/ABOS/SOTS/images'
 
         where
         <platform_code> is the value of the platform_code global attribute
@@ -239,14 +247,22 @@ class ABOSFileClassifier(MooringFileClassifier):
          - 'non-QC' for FV00 files
          - empty for FV01 files
         <year_of_deployment> is the year in which the deployment started
-        <delivery_mode> is either empty (for delayed mode data) or 'real-time'
+        <product_type> is
+         - 'real-time';
+         - empty (for delayed mode data)
+
         The basename of the input file is appended.
 
         """
-        dir_list = [cls.PROJECT]
+        dir_list = [cls.PROJECT, cls.FACILITY]
+        input_file_basename = os.path.basename(input_file)
 
-        (fac, subfac) = cls._get_facility(input_file)
-        dir_list.append(fac)
+        # deal with image zip files first, as they're simpler
+        if cls.SAZ_IMAGES_ZIP_PATTERN.match(input_file_basename):
+            dir_list.extend(['SOTS', 'images', input_file_basename])
+            return cls._make_path(dir_list)
+
+        fac, subfac = cls._get_facility(input_file)
 
         if subfac == 'DA':
             dir_list.append(subfac)
@@ -259,9 +275,12 @@ class ABOSFileClassifier(MooringFileClassifier):
             if cls._is_realtime(input_file):
                 dir_list.append('real-time')
         else:
-            cls._error('Unknown ABOS sub-facility {sub}'.format(sub=subfac))
+            raise InvalidFileNameError(
+                "Unknown ABOS sub-facility '{subfac}' for file '{input_file}'".format(subfac=subfac,
+                                                                                      input_file=input_file)
+            )
 
-        dir_list.append(os.path.basename(input_file))
+        dir_list.append(input_file_basename)
 
         return cls._make_path(dir_list)
 
