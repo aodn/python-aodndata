@@ -95,9 +95,7 @@ class TestSoopBaHandler(HandlerTestCase):
         preexisting_files.update([existing_file1, existing_file2])
 
         # set the files to UPLOAD_ONLY
-        preexisting_files.set_default_publish_types(include_regexes='.*', exclude_regexes=None,
-                                                    addition_type=PipelineFilePublishType.UPLOAD_ONLY,
-                                                    deletion_type=PipelineFilePublishType.NO_ACTION)
+        preexisting_files.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
 
         # upload the 'preexisting_files' collection to the unit test's temporary upload location
         broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
