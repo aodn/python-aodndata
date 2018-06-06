@@ -16,6 +16,7 @@ ENTRY_POINTS = {
         'AsyncUploadHandler = aodndata.common.asyncupload:AsyncUploadHandler',
         'FaimmsHandler = aodndata.aims.faimms:FaimmsHandler',
         'GenericHandler = aodndata.common.generic:GenericHandler',
+        'GslaHandler = aodndata.gsla.handler:GslaHandler',
         'MooringsHandler = aodndata.moorings.handlers:MooringsHandler',
         'SoopAsfSstHandler = aodndata.soop.soop_asf_sst:SoopAsfSstHandler',
         'SoopBaHandler = aodndata.soop.soop_ba:SoopBaHandler',
