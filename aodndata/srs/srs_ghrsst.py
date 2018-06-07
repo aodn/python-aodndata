@@ -5,6 +5,95 @@ from datetime import datetime
 from aodncore.pipeline import HandlerBase
 from aodncore.pipeline.exceptions import InvalidFileNameError
 
+L3S_L3C_FILE_PATTERN = re.compile(r"""
+                                ^(?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<product_type>L3S|L3C)_.*-AVHRR
+                                (?P<sat_number>.*)_D-
+                                (?P<temporal_extent>1d|3d|6d|14d|1m)_
+                                (?P<day_time>day|night|dn).*\.nc$
+                                """, re.VERBOSE)
+
+L3U_FILE_PATTERN = re.compile(r"""
+                                ^(?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<product_type>L3U)_.*-AVHRR
+                                (?P<sat_number>[0-9].*)_D-
+                                (?P<pass_direction>Asc|Des)
+                                (?P<optional>_Southern|)
+                                \.nc$
+                                """, re.VERBOSE)
+
+L3P_FILE_PATTERN = re.compile(r"""
+                                ^(?P<nc_time_cov_start>[0-9]{8})-ABOM-
+                                (?P<product_type>L3P)_.*-AVHRR_.*\.nc$
+                                """, re.VERBOSE)
+
+L4_FILE_PATTERN = re.compile(r"""
+                                ^(?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<product_type>L4)_GHRSST-SSTfnd-
+                                (?P<product_name>RAMSSA|GAMSSA)-.*\.nc$
+                                """, re.VERBOSE)
+
+GHRSST_PREFIX_PATH = 'IMOS/SRS/SST/ghrsst'
+
+
+def get_fields_from_filename(filename, pattern=L3S_L3C_FILE_PATTERN):
+    m = pattern.match(os.path.basename(filename))
+    if m is None:
+        raise InvalidFileNameError(
+            "file name: \"{filename}\" not matching regex to deduce dest_path".format(
+                filename=os.path.basename(filename)))
+
+    fields = m.groupdict()
+    return fields
+
+
+def get_info_nc(filepath):
+    file_basename = os.path.basename(filepath)
+
+    if L3S_L3C_FILE_PATTERN.match(file_basename):
+        fields = get_fields_from_filename(filepath, pattern=L3S_L3C_FILE_PATTERN)
+        day_time = fields['day_time']
+        temporal_extent = fields['temporal_extent']
+    elif L3U_FILE_PATTERN.match(file_basename):
+        fields = get_fields_from_filename(filepath, pattern=L3U_FILE_PATTERN)
+        day_time = None
+        temporal_extent = None
+    else:
+        raise InvalidFileNameError(
+            "file name: \"{filename}\" not matching regex to deduce dest_path".format(
+                filename=os.path.basename(filepath)))
+
+    prod_lev = fields['product_type']
+
+    if day_time == 'night':
+        day_time = 'ngt'
+
+    date_nc = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%d%H%M%S')
+
+    sat_number = fields['sat_number']
+    if sat_number == '':
+        sat_number = None
+
+    if prod_lev != 'L3U':
+        product_path = '%s-%s' % (prod_lev, temporal_extent)
+    else:
+        product_path = prod_lev
+
+    if 'Southern' in filepath:
+        if '-' in product_path:
+            product_path = '%sS' % product_path
+        else:
+            product_path = '%s-%s' % (product_path, 'S')
+
+    file_info = {'prod_level': prod_lev,
+                 'temporal_extent': temporal_extent,
+                 'day_time': day_time,
+                 'date_data': date_nc,
+                 'sat_number': sat_number,
+                 'product_path': product_path}
+
+    return file_info
+
 
 class SrsGhrsstHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
@@ -12,92 +101,41 @@ class SrsGhrsstHandler(HandlerBase):
         self.allowed_extensions = ['.nc']
 
     @staticmethod
-    def get_info_nc(filepath):
-
-        if 'L3S' in os.path.basename(filepath) or 'L3C' in os.path.basename(filepath):
-            try:
-                info_re = re.compile(
-                    r'^([0-9]{14})-ABOM-(L3S|L3C)_.*-AVHRR(.*)_D-(1d|3d|6d|14d|1m)_(day|night|dn).*.nc$')
-                info_re_match = info_re.findall(os.path.basename(filepath))[0]
-                day_time = info_re_match[4]
-            except Exception:
-                raise InvalidFileNameError("file name not matching regex to deduce dest_path of L3S/L3C files")
-        elif 'L3U' in os.path.basename(filepath):
-            try:
-                info_re = re.compile(r'^([0-9]{14})-ABOM-(L3U)_.*-AVHRR(.*)_D-(Asc|Des)(.*Southern)?.nc$')
-                info_re_match = info_re.findall(os.path.basename(filepath))[0]
-                day_time = None
-            except Exception:
-                raise InvalidFileNameError("file name not matching regex to deduce dest_path of L3U files")
-        else:
-            raise InvalidFileNameError("Unknown product in file name not matching regex to deduce dest_path")
-
-        prod_lev = info_re_match[1]
-        temporal_extent = info_re_match[3]
-
-        if day_time == 'night':
-            day_time = 'ngt'
-
-        date_nc = datetime.strptime(info_re_match[0], '%Y%m%d%H%M%S')
-
-        sat_number = info_re_match[2]
-        if sat_number == '':
-            sat_number = None
-
-        if prod_lev != 'L3U':
-            product_path = '%s-%s' % (prod_lev, temporal_extent)
-        else:
-            product_path = prod_lev
-
-        if 'Southern' in filepath:
-            if '-' in product_path:
-                product_path = '%sS' % product_path
-            else:
-                product_path = '%s-%s' % (product_path, 'S')
-
-        file_info = {'prod_level': prod_lev,
-                     'temporal_extent': temporal_extent,
-                     'day_time': day_time,
-                     'date_data': date_nc,
-                     'sat_number': sat_number,
-                     'product_path': product_path}
-
-        return file_info
-
-    @staticmethod
     def dest_path(filepath):
-        ghrsst_prefix_path = 'IMOS/SRS/SST/ghrsst'
+        file_basename = os.path.basename(filepath)
 
-        if 'L3P' in filepath:
-            return os.path.join(ghrsst_prefix_path, 'L3P', '14d', os.path.basename(filepath)[0:4],
-                                os.path.basename(filepath))
+        if L3P_FILE_PATTERN.match(file_basename):
+            fields = get_fields_from_filename(file_basename, pattern=L3P_FILE_PATTERN)
+            year = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%d').year
+            return os.path.join(GHRSST_PREFIX_PATH, fields['product_type'], '14d',
+                                str(year),
+                                file_basename)
 
-        if 'L4' in filepath and 'RAMSSA' in filepath:
-            return os.path.join(ghrsst_prefix_path, 'L4', 'RAMSSA', os.path.basename(filepath)[0:4],
-                                os.path.basename(filepath))
+        if L4_FILE_PATTERN.match(file_basename):
+            fields = get_fields_from_filename(file_basename, pattern=L4_FILE_PATTERN)
+            year = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%d%H%M%S').year
+            return os.path.join(GHRSST_PREFIX_PATH, fields['product_type'], fields['product_name'],
+                                str(year),
+                                file_basename)
 
-        if 'L4' in filepath and 'GAMSSA' in filepath:
-            return os.path.join(ghrsst_prefix_path, 'L4', 'GAMSSA', os.path.basename(filepath)[0:4],
-                                os.path.basename(filepath))
-
-        file_info = SrsGhrsstHandler.get_info_nc(filepath)
+        file_info = get_info_nc(filepath)
 
         if file_info['sat_number'] is None:
-            path = os.path.join(ghrsst_prefix_path,
+            path = os.path.join(GHRSST_PREFIX_PATH,
                                 file_info['product_path'],
                                 file_info['day_time'],
                                 str(file_info['date_data'].year),
                                 os.path.basename(filepath))
 
         elif file_info['day_time'] is None:
-            path = os.path.join(ghrsst_prefix_path,
+            path = os.path.join(GHRSST_PREFIX_PATH,
                                 file_info['product_path'],
                                 'n%s' % file_info['sat_number'],
                                 str(file_info['date_data'].year),
                                 os.path.basename(filepath))
 
         else:
-            path = os.path.join(ghrsst_prefix_path,
+            path = os.path.join(GHRSST_PREFIX_PATH,
                                 file_info['product_path'],
                                 file_info['day_time'],
                                 'n%s' % file_info['sat_number'],

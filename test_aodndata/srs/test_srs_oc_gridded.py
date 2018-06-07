@@ -1,13 +1,15 @@
 import os
+import unittest
 
 from aodncore.testlib import HandlerTestCase
 from aodncore.pipeline.exceptions import InvalidFileNameError
 
-from aodndata.srs.srs_oc_gridded import SrsOcGriddedHandler
+from aodndata.srs.srs_oc_gridded import SrsOcGriddedHandler, get_fields_from_filename, IMOS_OC_FILE_PATTERN
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 SRS_S3_PREFIX = 'IMOS/SRS/OC/gridded'
+SRS_GOOD = 'A.P1D.20151201T000000Z.aust.chl_gsm.nc'
 SRS_VARIOUS = {'A.P1D.20151201T000000Z.aust.chl_gsm.nc': 'aqua/P1D/2015/12',
                'A.P1D.20151201T000000Z.aust.chl_oc3.nc': 'aqua/P1D/2015/12',
                'A.P1D.20151201T000000Z.aust.dt.nc': 'aqua/P1D/2015/12',
@@ -45,11 +47,21 @@ class TestSrsOcGriddedHandler(HandlerTestCase):
 
     def test_various_path(self):
         for nc_file in SRS_VARIOUS.keys():
-            dest_path = SrsOcGriddedHandler.dest_path(nc_file)
+            dest_path = SrsOcGriddedHandler.dest_path(os.path.join(TEST_ROOT, nc_file))
             expected_path = os.path.join(SRS_S3_PREFIX, SRS_VARIOUS[nc_file], nc_file)
             self.assertEqual(dest_path, expected_path)
 
     def test_various_bad_path(self):
         for nc_file in SRS_BAD:
             with self.assertRaises(InvalidFileNameError):
-                SrsOcGriddedHandler.dest_path(nc_file)
+                SrsOcGriddedHandler.dest_path(os.path.join(TEST_ROOT, nc_file))
+
+    def test_get_fields_from_filename(self):
+        fields = get_fields_from_filename(os.path.join(TEST_ROOT, SRS_GOOD), pattern=IMOS_OC_FILE_PATTERN)
+
+        self.assertEqual(fields['data_parameter_code'], 'A')
+        self.assertEqual(fields['time_coverage_resolution'], 'P1D')
+        self.assertEqual(fields['sat_pass'], 'aust')
+
+if __name__ == '__main__':
+    unittest.main()
