@@ -84,9 +84,8 @@ class SoopBaHandler(HandlerBase):
         except KeyError:
             raise ValueError("unable to determine extension from file name {infile}".format(infile=input_file_name))
 
-        flist = [] # get list of previous files basename  to search through
-        for f in previous_file_list.keys():
-            flist.append(os.path.basename(f))
+        # get list of previous files basename  to search through
+        basenames = {os.path.basename(f) for f in previous_file_list}
 
         this_extension_pattern = re.compile(r".*\.{ext}$".format(ext=extension))
 
@@ -104,7 +103,7 @@ class SoopBaHandler(HandlerBase):
             file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
             files_to_delete.add(file_to_delete)
 
-        elif input_file_name not in flist:
+        elif input_file_name not in basenames:
             # if uploaded file name has the same name published file => no action, file will be overwritten, otherwise
             # sort file per wildcard and work out which one to delete (
             # check previous file widcard :
