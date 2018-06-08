@@ -112,6 +112,7 @@ class SoopBaHandler(HandlerBase):
             self.logger.info("adding deletion of previous file '{dest_path}'".format(dest_path=dest_path))
 
             file_to_delete = PipelineFile(prev_file, is_deletion=True, dest_path=dest_path)
+
             if extension == 'nc':
                 file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
             else:
