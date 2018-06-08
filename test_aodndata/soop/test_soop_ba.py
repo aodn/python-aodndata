@@ -82,7 +82,7 @@ class TestSoopBaHandler(HandlerTestCase):
         """Test with invalid netcdf missing a report_id"""
         self.run_handler_with_exception(InvalidFileContentError, BAD_NC)
 
-    def test_setup_upload_location(self):
+    def test_delete_previous_file(self):
         # create some PipelineFiles to represent the existing files on 'S3'
         preexisting_files = PipelineFileCollection()
 
@@ -130,6 +130,35 @@ class TestSoopBaHandler(HandlerTestCase):
         for png in pngs:
             if png.name == os.path.basename(PNG):
                 self.assertEqual(png.is_deleted, True)
+
+    def test_overwrite_same_file(self):
+        # check that files with same name are overwritten
+        preexisting_files = PipelineFileCollection()
+
+        existing_file1 = PipelineFile(GOOD_NC, dest_path=os.path.join(
+            'IMOS/SOOP/SOOP-BA/VKAD_Antarctic-Discovery/Antarctic-Discovery_20160116-20160129/',
+            os.path.basename(GOOD_NC)))
+
+        existing_file2 = PipelineFile(CSV, dest_path=os.path.join(
+            'IMOS/SOOP/SOOP-BA/VKAD_Antarctic-Discovery/Antarctic-Discovery_20160116-20160129/',
+            os.path.basename(CSV)))
+
+        preexisting_files.update([existing_file1, existing_file2])
+        # upload the 'preexisting_files' collection to the unit test's temporary upload location
+        broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
+        broker.upload(preexisting_files)
+
+        # run the handler
+        handler = self.run_handler(GOOD_ZIP)
+        nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
+        self.assertEqual(nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(nc[0].is_deleted, False)
+
+        csvs = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)
+        for csv in csvs:
+            if csv.name == os.path.basename(CSV):
+                self.assertEqual(csv.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
+                self.assertEqual(csv.is_deleted, False)
 
         if __name__ == '__main__':
             unittest.main()

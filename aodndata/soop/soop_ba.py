@@ -88,40 +88,37 @@ class SoopBaHandler(HandlerBase):
         basenames = {os.path.basename(f) for f in previous_file_list}
 
         this_extension_pattern = re.compile(r".*\.{ext}$".format(ext=extension))
+        if input_file_name not in basenames:
+            previous_file = [f for f in previous_file_list if this_extension_pattern.match(f)]
 
-        if extension == 'nc':
-            previous_nc = [f for f in previous_file_list if f.endswith('.nc')]
-            if len(previous_nc) != 1:
-                raise ValueError("Expected exactly 1 previous versions of the netcdf file, found {n}. Aborting ".format(
-                    n=len(previous_nc)))
+            if extension == 'nc':
+                if len(previous_file) != 1:
+                    raise ValueError("Expected exactly 1 previous versions of the netcdf file, found {n}. Aborting ".format(
+                        n=len(previous_file)))
+            else:
+                # if uploaded file name has the same name published file => no action, file will be overwritten, otherwise
+                # sort file per wildcard and work out which one to delete (
+                # check previous file widcard :
+                # can be '.inf', '.nc.png','.pitch.csv','.roll.csv',.gps.csv'
+                if len(previous_file) > 1:
+                    raise ValueError(
+                        "Found more than one previous versions of the extension '{ext}'. Aborting".format(
+                            ext=extension))
+                elif len(previous_file) == 0:
+                    return
 
-            prev_file = previous_nc[0]
+            prev_file = previous_file[0]
             dest_path = os.path.join(path, os.path.basename(prev_file))
-            self.logger.info("adding deletion of previous NC file '{dest_path}'".format(dest_path=dest_path))
+            self.logger.info("adding deletion of previous file '{dest_path}'".format(dest_path=dest_path))
 
             file_to_delete = PipelineFile(prev_file, is_deletion=True, dest_path=dest_path)
-            file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
-            files_to_delete.add(file_to_delete)
 
-        elif input_file_name not in basenames:
-            # if uploaded file name has the same name published file => no action, file will be overwritten, otherwise
-            # sort file per wildcard and work out which one to delete (
-            # check previous file widcard :
-            # can be '.inf', '.nc.png','.pitch.csv','.roll.csv',.gps.csv'
-            previous_non_nc = [f for f in previous_file_list if this_extension_pattern.match(f)]
-
-            if len(previous_non_nc) > 1:
-                raise ValueError(
-                    "Found more than one previous versions of the extension '{ext}'. Aborting".format(ext=extension))
-
-            if len(previous_non_nc) == 1:
-                prev_file = previous_non_nc[0]
-                dest_path = os.path.join(path, os.path.basename(prev_file))
-                self.logger.info("adding deletion of previous non-NC file '{dest_path}'".format(dest_path=dest_path))
-
-                file_to_delete = PipelineFile(prev_file, is_deletion=True, dest_path=dest_path)
+            if extension == 'nc':
+                file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
+            else:
                 file_to_delete.publish_type = PipelineFilePublishType.DELETE_ONLY
-                files_to_delete.add(file_to_delete)
+
+            files_to_delete.add(file_to_delete)
 
         return files_to_delete
 
