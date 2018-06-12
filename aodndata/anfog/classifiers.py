@@ -7,21 +7,25 @@ from aodncore.pipeline.exceptions import InvalidFileContentError, InvalidFileNam
 
 class AnfogFileClassifier(FileClassifier):
     MISSION_LISTING = 'HarvestmissionList.csv'
+    ANFOG_BASE = 'IMOS/ANFOG'
     ANFOG_RT_REGEX = \
-        '^IMOS_ANFOG.*_[0-9]{8}T[0-9]{6}Z_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
+        '^IMOS_ANFOG_([^R]+)_[0-9]{8}T[0-9]{6}Z_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
+    RT_POSITION_SUMMARY = '^unit.*position_summary.txt$'
+    RT_PNG_TRANSECT_REGEX = '^unit.*_[0-9]{8}T[0-9]{6}-[0-9]{8}T[0-9]{6}.png$'
+    RT_PNG_REGEX = '^unit.*.png$'
     ANFOG_DM_REGEX = \
         '^IMOS_ANFOG.*_[0-9]{8}T[0-9]{6}Z.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
-    DSTG_REGEX = '^DSTO_.*_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
+    DSTG_REGEX = '^DSTO_.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     DSTG_BASE = 'Department_of_Defence/DSTG'
-    NRL_REGEX = '^NRL_.*_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
+    NRL_REGEX = '^IMOS_NRL_.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     NRL_BASE = 'US_Naval_Research_Laboratory'
-    DM_REGEX = '.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
-    FV00_REGEX = '.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
-    RT_PNG_TRANSECT_REGEX = '^unit.*_[0-9]{8}T[0-9]{6}-[0-9]{8}T[0-9]{4}.png$'
-    RT_PNG_REGEX = '^unit.*.png$'
+    DM_REGEX = '%s|%s|%s' % (ANFOG_DM_REGEX, DSTG_REGEX, NRL_REGEX)
+    RAW_DATA_REGEX = '^IMOS_.*R.*_[0-9]{8}T[0-9]{6}Z_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
+    RAW_BATTERY_REGEX = '^ANFOG_E_[0-9]{8}T[0-9]{6}Z_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
+    RAW_FILES_REGEX = '%s|%s|%s' % ('.*rawfiles.zip$', RAW_DATA_REGEX, RAW_BATTERY_REGEX)
     PLATFORM_CODES = {'SG': 'seaglider',
                       'SL': 'slocum_glider'}
-    RT_POSITION_SUMMARY = '^unit.*position_summary.txt$'
+    UPLOAD_TO_S3_REGEX = '.*(.kml|.jpg|.pdf)$'
 
     @classmethod
     def get_platform(cls, filename):
@@ -30,9 +34,12 @@ class AnfogFileClassifier(FileClassifier):
             ANFOG deployments are either seaglider or slocum glider """
         if (re.match(cls.DSTG_REGEX, filename)) or (re.match(cls.NRL_REGEX, filename)):
             platform = 'slocum_glider'
-        else:
+        elif (re.match(cls.ANFOG_DM_REGEX, filename)) or (re.match(cls.ANFOG_RT_REGEX, filename)):
             fields = cls._get_file_name_fields(filename)
             platform_id = fields[4][:2]
+            platform = cls.PLATFORM_CODES[platform_id]
+        else:  # status text file
+            platform_id = filename.split('-')[0]
             platform = cls.PLATFORM_CODES[platform_id]
 
         return platform
@@ -52,8 +59,12 @@ class AnfogFileClassifier(FileClassifier):
                 raise InvalidFileContentError(
                     "Missing deployment code in {file} ".format(file=name))
 
-        elif re.match(cls.ANFOG_DM_REGEX, name):
+        elif re.match(cls.ANFOG_DM_REGEX, name) or re.match(cls.NRL_REGEX, name):
             deployment_code = cls._get_nc_att(src_path, 'deployment_code')
+        elif name.endswith('.txt'):
+            # extract deployment code from filename like SL-Yamba20180609_completed.txt
+            field = name.split('_')
+            deployment_code = field[0].split('-')[1]
         else:
             raise InvalidFileNameError(
                 "Invalidfile name {file} ".format(file=name))
@@ -76,23 +87,25 @@ class AnfogFileClassifier(FileClassifier):
 
     @classmethod
     def get_destination(cls, src_path):
+        """set destination path
+           hadnle also special case """
         name = os.path.basename(src_path)
         dir_list = []
-        fields = cls._get_file_name_fields(name)
-        platform = cls.get_platform(name)
-        deployment_code = cls.get_deployment_code(src_path)
+        if name.endswith('.txt'):
+            [deployment, message] = cls._get_file_name_fields(name, min_fields=2)
+            platform = cls.PLATFORM_CODES[deployment.split('-')[0]]
+            deployment_code = deployment.split('-')[1]
+        else:
+            platform = cls.get_platform(name)
+            deployment_code = cls.get_deployment_code(src_path)
 
         if re.match(cls.NRL_REGEX, name):
-            project = cls.NRL_BASE
-            dir_list.append(project)
+            dir_list.append(cls.NRL_BASE)
         elif re.match(cls.DSTG_REGEX, name):
-            project = cls.DSTG_BASE
-            dir_list.append(project)
-        else:  # IMOS ANFOG RT or DM
-            project = fields[0]
-            facility = fields[1]
-            dir_list.extend([project, facility])
-            if re.match(cls.ANFOG_RT_REGEX, name):
+            dir_list.append(cls.DSTG_BASE)
+        else:  # IMOS ANFOG RT, DM, or status text file
+            dir_list.append(cls.ANFOG_BASE)
+            if re.match(cls.ANFOG_RT_REGEX, name) or name.endswith('.txt'):
                 data_type = 'REALTIME'
                 dir_list.append(data_type)
 
