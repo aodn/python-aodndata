@@ -1,4 +1,4 @@
-from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFileCheckType
+from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFileCheckType, FileType
 from aodncore.pipeline.exceptions import InvalidFileNameError
 from aodndata.moorings.classifiers import MooringsFileClassifier
 
@@ -13,13 +13,6 @@ class MooringsHandler(HandlerBase):
 
     The entire process fails if any input file is excluded by the regex patterns, or is a netCDF file that fails the
     compliance checks.
-
-    Usage:
-    handler = MooringsHandler(input_file,
-                             include_regexes=['*\.nc'],
-                             check_params={'checks': ['cf', 'imos:1.4']},
-                             )
-    handler.run()
     """
 
     def __init__(self, *args, **kwargs):
@@ -38,19 +31,16 @@ class MooringsHandler(HandlerBase):
         """
         self.logger.info("Checking for invalid files and adjusting check/publish properties.")
 
-        invalid_files = []
-        for f in self.file_collection:
-            if f.publish_type == PipelineFilePublishType.NO_ACTION:
-                invalid_files.append(f.name)
-            if f.extension != '.nc':
-                f.check_type = PipelineFileCheckType.NO_ACTION
-                f.publish_type = PipelineFilePublishType.UPLOAD_ONLY
-
+        invalid_files = self.file_collection.filter_by_attribute_id('publish_type', PipelineFilePublishType.NO_ACTION)
         if invalid_files:
             raise InvalidFileNameError(
-                "File name(s) don't match the pattern expected for this run location: {name}".format(
-                    name=str(invalid_files)
+                "File name(s) don't match the pattern expected for this upload location: {names}".format(
+                    names=[str(f.name) for f in invalid_files]
                 )
             )
+
+        non_nc_files = self.file_collection.filter_by_attribute_id_not('file_type', FileType.NETCDF)
+        non_nc_files.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
+        non_nc_files.set_check_types(PipelineFileCheckType.FORMAT_CHECK)
 
     dest_path = MooringsFileClassifier.dest_path
