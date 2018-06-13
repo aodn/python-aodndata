@@ -1,6 +1,6 @@
-from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType
-from aodncore.pipeline.exceptions import InvalidFileNameError
-from aodndata.moorings.classifiers import MooringsFileClassifier
+from aodncore.pipeline import HandlerBase, PipelineFile, PipelineFilePublishType, FileType
+from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError
+from aodndata.moorings.classifiers import MooringsFileClassifier, AbosFileClassifier
 
 
 class MooringsHandler(HandlerBase):
@@ -43,3 +43,39 @@ class MooringsHandler(HandlerBase):
         non_nc_files.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
 
     dest_path = MooringsFileClassifier.dest_path
+
+
+class AbosHandler(MooringsHandler):
+    """Handler for ABOS files.
+
+    It does mostly the same as MooringsHandler, but there are a few ABOS-specific tweaks, and the dest_path
+    method is different.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(AbosHandler, self).__init__(*args, **kwargs)
+        self.allowed_extensions = ['.nc', '.zip']
+
+    def process(self):
+        """Handle a zip file containing *only* jpg images. In this case we just want to publish the zip file itself,
+        not the individual images. If we encounter a "mixed" zip file with images and netCDF files, we're just going
+        to give up, for now.
+        """
+        images = self.file_collection.filter_by_attribute_id('file_type', FileType.JPEG)
+        is_zip = self.file_type is FileType.ZIP
+        have_images = len(images) > 0
+        only_images = images == self.file_collection
+        if is_zip and have_images:
+            if not only_images:
+                raise InvalidFileContentError(
+                    "Zip file contains both images and netCDFs. Don't know what to do!"
+                    " They are handled differently, so please upload only one at a time."
+                )
+
+            self.logger.info("Zip file contains only images. Publishing original zip file instead of images.")
+
+            images.set_publish_types(PipelineFilePublishType.NO_ACTION)
+            self.input_file_object.publish_type = PipelineFilePublishType.UPLOAD_ONLY
+            self.file_collection.add(self.input_file_object)
+
+    dest_path = AbosFileClassifier.dest_path
