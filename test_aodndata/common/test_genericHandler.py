@@ -2,7 +2,7 @@ import os
 import unittest
 
 from aodncore.pipeline import PipelineFilePublishType
-from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidInputFileError, InvalidFileContentError
+from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidFileContentError, InvalidFileNameError
 from aodncore.testlib import HandlerTestCase
 from aodndata.common.generic import GenericHandler
 from aodndata.moorings.classifiers import dest_path_anmn_nrs_realtime
@@ -34,7 +34,7 @@ class TestGenericHandler(HandlerTestCase):
                                         dest_path_function=dest_path_anmn_nrs_realtime)
 
     def test_bad_name_netcdf(self):
-        self.run_handler_with_exception(InvalidInputFileError, BAD_NC,
+        self.run_handler_with_exception(InvalidFileNameError, BAD_NC,
                                         include_regexes=['IMOS_ANMN-NRS_.*realtime\.nc'],
                                         dest_path_function=dest_path_anmn_nrs_realtime)
 

@@ -1,5 +1,5 @@
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType
-from aodncore.pipeline.exceptions import InvalidInputFileError
+from aodncore.pipeline.exceptions import InvalidFileNameError
 
 
 class GenericHandler(HandlerBase):
@@ -26,17 +26,16 @@ class GenericHandler(HandlerBase):
 
     def preprocess(self):
         """Check that every input file is valid according to the include/exclude regex patterns. Any non-matching
-        file will be marked as NO_ACTION after the _resolve step.
+        file will be left with publish_type UNSET after the _resolve step.
 
         :return: None
         """
-        self.logger.info("Running preprocess from child class")
+        self.logger.info("Checking for invalid files.")
 
-        invalid_files = [f.name for f in self.file_collection
-                         if f.publish_type == PipelineFilePublishType.NO_ACTION]
+        invalid_files = self.file_collection.filter_by_attribute_id('publish_type', PipelineFilePublishType.UNSET)
         if invalid_files:
-            raise InvalidInputFileError(
-                "File name(s) don't match the pattern expected for this run location: {name}".format(
-                    name=str(invalid_files)
+            raise InvalidFileNameError(
+                "File name(s) don't match the pattern expected for this upload location: {names}".format(
+                    names=map(str, invalid_files.get_attribute_list('name'))
                 )
             )
