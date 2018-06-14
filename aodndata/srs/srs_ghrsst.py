@@ -8,7 +8,7 @@ from aodncore.pipeline import HandlerBase
 from aodncore.pipeline.exceptions import InvalidFileNameError
 
 L3S_L3C_FILE_PATTERN = re.compile(r"""
-                                (.*/|)(?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L3S|L3C)_.*-AVHRR
                                 (?P<sat_number>.*)_D-
                                 (?P<temporal_extent>1d|3d|6d|14d|1m)_
@@ -16,7 +16,7 @@ L3S_L3C_FILE_PATTERN = re.compile(r"""
                                 """, re.VERBOSE)
 
 L3U_FILE_PATTERN = re.compile(r"""
-                                (.*/|)(?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L3U)_.*-AVHRR
                                 (?P<sat_number>[0-9].*)_D-
                                 (?P<pass_direction>Asc|Des)
@@ -25,12 +25,12 @@ L3U_FILE_PATTERN = re.compile(r"""
                                 """, re.VERBOSE)
 
 L3P_FILE_PATTERN = re.compile(r"""
-                                (.*/|)(?P<nc_time_cov_start>[0-9]{8})-ABOM-
+                                (?P<nc_time_cov_start>[0-9]{8})-ABOM-
                                 (?P<product_type>L3P)_.*-AVHRR_.*\.nc$
                                 """, re.VERBOSE)
 
 L4_FILE_PATTERN = re.compile(r"""
-                                (.*/|)(?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L4)_GHRSST-SSTfnd-
                                 (?P<product_name>RAMSSA|GAMSSA)_.*\.nc$
                                 """, re.VERBOSE)
@@ -42,11 +42,11 @@ def get_info_nc(filepath):
     file_basename = os.path.basename(filepath)
 
     if L3S_L3C_FILE_PATTERN.match(file_basename):
-        fields = get_pattern_subgroups_from_string(filepath, pattern=L3S_L3C_FILE_PATTERN)
+        fields = get_pattern_subgroups_from_string(file_basename, pattern=L3S_L3C_FILE_PATTERN)
         day_time = fields['day_time']
         temporal_extent = fields['temporal_extent']
     elif L3U_FILE_PATTERN.match(file_basename):
-        fields = get_pattern_subgroups_from_string(filepath, pattern=L3U_FILE_PATTERN)
+        fields = get_pattern_subgroups_from_string(file_basename, pattern=L3U_FILE_PATTERN)
         day_time = None
         temporal_extent = None
     else:
@@ -116,14 +116,14 @@ class SrsGhrsstHandler(HandlerBase):
                                 file_info['product_path'],
                                 file_info['day_time'],
                                 str(file_info['date_data'].year),
-                                os.path.basename(filepath))
+                                file_basename)
 
         elif file_info['day_time'] is None:
             path = os.path.join(GHRSST_PREFIX_PATH,
                                 file_info['product_path'],
                                 'n%s' % file_info['sat_number'],
                                 str(file_info['date_data'].year),
-                                os.path.basename(filepath))
+                                file_basename)
 
         else:
             path = os.path.join(GHRSST_PREFIX_PATH,
@@ -131,6 +131,6 @@ class SrsGhrsstHandler(HandlerBase):
                                 file_info['day_time'],
                                 'n%s' % file_info['sat_number'],
                                 str(file_info['date_data'].year),
-                                os.path.basename(filepath))
+                                file_basename)
 
         return path
