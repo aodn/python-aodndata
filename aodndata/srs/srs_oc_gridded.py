@@ -15,14 +15,14 @@ OC_VARIABLES = '|'.join(SRS_OC_GRIDDED_VARIABLES)
 OC_GRIDDED_PREFIX_PATH = 'IMOS/SRS/OC/gridded'
 
 RJOHNSON_FILE_PATTERN = re.compile(r"""
-                                (.*/|)(?P<data_parameter_code>A|S)
+                                (?P<data_parameter_code>A|S)
                                 (?P<nc_time_cov_start>[0-9]{14})\.L3m_
                                 (?P<time_coverage_resolution>8D|MO)_
                                 SO_Chl_9km\.Johnson_SO_Chl\.nc$
                                 """, re.VERBOSE)
 
 IMOS_OC_FILE_PATTERN = re.compile(r"""
-                                (.*/|)(?P<data_parameter_code>A|S)\.
+                                (?P<data_parameter_code>A|S)\.
                                 (?P<time_coverage_resolution>P1D|P1H)\.
                                 (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)\.
                                 (?P<sat_pass>aust|overpass)\.
@@ -41,7 +41,7 @@ class SrsOcGriddedHandler(HandlerBase):
 
         # NON CONTRIBUTED DATA SET
         if IMOS_OC_FILE_PATTERN.match(file_basename):
-            fields = get_pattern_subgroups_from_string(filepath, pattern=IMOS_OC_FILE_PATTERN)
+            fields = get_pattern_subgroups_from_string(file_basename, pattern=IMOS_OC_FILE_PATTERN)
             nc_time_cov_start = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%dT%H%M%SZ')
             data_parameter_code = fields['data_parameter_code']
 
@@ -52,12 +52,12 @@ class SrsOcGriddedHandler(HandlerBase):
 
             path = os.path.join(OC_GRIDDED_PREFIX_PATH, product_name, fields['time_coverage_resolution'],
                                 '%d' % nc_time_cov_start.year, '%02d' % nc_time_cov_start.month,
-                                os.path.basename(filepath))
+                                file_basename)
             return path
 
         # CONTRIBUTED DATA SET
         elif RJOHNSON_FILE_PATTERN.match(file_basename):
-            fields = get_pattern_subgroups_from_string(filepath, pattern=RJOHNSON_FILE_PATTERN)
+            fields = get_pattern_subgroups_from_string(file_basename, pattern=RJOHNSON_FILE_PATTERN)
             data_parameter_code = fields['data_parameter_code']
             time_coverage_resolution =  fields['time_coverage_resolution']
 
