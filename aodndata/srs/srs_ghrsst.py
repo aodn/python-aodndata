@@ -2,11 +2,13 @@ import os
 import re
 from datetime import datetime
 
+from aodncore.util.misc import get_pattern_subgroups_from_string
+
 from aodncore.pipeline import HandlerBase
 from aodncore.pipeline.exceptions import InvalidFileNameError
 
 L3S_L3C_FILE_PATTERN = re.compile(r"""
-                                ^(?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (.*/|)(?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L3S|L3C)_.*-AVHRR
                                 (?P<sat_number>.*)_D-
                                 (?P<temporal_extent>1d|3d|6d|14d|1m)_
@@ -14,7 +16,7 @@ L3S_L3C_FILE_PATTERN = re.compile(r"""
                                 """, re.VERBOSE)
 
 L3U_FILE_PATTERN = re.compile(r"""
-                                ^(?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (.*/|)(?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L3U)_.*-AVHRR
                                 (?P<sat_number>[0-9].*)_D-
                                 (?P<pass_direction>Asc|Des)
@@ -23,12 +25,12 @@ L3U_FILE_PATTERN = re.compile(r"""
                                 """, re.VERBOSE)
 
 L3P_FILE_PATTERN = re.compile(r"""
-                                ^(?P<nc_time_cov_start>[0-9]{8})-ABOM-
+                                (.*/|)(?P<nc_time_cov_start>[0-9]{8})-ABOM-
                                 (?P<product_type>L3P)_.*-AVHRR_.*\.nc$
                                 """, re.VERBOSE)
 
 L4_FILE_PATTERN = re.compile(r"""
-                                ^(?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (.*/|)(?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L4)_GHRSST-SSTfnd-
                                 (?P<product_name>RAMSSA|GAMSSA)_.*\.nc$
                                 """, re.VERBOSE)
@@ -36,26 +38,15 @@ L4_FILE_PATTERN = re.compile(r"""
 GHRSST_PREFIX_PATH = 'IMOS/SRS/SST/ghrsst'
 
 
-def get_fields_from_filename(filename, pattern=L3S_L3C_FILE_PATTERN):
-    m = pattern.match(os.path.basename(filename))
-    if m is None:
-        raise InvalidFileNameError(
-            "file name: \"{filename}\" not matching regex to deduce dest_path".format(
-                filename=os.path.basename(filename)))
-
-    fields = m.groupdict()
-    return fields
-
-
 def get_info_nc(filepath):
     file_basename = os.path.basename(filepath)
 
     if L3S_L3C_FILE_PATTERN.match(file_basename):
-        fields = get_fields_from_filename(filepath, pattern=L3S_L3C_FILE_PATTERN)
+        fields = get_pattern_subgroups_from_string(filepath, pattern=L3S_L3C_FILE_PATTERN)
         day_time = fields['day_time']
         temporal_extent = fields['temporal_extent']
     elif L3U_FILE_PATTERN.match(file_basename):
-        fields = get_fields_from_filename(filepath, pattern=L3U_FILE_PATTERN)
+        fields = get_pattern_subgroups_from_string(filepath, pattern=L3U_FILE_PATTERN)
         day_time = None
         temporal_extent = None
     else:
@@ -105,14 +96,14 @@ class SrsGhrsstHandler(HandlerBase):
         file_basename = os.path.basename(filepath)
 
         if L3P_FILE_PATTERN.match(file_basename):
-            fields = get_fields_from_filename(file_basename, pattern=L3P_FILE_PATTERN)
+            fields = get_pattern_subgroups_from_string(file_basename, pattern=L3P_FILE_PATTERN)
             year = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%d').year
             return os.path.join(GHRSST_PREFIX_PATH, fields['product_type'], '14d',
                                 str(year),
                                 file_basename)
 
         if L4_FILE_PATTERN.match(file_basename):
-            fields = get_fields_from_filename(file_basename, pattern=L4_FILE_PATTERN)
+            fields = get_pattern_subgroups_from_string(file_basename, pattern=L4_FILE_PATTERN)
             year = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%d%H%M%S').year
             return os.path.join(GHRSST_PREFIX_PATH, fields['product_type'], fields['product_name'],
                                 str(year),

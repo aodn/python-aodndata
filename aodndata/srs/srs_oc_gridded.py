@@ -4,6 +4,7 @@ from datetime import datetime
 
 from aodncore.pipeline import HandlerBase
 from aodncore.pipeline.exceptions import InvalidFileNameError
+from aodncore.util.misc import get_pattern_subgroups_from_string
 
 SRS_OC_GRIDDED_VARIABLES = ['chl_gsm', 'chl_oc3', 'chl_oc4', 'dt', 'ipar', 'K_490', 'l2_flags',
                                'nanop_brewin2010at', 'nanop_brewin2012in', 'npp_vgpm_eppley_gsm',
@@ -14,30 +15,19 @@ OC_VARIABLES = '|'.join(SRS_OC_GRIDDED_VARIABLES)
 OC_GRIDDED_PREFIX_PATH = 'IMOS/SRS/OC/gridded'
 
 RJOHNSON_FILE_PATTERN = re.compile(r"""
-                                ^(?P<data_parameter_code>A|S)
+                                (.*/|)(?P<data_parameter_code>A|S)
                                 (?P<nc_time_cov_start>[0-9]{14})\.L3m_
                                 (?P<time_coverage_resolution>8D|MO)_
                                 SO_Chl_9km\.Johnson_SO_Chl\.nc$
                                 """, re.VERBOSE)
 
 IMOS_OC_FILE_PATTERN = re.compile(r"""
-                                ^(?P<data_parameter_code>A|S)\.
+                                (.*/|)(?P<data_parameter_code>A|S)\.
                                 (?P<time_coverage_resolution>P1D|P1H)\.
                                 (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)\.
                                 (?P<sat_pass>aust|overpass)\.
                                 (?P<oc_variable>%s)\.nc$
                                 """ % OC_VARIABLES, re.VERBOSE)
-
-
-def get_fields_from_filename(filename, pattern=IMOS_OC_FILE_PATTERN):
-    m = pattern.match(os.path.basename(filename))
-    if m is None:
-        raise InvalidFileNameError(
-            "file name: \"{filename}\" not matching regex to deduce dest_path".format(
-                filename=os.path.basename(filename)))
-
-    fields = m.groupdict()
-    return fields
 
 
 class SrsOcGriddedHandler(HandlerBase):
@@ -51,7 +41,7 @@ class SrsOcGriddedHandler(HandlerBase):
 
         # NON CONTRIBUTED DATA SET
         if IMOS_OC_FILE_PATTERN.match(file_basename):
-            fields = get_fields_from_filename(filepath, pattern=IMOS_OC_FILE_PATTERN)
+            fields = get_pattern_subgroups_from_string(filepath, pattern=IMOS_OC_FILE_PATTERN)
             nc_time_cov_start = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%dT%H%M%SZ')
             data_parameter_code = fields['data_parameter_code']
 
@@ -67,7 +57,7 @@ class SrsOcGriddedHandler(HandlerBase):
 
         # CONTRIBUTED DATA SET
         elif RJOHNSON_FILE_PATTERN.match(file_basename):
-            fields = get_fields_from_filename(filepath, pattern=RJOHNSON_FILE_PATTERN)
+            fields = get_pattern_subgroups_from_string(filepath, pattern=RJOHNSON_FILE_PATTERN)
             data_parameter_code = fields['data_parameter_code']
             time_coverage_resolution =  fields['time_coverage_resolution']
 

@@ -3,8 +3,9 @@ import unittest
 
 from aodncore.testlib import HandlerTestCase
 from aodncore.pipeline.exceptions import InvalidFileNameError
+from aodncore.util.misc import get_pattern_subgroups_from_string
 
-from aodndata.srs.srs_oc_gridded import SrsOcGriddedHandler, get_fields_from_filename, IMOS_OC_FILE_PATTERN
+from aodndata.srs.srs_oc_gridded import SrsOcGriddedHandler, IMOS_OC_FILE_PATTERN
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
@@ -57,7 +58,7 @@ class TestSrsOcGriddedHandler(HandlerTestCase):
                 SrsOcGriddedHandler.dest_path(os.path.join(TEST_ROOT, nc_file))
 
     def test_get_fields_from_filename(self):
-        fields = get_fields_from_filename(os.path.join(TEST_ROOT, SRS_GOOD), pattern=IMOS_OC_FILE_PATTERN)
+        fields = get_pattern_subgroups_from_string(os.path.join(TEST_ROOT, SRS_GOOD), pattern=IMOS_OC_FILE_PATTERN)
 
         self.assertEqual(fields['data_parameter_code'], 'A')
         self.assertEqual(fields['time_coverage_resolution'], 'P1D')
