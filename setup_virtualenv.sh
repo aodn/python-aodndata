@@ -1,39 +1,29 @@
 #!/usr/bin/env bash
 
-set -eu
+set -e
 
 AODNCORE_ARTIFACT=aodncore_prod
 CC_PLUGIN_ARTIFACT=cc_plugin_imos_prod
 
-GET_LATEST_ARTIFACT_URL=https://raw.githubusercontent.com/aodn/utilities/master/jenkins/get_latest_artifact.py
+AODNFETCHER_URL="git+https://github.com/aodn/python-aodnfetcher.git@master"
+AODNCORE_URL="jenkins://imos-binary/${AODNCORE_ARTIFACT}?pattern=^.*\.whl$"
+CC_PLUGIN_IMOS_URL="jenkins://imos-binary/${CC_PLUGIN_ARTIFACT}?pattern=^.*\.whl$"
+
 VIRTUALENV_DIR=python-aodndata-virtualenv
 WHEEL_CACHE_DIR=.python-aodndata-download-cache
 
-function populate_local_repo() {
-    echo "Downloading dependencies..."
-    find . -name '*.whl' -delete
-    mkdir -p ${WHEEL_CACHE_DIR}
-    pushd ${WHEEL_CACHE_DIR} >/dev/null
-    wget --quiet ${GET_LATEST_ARTIFACT_URL}
-    python get_latest_artifact.py --extension .whl --job ${CC_PLUGIN_ARTIFACT}
-    python get_latest_artifact.py --extension .whl --job ${AODNCORE_ARTIFACT}
-    popd >/dev/null
-}
+echo "##### Creating/updating virtual environment #####"
+virtualenv ${VIRTUALENV_DIR}
+source ${VIRTUALENV_DIR}/bin/activate
+pip install pip==9.0.3
+pip install ${AODNFETCHER_URL}
 
-function setup_virtualenv() {
-    echo "Creating virtual environment..."
-    virtualenv --quiet ${VIRTUALENV_DIR}
-
-    VIRTUALENV_PIP="${VIRTUALENV_DIR}/bin/pip"
-
-    echo "Installing dependencies into virtual environment..."
-    ${VIRTUALENV_PIP} install --quiet --upgrade ${WHEEL_CACHE_DIR}/cc_plugin_imos-*.whl
-    ${VIRTUALENV_PIP} install --quiet --upgrade ${WHEEL_CACHE_DIR}/aodncore-*.whl
-    ${VIRTUALENV_PIP} install --quiet -r requirements.txt
-}
-
-populate_local_repo
-setup_virtualenv
+echo "##### Installing dependencies into virtual environment #####"
+pip install $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${CC_PLUGIN_IMOS_URL} \
+    | python -c "import sys, json; print json.load(sys.stdin)['${CC_PLUGIN_IMOS_URL}']['local_file']")
+pip install $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNCORE_URL} \
+    | python -c "import sys, json; print json.load(sys.stdin)['${AODNCORE_URL}']['local_file']")
+pip install -r requirements.txt
 
 cat<<EOF
 Virtual environment successfully created at: ${VIRTUALENV_DIR}
