@@ -30,7 +30,7 @@ L3P_FILE_PATTERN = re.compile(r"""
 L4_FILE_PATTERN = re.compile(r"""
                                 ^(?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L4)_GHRSST-SSTfnd-
-                                (?P<product_name>RAMSSA|GAMSSA)-.*\.nc$
+                                (?P<product_name>RAMSSA|GAMSSA)_.*\.nc$
                                 """, re.VERBOSE)
 
 GHRSST_PREFIX_PATH = 'IMOS/SRS/SST/ghrsst'
