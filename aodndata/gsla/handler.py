@@ -84,8 +84,13 @@ class GslaHandler(HandlerBase):
                     previous_file_path = self.get_previous_version_object(netcdf_file.name)
 
             if push_new_file:
-                # index un-gzipped file, but push gzipped file to S3
-                netcdf_file.publish_type = PipelineFilePublishType.HARVEST_ONLY
+                if GSLA_REGEX_YEARLY.match(netcdf_file.name):
+                    # yearly file should never be harvested
+                    netcdf_file.publish_type = PipelineFilePublishType.NO_ACTION
+                else:
+                    # index un-gzipped file, but push gzipped file to S3
+                    netcdf_file.publish_type = PipelineFilePublishType.HARVEST_ONLY
+
                 # to set to all files in the collection
                 netcdf_file_gz_collection.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
 
