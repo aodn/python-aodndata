@@ -15,9 +15,9 @@ from mock import patch
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 
-GOOD_NC_DM00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_19930101T000000Z_GSLA_FV02_DM00_C-20130913T082343Z.nc.gz")
-GOOD_NC_NRT00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_NRT00_C-20180105T222006Z.nc.gz")
-GOOD_YEARLY_FILE = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_1993_C-20150521T030649Z.nc.gz")
+GOOD_NC_DM00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_19930101T000000Z_GSLA_FV02_DM00_C-20130913T082343Z.nc")
+GOOD_NC_NRT00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_NRT00_C-20180105T222006Z.nc")
+GOOD_YEARLY_FILE = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_1993_C-20150521T030649Z.nc")
 
 PREV_NC_STORAGE = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20180130T224000Z.nc.gz')
 NEWER_CREATION_DATE_NC = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20181231T225959Z.nc.gz')
@@ -40,15 +40,16 @@ class TestGslaHandler(HandlerTestCase):
     def test_good_nc(self):
         """ check various good dest_path        """
         dest_path = GslaHandler.dest_path(GOOD_NC_DM00)
-        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM00/1993", os.path.basename(GOOD_NC_DM00))
+        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM00/1993", "{}.gz".format(os.path.basename(GOOD_NC_DM00)))
         self.assertEqual(dest_path, expected_path)
 
         dest_path = GslaHandler.dest_path(GOOD_NC_NRT00)
-        expected_path = os.path.join(GSLA_PREFIX_PATH, "NRT00/2018", os.path.basename(GOOD_NC_NRT00))
+        expected_path = os.path.join(GSLA_PREFIX_PATH, "NRT00/2018", "{}.gz".format(os.path.basename(GOOD_NC_NRT00)))
         self.assertEqual(dest_path, expected_path)
 
         dest_path = GslaHandler.dest_path(GOOD_YEARLY_FILE)
-        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM00/yearfiles", os.path.basename(GOOD_YEARLY_FILE))
+        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM00/yearfiles",
+                                     "{}.gz".format(os.path.basename(GOOD_YEARLY_FILE)))
         self.assertEqual(dest_path, expected_path)
 
     def test_bad_file(self):
