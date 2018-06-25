@@ -131,11 +131,11 @@ class GslaHandler(HandlerBase):
         gsla_type = get_gsla_type(filepath)
 
         if GSLA_REGEX_YEARLY.match(file_basename):
-            destination = os.path.join(GSLA_PREFIX_PATH, gsla_type, file_basename)
+            destination = os.path.join(GSLA_PREFIX_PATH, gsla_type, "{}.gz".format(file_basename))
         else:
             fields = get_pattern_subgroups_from_string(file_basename, GSLA_REGEX)
             gsla_year = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%dT%H%M%SZ').year
-            destination = os.path.join(GSLA_PREFIX_PATH, gsla_type, str(gsla_year), file_basename)
+            destination = os.path.join(GSLA_PREFIX_PATH, gsla_type, str(gsla_year), "{}.gz".format(file_basename))
 
         # FORCE check we aren't deleting files that shouldn't be
         if not GSLA_PREFIX_PATH:
