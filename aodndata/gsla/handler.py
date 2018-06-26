@@ -26,10 +26,17 @@ GSLA_REGEX_YEARLY = re.compile(r"""
 def get_creation_date(filepath):
     """ :return: creation date    """
     file_basename = os.path.basename(filepath)
-    if get_pattern_subgroups_from_string(file_basename, pattern=GSLA_REGEX):
+    if GSLA_REGEX.match(file_basename):
         fields = get_pattern_subgroups_from_string(file_basename, pattern=GSLA_REGEX)
-    else:
+
+    elif GSLA_REGEX_YEARLY.match(file_basename):
         fields = get_pattern_subgroups_from_string(file_basename, pattern=GSLA_REGEX_YEARLY)
+
+    else:
+        raise InvalidFileNameError(
+            "file name: \"{filename}\" not matching regex to deduce creation_date".format(
+                filename=file_basename))
+
     return datetime.strptime(fields['creation_date'], '%Y%m%dT%H%M%SZ')
 
 
