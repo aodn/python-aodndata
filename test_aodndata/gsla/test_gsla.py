@@ -73,6 +73,12 @@ class TestGslaHandler(HandlerTestCase):
         creation_date = get_creation_date(GOOD_NC_DM00)
         self.assertEqual(creation_date, datetime(2013, 9, 13, 8, 23, 43))
 
+        yearly_creation_date = get_creation_date(GOOD_YEARLY_FILE)
+        self.assertEqual(yearly_creation_date, datetime(2015, 5, 21, 3, 6, 49))
+
+        with self.assertRaises(InvalidFileNameError):
+            _ = get_creation_date('not_a_real_path')
+
     def test_setup_upload_location_push_newer_file(self):
         """
         Test case: Check creation date of new *.nc.gz is newer that one is already on storage
