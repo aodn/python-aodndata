@@ -24,9 +24,6 @@ class MooringsHandler(HandlerBase):
         """Check that every input file is valid according to the include/exclude regex patterns. Any non-matching
         file will be left with publish_type UNSET after the _resolve step.
 
-        Also adjust the check_type and publish_type properties for non-NetCDF files. These are currently not checked
-        or harvested, but they need to be uploaded to S3.
-
         :return: None
         """
         self.logger.info("Checking for invalid files and adjusting check/publish properties.")
@@ -38,9 +35,6 @@ class MooringsHandler(HandlerBase):
                     names=map(str, invalid_files.get_attribute_list('name'))
                 )
             )
-
-        non_nc_files = self.file_collection.filter_by_attribute_id_not('file_type', FileType.NETCDF)
-        non_nc_files.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
 
     dest_path = MooringsFileClassifier.dest_path
 
@@ -75,7 +69,7 @@ class AbosHandler(MooringsHandler):
             self.logger.info("Zip file contains only images. Publishing original zip file instead of images.")
 
             images.set_publish_types(PipelineFilePublishType.NO_ACTION)
-            self.input_file_object.publish_type = PipelineFilePublishType.UPLOAD_ONLY
+            self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(self.input_file_object)
 
     dest_path = AbosFileClassifier.dest_path
