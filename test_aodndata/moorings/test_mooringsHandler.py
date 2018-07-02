@@ -63,11 +63,11 @@ class TestMooringsHandler(HandlerTestCase):
         handler = self.run_handler(GOOD_PDF, include_regexes=['IMOS_ANMN-NRS_[0-9]{8}_.*\_LOGSHT.pdf'])
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
-        self.assertEqual(f.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
         self.assertEqual(f.name, GOOD_PDF_BASENAME)
         self.assertEqual(f.dest_path, os.path.join('IMOS/ANMN/NRS/NRSMAI/Field_logsheets/', GOOD_PDF_BASENAME))
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
+        self.assertTrue(f.is_harvested)
 
     # TODO: def test_bad_format_pdf(self):
 
@@ -77,11 +77,11 @@ class TestMooringsHandler(HandlerTestCase):
         handler = self.run_handler(GOOD_PNG, include_regexes=['.*\.png'])
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
-        self.assertEqual(f.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
         self.assertEqual(f.name, GOOD_PNG_BASENAME)
         self.assertEqual(f.dest_path, os.path.join('IMOS/ANMN/NRS/NRSMAI/plots/', GOOD_PNG_BASENAME))
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
+        self.assertTrue(f.is_harvested)
 
     # TODO: def test_bad_format_png(self):
 
@@ -91,13 +91,13 @@ class TestMooringsHandler(HandlerTestCase):
         handler = self.run_handler(GOOD_CNV, include_regexes=['.*\.cnv'])
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
-        self.assertEqual(f.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
         self.assertEqual(f.name, GOOD_CNV_BASENAME)
         self.assertEqual(f.dest_path,
                          os.path.join('IMOS/ANMN/NRS/NRSMAI/Biogeochem_profiles/non-QC/cnv/', GOOD_CNV_BASENAME)
                          )
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
+        self.assertTrue(f.is_harvested)
 
     # TODO: def test_bad_cnv(self):
 
@@ -144,14 +144,10 @@ class TestMooringsHandler(HandlerTestCase):
                                    check_params={'checks': ['cf', 'imos:1.4']}
                                    )
         self.assertEqual(len(handler.file_collection), 4)
-        nc_file = handler.file_collection.filter_by_attribute_value('name', GOOD_NC_BASENAME)[0]
-        self.assertTrue(nc_file.is_checked)
-        self.assertTrue(nc_file.is_stored)
-        self.assertTrue(nc_file.is_harvested)
-        for f in handler.file_collection.filter_by_attribute_id_not('file_type', FileType.NETCDF):
-            self.assertIs(f.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
+        for f in handler.file_collection:
             self.assertTrue(f.is_checked)
             self.assertTrue(f.is_stored)
+            self.assertTrue(f.is_harvested)
 
 
 if __name__ == '__main__':
