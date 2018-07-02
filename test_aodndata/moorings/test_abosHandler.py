@@ -39,9 +39,9 @@ class TestAbosHandler(HandlerTestCase):
             self.assertFalse(f.is_stored)
 
         for f in handler.file_collection.filter_by_attribute_id('file_type', FileType.ZIP):
-            self.assertIs(f.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
             self.assertEqual(f.dest_path, os.path.join('IMOS', 'ABOS', 'SOTS', 'images', IMAGES_ZIP_BASENAME))
             self.assertTrue(f.is_stored)
+            self.assertTrue(f.is_harvested)
 
     def test_mixed_zip(self):
         self.run_handler_with_exception(InvalidFileContentError, MIXED_ZIP)
