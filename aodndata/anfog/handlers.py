@@ -33,7 +33,7 @@ class AnfogHandler(HandlerBase):
 
     def __init__(self, *args, **kwargs):
         super(AnfogHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.nc', '.txt', '.zip']
+        self.allowed_extensions = ['.nc', '.txt', '.zip', '.csv']
 
         # store the NC file and the subsequent upload destination calculated from it in the class for other file types
         # to access it when they need to (e.g. dest_path)
@@ -83,18 +83,19 @@ class AnfogHandler(HandlerBase):
             elif re.match(AnfogFileClassifier.DM_REGEX, input_file_basename):
                 # In Delayed mode, single NetCDF file upload only valid for updates
                 # => Check that deployment exists on S3
-                nc = self.file_collection[0]
-                self.upload_destination = AnfogFileClassifier.get_destination(nc.src_path)
+                self.primary_nc = self.file_collection[0]
+                self.upload_destination = AnfogFileClassifier.get_destination(self.primary_nc.src_path)
                 results = self.state_query.query_storage(self.upload_destination)
-                if not results:
+                if results:
+                    self.delete_previous_version('DM', 'update')
+                else:
                     raise MissingFileError(
                         "New delayed mode deployment. NetCDF file '{file}' "
-                        "should have been submitted with ancillary material".
-                            format(file=os.path.basename(nc.src_path)))
-
+                        "should have been submitted with ancillary material"
+                            .format(file=os.path.basename(self.primary_nc.src_path)))
         else:
-            raise InvalidInputFileError("Cannot process the uploaded file {name}.".
-                                        format(name=input_file_basename))
+            raise InvalidInputFileError("Cannot process the uploaded file {name}."
+                                        .format(name=input_file_basename))
 
     def process_zip_common(self, mode):
         if mode == 'RT':
@@ -157,7 +158,7 @@ class AnfogHandler(HandlerBase):
     def set_deployment_status(self, input_file, message):
         """
         Update the harvest_listing table of the anfog_rt_schema using the Harvestmission.csv file
-        Note that 'platform' cannot be determinate from txt file so set to na =not available
+        Note that 'platform' cannot be determinate from txt file so set to na = not available
         :return:  Harvestmission.csv updated with deployment specific status
         """
         name = os.path.basename(input_file)
@@ -173,6 +174,7 @@ class AnfogHandler(HandlerBase):
         product = PipelineFile(listing_path)
         product.publish_type = PipelineFilePublishType.HARVEST_ONLY
         product.check_type = PipelineFileCheckType.FORMAT_CHECK
+        product.dest_path = os.path.join(self.upload_destination, os.path.basename(listing_path))
         self.file_collection.add(product)
 
     def delete_previous_version(self, mode, deployment_status):
@@ -190,33 +192,49 @@ class AnfogHandler(HandlerBase):
         if mode == 'DM' and deployment_status == 'delayed_mode':
             #  RT and DM folder hierarchy similar except that RT has additional level /REALTIME/
             destination = AnfogFileClassifier.make_rt_path(self.upload_destination)
-        elif (mode == 'DM' and deployment_status == 'update') or (
-                mode == 'RT' and deployment_status in ['renamed', 'in_progress']):
+            delete_file_regex = '%s|%s|%s' % (AnfogFileClassifier.ANFOG_RT_REGEX,
+                                              AnfogFileClassifier.RT_PNG_REGEX,
+                                              AnfogFileClassifier.RT_POSITION_SUMMARY)
+        elif mode == 'DM' and deployment_status == 'update':
             destination = self.upload_destination
+            delete_file_regex = AnfogFileClassifier.ANFOG_DM_REGEX
+        elif mode == 'RT' and deployment_status == 'renamed':
+            destination = self.upload_destination
+            delete_file_regex = '%s|%s|%s' % (AnfogFileClassifier.ANFOG_RT_REGEX,
+                                              AnfogFileClassifier.RT_PNG_REGEX,
+                                              AnfogFileClassifier.RT_POSITION_SUMMARY)
+        elif mode == 'RT' and deployment_status == 'in_progress':
+            destination = self.upload_destination
+            delete_file_regex = '%s|%s' % (AnfogFileClassifier.ANFOG_RT_REGEX,
+                                           AnfogFileClassifier.RT_PNG_TRANSECT_REGEX)
         else:
             raise ValueError(
                 "Invalid combination of mode '{mode}' and status'{st}'".format(mode=mode, st=deployment_status))
 
-        # publishtype set according to file type: netcdf unharvest_delete,
+        # publish_type set according to file type: netcdf unharvest_delete,
         # everything else (png, txt, kml..) DELETE_ONLY
         previous_file_list = self.state_query.query_storage(destination)
+        self.logger.info("Mode '{mode}' and Status '{status}'".format(mode=mode, status=deployment_status))
 
         for filename in previous_file_list:
-
             previous_file = PipelineFile(filename, is_deletion=True, dest_path=destination)
             previous_file.dest_path = os.path.join(destination, previous_file.name)
             # set default publish type to delete only
             previous_file.publish_type = PipelineFilePublishType.DELETE_ONLY
-            self.file_collection.add(previous_file)
-
             if previous_file.file_type is FileType.NETCDF:
                 previous_file.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
-                self.logger.info(
-                    "adding deletion of previous file '{dest_path}'".format(dest_path=previous_file.dest_path))
-            elif re.match(AnfogFileClassifier.RT_PNG_REGEX, previous_file.name) and not re.match(
-                    AnfogFileClassifier.RT_PNG_TRANSECT_REGEX, previous_file.name):
-                # remove file that will be overwritten otherwise triggers pipeline error : 2 files have same dest_path
-                self.file_collection.discard(previous_file)
+
+            if re.match(delete_file_regex, previous_file.name):
+                self.file_collection.add(previous_file)
+
+                if deployment_status != 'renamed' and re.match(previous_file.name,
+                                                               os.path.basename(self.primary_nc.src_path)):
+                    # removing file as it will be overwritten. Note that test is invalid in 'renamed' status
+                    #  cause primary_nc not set(irrelevant)
+                    self.file_collection.discard(previous_file)
+                else:
+                    self.logger.info(
+                        "adding deletion of previous file '{dest_path}'".format(dest_path=previous_file.dest_path))
 
     def get_data_mode(self):
         """

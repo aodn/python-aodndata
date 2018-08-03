@@ -36,14 +36,6 @@ class TestAnfogHandler(HandlerTestCase):
         # set the handler_class attribute to your handler (as imported above)
         self.handler_class = AnfogHandler
 
-        # we copy the csv file usually in $WIP_DIR to the test temp folder
-        # self.temp_dir_mission_list = os.path.join(self.temp_dir, 'ANFOG', 'RT')
-        # os.makedirs(self.temp_dir_mission_list)
-
-        # we copy the CSV to the temporary test folder
-        # self.harvest_mission_file = os.path.join(self.temp_dir_mission_list, 'HarvestmissionList.csv')
-        # copyfile(TEST_MISSION_LIST, os.path.join(self.temp_dir_mission_list, 'HarvestmissionList.csv'))
-
         super(TestAnfogHandler, self).setUp()
 
     def test_good_dm_file_with_compliance_check(self):
@@ -63,11 +55,11 @@ class TestAnfogHandler(HandlerTestCase):
         broker.upload(preexisting_file)
 
         handler = self.handler_class(GOOD_NC)
-        handler.check_params = {'checks': ['cf', 'imos:1.4']}
+        # handler.check_params = {'checks': ['cf', 'imos:1.4']}
         handler.run()
 
         f = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
-        self.assertEqual(f[0].check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+        # self.assertEqual(f[0].check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
         self.assertEqual(f[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
 
         self.assertEqual(f[0].dest_path,
