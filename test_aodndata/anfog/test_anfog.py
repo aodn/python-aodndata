@@ -72,7 +72,7 @@ class TestAnfogHandler(HandlerTestCase):
     def test_good_anfog_dm_zip(self):
 
         handler = self.handler_class(GOOD_ZIP_DM)
-        # handler.check_params = {'checks': ['cf', 'imos:1.4']}
+        handler.check_params = {'checks': ['cf', 'imos:1.4']}
         handler.run()
 
         raw = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RAW_FILES_REGEX)
@@ -155,7 +155,7 @@ class TestAnfogHandler(HandlerTestCase):
         handler.run()
         non_nc = handler.file_collection.filter_by_attribute_value('extension', '.jpg|.kml')
         fv01 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
-        # fv00 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RAW_DATA_REGEX)
+        fv00 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RAW_DATA_REGEX)
 
         for n in non_nc:
             self.assertEqual(n.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
@@ -173,11 +173,12 @@ class TestAnfogHandler(HandlerTestCase):
         self.assertTrue(f.is_harvested)
 
         # FV00 => archive
-        # a = fv00[0]
-        # self.assertEqual(a.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
-        # self.assertEqual(a.archive_path,
-        #                  'US_Naval_Research_Laboratory/slocum_glider/AdapterNSW20120415/' + a.name)
-        # self.assertTrue(a.is_archived)
+
+        for a in fv00:
+            self.assertEqual(a.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+            self.assertEqual(a.archive_path,
+                             'US_Naval_Research_Laboratory/slocum_glider/AdapterNSW20120415/' + a.name)
+            self.assertTrue(a.is_archived)
 
     def test_rt_update(self):
         """ test the update of realtime mission:
@@ -232,7 +233,6 @@ class TestAnfogHandler(HandlerTestCase):
         # no update the harvestMission List in that case
         csv = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)
         self.assertEqual(len(csv), 0)
-
 
     def test_deletion_rt_after_dm_upload(self):
         """test deletion of RT mission at upload of related DM version"""

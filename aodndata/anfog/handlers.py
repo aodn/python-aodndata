@@ -219,6 +219,7 @@ class AnfogHandler(HandlerBase):
         for filename in previous_file_list:
             previous_file = PipelineFile(filename, is_deletion=True, dest_path=destination)
             previous_file.dest_path = os.path.join(destination, previous_file.name)
+            previous_file.check_type = PipelineFileCheckType.NO_ACTION
             # set default publish type to delete only
             previous_file.publish_type = PipelineFilePublishType.DELETE_ONLY
             if previous_file.file_type is FileType.NETCDF:
