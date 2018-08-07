@@ -1,6 +1,4 @@
-import os
 from itertools import chain
-
 from pkg_resources import EntryPoint
 from setuptools import setup, find_packages
 
@@ -46,6 +44,12 @@ ENTRY_POINTS = {
     ]
 }
 
+INSTALL_REQUIRES = [
+    'aodncore>=0.12.0',
+    'matplotlib==1.5.1',
+    'pandas==0.22.0'
+]
+
 # validate entry points
 for item in chain(ENTRY_POINTS['pipeline.handlers'], ENTRY_POINTS['pipeline.path_functions']):
     if item.count('=') != 1:
@@ -58,11 +62,6 @@ for item in chain(ENTRY_POINTS['pipeline.handlers'], ENTRY_POINTS['pipeline.path
 PACKAGE_EXCLUDES = ['test_aodndata.*', 'test_aodndata']
 PACKAGE_NAME = 'aodndata'
 
-requirements_txt = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'requirements.txt')
-
-with open(requirements_txt) as f:
-    requires = f.read().splitlines()
-
 setup(
     name=PACKAGE_NAME,
     version=__version__,
@@ -73,7 +72,7 @@ setup(
     author_email='developers@emii.org.au',
     description='AODN pipeline library',
     zip_safe=False,
-    install_requires=requires,
+    install_requires=INSTALL_REQUIRES ,
     test_suite='test_aodndata',
     entry_points=ENTRY_POINTS
 )
