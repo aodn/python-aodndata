@@ -123,7 +123,7 @@ class AnfogHandler(HandlerBase):
             if not =>  new deployment, clear RT data
         """
         self.process_zip_common('DM')
-        self.primary_nc.check_type = PipelineFileCheckType.NC_COMPLIANCE_CHECK
+
 
         results = self.state_query.query_storage(self.upload_destination)
         self._set_dm_collection_attributes()
@@ -144,10 +144,8 @@ class AnfogHandler(HandlerBase):
         all files have to be uploaded to S3
         """
         self.process_zip_common('RT')
-        self.primary_nc.check_type = PipelineFileCheckType.FORMAT_CHECK
         # publish type of ancillary files set to UPLOAD_ONLY
         non_nc_files = PipelineFileCollection(f for f in self.file_collection if (f.file_type is not FileType.NETCDF))
-        non_nc_files.set_check_types(PipelineFileCheckType.FORMAT_CHECK)
         non_nc_files.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
 
         # Check if deployment exist on S3
