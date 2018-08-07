@@ -148,9 +148,8 @@ class TestAnfogHandler(HandlerTestCase):
 
     def test_nrl(self):
         # test processing of NRL file collection. Collection containn FV01 and FV00
-        # TODO add the NRL FV00 file back in the zip => uncomment last 4 lines
         handler = self.handler_class(ZIP_NRL)
-        # handler.check_params = {'checks': ['cf']}
+        handler.check_params = {'checks': ['cf']}
 
         handler.run()
         non_nc = handler.file_collection.filter_by_attribute_value('extension', '.jpg|.kml')
@@ -256,7 +255,10 @@ class TestAnfogHandler(HandlerTestCase):
         broker.upload(preexisting_files)
 
         # run the handler
-        handler = self.run_handler(GOOD_ZIP_DM)
+
+        handler = self.handler_class(GOOD_ZIP_DM)
+        handler.check_params = {'checks': ['cf', 'imos:1.4']}
+        handler.run()
 
         nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
         for n in nc:
@@ -304,7 +306,8 @@ class TestAnfogHandler(HandlerTestCase):
         broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         broker.upload(preexisting_files)
 
-        handler = self.run_handler(MISSION_STATUS)
+        handler = self.handler_class(MISSION_STATUS)
+        handler.run()
 
         # Process should resuls in : input file unhandled , preexisting file should be deleted, cvs file harvested
         csv = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)

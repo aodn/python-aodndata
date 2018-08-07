@@ -123,6 +123,8 @@ class AnfogHandler(HandlerBase):
             if not =>  new deployment, clear RT data
         """
         self.process_zip_common('DM')
+        self.primary_nc.check_type = PipelineFileCheckType.NC_COMPLIANCE_CHECK
+
         results = self.state_query.query_storage(self.upload_destination)
         self._set_dm_collection_attributes()
         if results:
@@ -142,8 +144,10 @@ class AnfogHandler(HandlerBase):
         all files have to be uploaded to S3
         """
         self.process_zip_common('RT')
+        self.primary_nc.check_type = PipelineFileCheckType.FORMAT_CHECK
         # publish type of ancillary files set to UPLOAD_ONLY
         non_nc_files = PipelineFileCollection(f for f in self.file_collection if (f.file_type is not FileType.NETCDF))
+        non_nc_files.set_check_types(PipelineFileCheckType.FORMAT_CHECK)
         non_nc_files.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
 
         # Check if deployment exist on S3
@@ -219,7 +223,6 @@ class AnfogHandler(HandlerBase):
         for filename in previous_file_list:
             previous_file = PipelineFile(filename, is_deletion=True, dest_path=destination)
             previous_file.dest_path = os.path.join(destination, previous_file.name)
-            previous_file.check_type = PipelineFileCheckType.NO_ACTION
             # set default publish type to delete only
             previous_file.publish_type = PipelineFilePublishType.DELETE_ONLY
             if previous_file.file_type is FileType.NETCDF:
@@ -287,6 +290,7 @@ class AnfogHandler(HandlerBase):
 
         # construct collection of files to upload
         upload_to_s3 = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.UPLOAD_TO_S3_REGEX)
+        upload_to_s3.set_check_types(PipelineFileCheckType.FORMAT_CHECK)
         upload_to_s3.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
 
     def dest_path(self, filepath):
