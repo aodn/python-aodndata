@@ -1,7 +1,6 @@
 import os
 from itertools import chain
 
-from pip.req import parse_requirements
 from pkg_resources import EntryPoint
 from setuptools import setup, find_packages
 
@@ -59,10 +58,10 @@ for item in chain(ENTRY_POINTS['pipeline.handlers'], ENTRY_POINTS['pipeline.path
 PACKAGE_EXCLUDES = ['test_aodndata.*', 'test_aodndata']
 PACKAGE_NAME = 'aodndata'
 
-package_root = os.path.dirname(os.path.realpath(__file__))
-requirements_txt = os.path.join(package_root, 'requirements.txt')
+requirements_txt = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'requirements.txt')
 
-requires = [str(r.req) for r in parse_requirements(requirements_txt, session=False)]
+with open(requirements_txt) as f:
+    requires = f.read().splitlines()
 
 setup(
     name=PACKAGE_NAME,
