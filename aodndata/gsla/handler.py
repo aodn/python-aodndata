@@ -113,7 +113,6 @@ class GslaHandler(HandlerBase):
 
                 file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
                 self.file_collection.add(file_to_delete)
-                pass
 
     def get_previous_version_object(self, filepath):
         destination = self.dest_path(filepath)

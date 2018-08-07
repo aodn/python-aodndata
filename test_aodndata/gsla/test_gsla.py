@@ -17,7 +17,7 @@ TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 GOOD_NC_DM00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_19930101T000000Z_GSLA_FV02_DM00_C-20130913T082343Z.nc.gz")
 GOOD_NC_NRT00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_NRT00_C-20180105T222006Z.nc.gz")
-GOOD_YEARLY_FILE = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_1993_C-20150521T030649Z.nc.gz")
+GOOD_YEARLY_FILE = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_2018_C-20180806T000000Z.nc.gz")
 
 PREV_NC_STORAGE = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20180130T224000Z.nc.gz')
 NEWER_CREATION_DATE_NC = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20181231T225959Z.nc.gz')
@@ -73,7 +73,7 @@ class TestGslaHandler(HandlerTestCase):
         self.assertEqual(creation_date, datetime(2013, 9, 13, 8, 23, 43))
 
         yearly_creation_date = get_creation_date(GOOD_YEARLY_FILE)
-        self.assertEqual(yearly_creation_date, datetime(2015, 5, 21, 3, 6, 49))
+        self.assertEqual(yearly_creation_date, datetime(2018, 8, 6, 0, 0, 0))
 
         with self.assertRaises(InvalidFileNameError):
             _ = get_creation_date('not_a_real_path')
@@ -171,6 +171,20 @@ class TestGslaHandler(HandlerTestCase):
 
         nc_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(nc_file.publish_type, PipelineFilePublishType.NO_ACTION)
+
+    def test_push_yearly_file(self):
+        """
+        Test case: Push new yearly file *.nc.gz with UPLOAD_ONLY
+        """
+        # run the handler
+        handler = self.run_handler(GOOD_YEARLY_FILE)
+
+        nc_gz_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)[0]
+        self.assertEqual(nc_gz_file.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
+
+        nc_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        self.assertEqual(nc_file.publish_type, PipelineFilePublishType.NO_ACTION)
+
 
 if __name__ == '__main__':
     unittest.main()
