@@ -54,10 +54,6 @@ INSTALL_REQUIRES = [
 for item in chain(ENTRY_POINTS['pipeline.handlers'], ENTRY_POINTS['pipeline.path_functions']):
     if item.count('=') != 1:
         raise ValueError("invalid entry point '{item}'. Missing comma?".format(item=item))
-    try:
-        EntryPoint.parse(item).resolve()
-    except Exception as e:
-        raise ValueError("invalid entry point '{item}'. {c}: {e}".format(item=item, c=e.__class__.__name__, e=e))
 
 PACKAGE_EXCLUDES = ['test_aodndata.*', 'test_aodndata']
 PACKAGE_NAME = 'aodndata'

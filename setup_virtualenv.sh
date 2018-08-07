@@ -15,7 +15,6 @@ WHEEL_CACHE_DIR=.python-aodndata-download-cache
 echo "##### Creating/updating virtual environment #####"
 virtualenv ${VIRTUALENV_DIR}
 source ${VIRTUALENV_DIR}/bin/activate
-pip install pip==9.0.3
 pip install ${AODNFETCHER_URL}
 
 echo "##### Installing dependencies into virtual environment #####"
