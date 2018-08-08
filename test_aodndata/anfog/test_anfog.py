@@ -54,9 +54,7 @@ class TestAnfogHandler(HandlerTestCase):
         broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         broker.upload(preexisting_file)
 
-        handler = self.handler_class(GOOD_NC)
-        # handler.check_params = {'checks': ['cf', 'imos:1.4']}
-        handler.run()
+        handler = self.run_handler(GOOD_NC, check_params={'checks': ['cf', 'imos:1.4']})
 
         f = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
         # self.assertEqual(f[0].check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
@@ -71,9 +69,7 @@ class TestAnfogHandler(HandlerTestCase):
 
     def test_good_anfog_dm_zip(self):
 
-        handler = self.handler_class(GOOD_ZIP_DM)
-        handler.check_params = {'checks': ['cf', 'imos:1.4']}
-        handler.run()
+        handler = self.run_handler(GOOD_ZIP_DM, check_params={'checks': ['cf', 'imos:1.4']})
 
         raw = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RAW_FILES_REGEX)
         jpg = handler.file_collection.filter_by_attribute_value('extension', '.jpg')
@@ -102,8 +98,7 @@ class TestAnfogHandler(HandlerTestCase):
 
     def test_good_anfog_rt_zip(self):
 
-        handler = self.handler_class(GOOD_ZIP_RT)
-        handler.run()
+        handler = self.run_handler(GOOD_ZIP_RT)
 
         png = handler.file_collection.filter_by_attribute_regex('extension', '.png')
         nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
@@ -136,9 +131,8 @@ class TestAnfogHandler(HandlerTestCase):
         broker.upload(preexisting_file)
 
         # test processing of DSTG and NRL NetCDF files
-        handler = self.handler_class(DSTG)
+        handler = self.run_handler(DSTG)
 
-        handler.run()
         f = handler.file_collection[0]
         self.assertEqual(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertEqual(f.dest_path,
@@ -148,10 +142,8 @@ class TestAnfogHandler(HandlerTestCase):
 
     def test_nrl(self):
         # test processing of NRL file collection. Collection containn FV01 and FV00
-        handler = self.handler_class(ZIP_NRL)
-        handler.check_params = {'checks': ['cf']}
+        handler = self.run_handler(ZIP_NRL,check_params={'checks': ['cf']})
 
-        handler.run()
         non_nc = handler.file_collection.filter_by_attribute_value('extension', '.jpg|.kml')
         fv01 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
         fv00 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RAW_DATA_REGEX)
@@ -255,10 +247,7 @@ class TestAnfogHandler(HandlerTestCase):
         broker.upload(preexisting_files)
 
         # run the handler
-
-        handler = self.handler_class(GOOD_ZIP_DM)
-        handler.check_params = {'checks': ['cf', 'imos:1.4']}
-        handler.run()
+        handler = self.run_handler(GOOD_ZIP_DM, check_params={'checks': ['cf', 'imos:1.4']})
 
         nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
         for n in nc:
@@ -306,8 +295,7 @@ class TestAnfogHandler(HandlerTestCase):
         broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         broker.upload(preexisting_files)
 
-        handler = self.handler_class(MISSION_STATUS)
-        handler.run()
+        handler = self.run_handler(MISSION_STATUS)
 
         # Process should resuls in : input file unhandled , preexisting file should be deleted, cvs file harvested
         csv = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)

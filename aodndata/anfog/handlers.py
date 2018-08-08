@@ -124,7 +124,6 @@ class AnfogHandler(HandlerBase):
         """
         self.process_zip_common('DM')
 
-
         results = self.state_query.query_storage(self.upload_destination)
         self._set_dm_collection_attributes()
         if results:
@@ -288,7 +287,6 @@ class AnfogHandler(HandlerBase):
 
         # construct collection of files to upload
         upload_to_s3 = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.UPLOAD_TO_S3_REGEX)
-        upload_to_s3.set_check_types(PipelineFileCheckType.FORMAT_CHECK)
         upload_to_s3.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
 
     def dest_path(self, filepath):
