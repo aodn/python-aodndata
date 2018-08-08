@@ -123,6 +123,7 @@ class AnfogHandler(HandlerBase):
             if not =>  new deployment, clear RT data
         """
         self.process_zip_common('DM')
+
         results = self.state_query.query_storage(self.upload_destination)
         self._set_dm_collection_attributes()
         if results:
