@@ -39,7 +39,6 @@ class SoopBaHandler(HandlerBase):
                 "Expecting one netCDF file from input file '{infile}'".format(infile=os.path.basename(self.input_file)))
 
         nc = netcdf[0]
-        nc.check_type = PipelineFileCheckType.NC_COMPLIANCE_CHECK
         destination = SoopBaFileClassifier.dest_path(nc)
         nc.dest_path = os.path.join(destination, nc.name)
 
