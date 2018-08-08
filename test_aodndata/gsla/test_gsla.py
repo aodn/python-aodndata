@@ -113,6 +113,36 @@ class TestGslaHandler(HandlerTestCase):
         nc_gz_delete = handler.file_collection.filter_by_attribute_value('name', os.path.basename(PREV_NC_STORAGE))[0]
         self.assertEqual(nc_gz_delete.publish_type, PipelineFilePublishType.DELETE_UNHARVEST)
 
+    def test_setup_upload_location_push_same_file(self):
+        """
+        Test case: Push same file twice to $INCOMING_DIR
+                   HARVEST_UPLOAD the incoming *.nc.gz
+                   NO_ACTION on the nc inside the *.nc.gz
+        """
+        # create some PipelineFiles to represent the existing files on 'S3'
+        preexisting_files = PipelineFileCollection()
+
+        existing_file = PipelineFile(PREV_NC_STORAGE, dest_path=os.path.join(
+            'IMOS/OceanCurrent/GSLA/DM00/2018/',
+            os.path.basename(PREV_NC_STORAGE)))
+
+        preexisting_files.update([existing_file])
+
+        # set the files to UPLOAD_ONLY
+        preexisting_files.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
+
+        # upload the 'preexisting_files' collection to the unit test's temporary upload location
+        broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
+        broker.upload(preexisting_files)
+
+        # run the handler by uploading again the same file
+        handler = self.run_handler(PREV_NC_STORAGE)
+
+        nc_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        self.assertEqual(nc_file.publish_type, PipelineFilePublishType.NO_ACTION)
+
+        nc_gz_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)[0]
+        self.assertEqual(nc_gz_file.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
 
     @patch('aodndata.gsla.handler.GSLA_PREFIX_PATH', '')
     def test_setup_upload_location_push_newer_file_bad_prefix(self):

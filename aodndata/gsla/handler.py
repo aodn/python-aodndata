@@ -93,6 +93,8 @@ class GslaHandler(HandlerBase):
                 new_file_creation_date = get_creation_date(netcdf_file.name)
                 if result_previous_version_creation_date > new_file_creation_date:
                     push_new_file = False
+                elif result_previous_version_creation_date == new_file_creation_date:
+                    push_new_file = True
                 else:
                     remove_previous_version = True
                     previous_file_path = self.get_previous_version_object(netcdf_file.name)
