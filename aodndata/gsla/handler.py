@@ -65,6 +65,8 @@ class GslaHandler(HandlerBase):
         # add nc_gz file to collection (not by default)
         self.file_collection.add(self.input_file_object)
         netcdf_file_gz_collection = self.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)
+        netcdf_file_gz = netcdf_file_gz_collection[0]
+        netcdf_file_gz.publish_type = PipelineFilePublishType.HARVEST_UPLOAD  # default
 
         # GSLA files are gzipped, so gunzip them before checking them
         if self.file_type is FileType.GZIP:
@@ -76,16 +78,23 @@ class GslaHandler(HandlerBase):
                 )
 
             netcdf_file = netcdf_collection[0]
+            # Nothing to do with *.nc. Talend can harvest *.nc.gz. Set to NO_ACTION
+            netcdf_file.publish_type = PipelineFilePublishType.NO_ACTION
+
             result_previous_version_creation_date = self.get_previous_version_creation_date(netcdf_file.name)
 
-            push_new_file = True  # by default we push to the storage the file landed in the pipeline
+            """ default values
+            by default we push to the storage the file landed in the pipeline (ie *.nc.gz) """
+            push_new_file = True
             remove_previous_version = False
 
-            # compare creation dates of file already on storage
+            # compare creation dates with file already on storage
             if result_previous_version_creation_date:
                 new_file_creation_date = get_creation_date(netcdf_file.name)
                 if result_previous_version_creation_date > new_file_creation_date:
                     push_new_file = False
+                elif result_previous_version_creation_date == new_file_creation_date:
+                    push_new_file = True
                 else:
                     remove_previous_version = True
                     previous_file_path = self.get_previous_version_object(netcdf_file.name)
@@ -93,24 +102,17 @@ class GslaHandler(HandlerBase):
             if push_new_file:
                 if GSLA_REGEX_YEARLY.match(netcdf_file.name):
                     # yearly file should never be harvested
-                    netcdf_file.publish_type = PipelineFilePublishType.NO_ACTION
-                else:
-                    # index un-gzipped file, but push gzipped file to S3
-                    netcdf_file.publish_type = PipelineFilePublishType.HARVEST_ONLY
-
-                # to set to all files in the collection
-                netcdf_file_gz_collection.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
-
+                    netcdf_file_gz.publish_type = PipelineFilePublishType.UPLOAD_ONLY
             else:
-                netcdf_file.publish_type = PipelineFilePublishType.NO_ACTION
-                netcdf_file_gz_collection.publish_type = PipelineFilePublishType.NO_ACTION
+                netcdf_file_gz.publish_type = PipelineFilePublishType.NO_ACTION
 
             # deletion of the previous file
             if remove_previous_version:
                 previous_file_name = os.path.basename(previous_file_path)
                 file_to_delete = PipelineFile(previous_file_name,
-                                              is_deletion=True)
-                file_to_delete.dest_path = self.dest_path(previous_file_name)
+                                              is_deletion=True,
+                                              dest_path=self.dest_path(previous_file_name))
+
                 file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
                 self.file_collection.add(file_to_delete)
 
@@ -143,11 +145,12 @@ class GslaHandler(HandlerBase):
         gsla_type = get_gsla_type(filepath)
 
         if GSLA_REGEX_YEARLY.match(file_basename):
-            destination = os.path.join(GSLA_PREFIX_PATH, gsla_type, "{}.gz".format(file_basename))
+            destination = os.path.join(GSLA_PREFIX_PATH, gsla_type, file_basename)
+
         else:
             fields = get_pattern_subgroups_from_string(file_basename, GSLA_REGEX)
             gsla_year = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%dT%H%M%SZ').year
-            destination = os.path.join(GSLA_PREFIX_PATH, gsla_type, str(gsla_year), "{}.gz".format(file_basename))
+            destination = os.path.join(GSLA_PREFIX_PATH, gsla_type, str(gsla_year), file_basename)
 
         # FORCE check we aren't deleting files that shouldn't be
         if not GSLA_PREFIX_PATH:
