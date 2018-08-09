@@ -112,8 +112,12 @@ class GslaHandler(HandlerBase):
                 file_to_delete = PipelineFile(previous_file_name,
                                               is_deletion=True,
                                               dest_path=self.dest_path(previous_file_name))
+                
+                if GSLA_REGEX_YEARLY.match(netcdf_file.name):
+                    file_to_delete.publish_type = PipelineFilePublishType.DELETE_ONLY
+                else:
+                    file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
 
-                file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
                 self.file_collection.add(file_to_delete)
 
     def get_previous_version_object(self, filepath):
