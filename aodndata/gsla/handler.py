@@ -111,8 +111,10 @@ class GslaHandler(HandlerBase):
                 previous_file_name = os.path.basename(previous_file_path)
                 file_to_delete = PipelineFile(previous_file_name,
                                               is_deletion=True,
-                                              dest_path=self.dest_path(previous_file_name))
-                
+                                              dest_path=self.dest_path(previous_file_name),
+                                              file_update_callback=self._file_update_callback
+                                              )
+
                 if GSLA_REGEX_YEARLY.match(netcdf_file.name):
                     file_to_delete.publish_type = PipelineFilePublishType.DELETE_ONLY
                 else:
@@ -149,19 +151,9 @@ class GslaHandler(HandlerBase):
         gsla_type = get_gsla_type(filepath)
 
         if GSLA_REGEX_YEARLY.match(file_basename):
-            destination = os.path.join(GSLA_PREFIX_PATH, gsla_type, file_basename)
+            return os.path.join(GSLA_PREFIX_PATH, gsla_type, file_basename)
 
         else:
             fields = get_pattern_subgroups_from_string(file_basename, GSLA_REGEX)
             gsla_year = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%dT%H%M%SZ').year
-            destination = os.path.join(GSLA_PREFIX_PATH, gsla_type, str(gsla_year), file_basename)
-
-        # FORCE check we aren't deleting files that shouldn't be
-        if not GSLA_PREFIX_PATH:
-            raise InvalidPathFunctionError(
-                "dest_path '{dest_path}' of new/previous file to add/delete doesn't start with GSLA prefix '{prefix}'".
-                    format(dest_path=destination,
-                           prefix=GSLA_PREFIX_PATH)
-            )
-        else:
-            return destination
+            return os.path.join(GSLA_PREFIX_PATH, gsla_type, str(gsla_year), file_basename)
