@@ -53,6 +53,7 @@ class TestArgoHandler(HandlerTestCase):
         bad_file = handler.file_collection.filter_by_attribute_value('name', 'D1901119_001.bad')[0]
         good_file_deletion = handler.file_collection.filter_by_attribute_value('file_type', FileType.NETCDF)[0]
 
+        self.assertIsNone(handler.error)
         self.assertEqual(bad_file.publish_type, PipelineFilePublishType.NO_ACTION)
         self.assertEqual(good_file_deletion.publish_type, PipelineFilePublishType.DELETE_UNHARVEST)
 
