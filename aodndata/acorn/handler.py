@@ -85,7 +85,6 @@ class AcornHandler(HandlerBase):
         super(AcornHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.nc']
         self.opendap_root = self.config.pipeline_config['global'].get('opendap_root')
-        self.allowed_regexes = [ACORN_FILE_PATTERN]
 
     def preprocess(self):
         nc_file = self.file_collection[0]
@@ -96,7 +95,7 @@ class AcornHandler(HandlerBase):
         else:
             nc_file.publish_type = PipelineFilePublishType.UPLOAD_ONLY
 
-        # check if file with same dest path already on s3. If yes, check its date_created nc attribute to know
+        # check if file with same dest_path already on s3. If yes, check its date_created nc attribute to know
         # if we need to overwrite this object or not
         destination_s3 = self.dest_path(nc_file.name)
 

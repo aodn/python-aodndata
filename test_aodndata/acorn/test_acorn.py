@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from netCDF4 import Dataset
 
 from aodncore.pipeline import PipelineFilePublishType, PipelineFile, PipelineFileCollection, FileType
-from aodncore.pipeline.exceptions import AttributeValidationError, InvalidFileNameError
+from aodncore.pipeline.exceptions import InvalidInputFileError, InvalidFileNameError
 from aodncore.pipeline.storage import get_storage_broker
 from aodncore.util.misc import get_pattern_subgroups_from_string
 from aodndata.acorn.handler import AcornHandler, ACORN_FILE_PATTERN, get_creation_date
@@ -51,16 +51,18 @@ class TestAcornHandler(HandlerTestCase):
         
     def test_fv00_in_dm(self):
         # check that a FV00 file is not allowed in DM folder/pipeline
-        self.run_handler_with_exception(AttributeValidationError, GOOD_NC_FV00,
-                                        include_regexes=[
+        # mock JSON file by adding allowed_regexes & allowed_dest_path_regexes
+        self.run_handler_with_exception(InvalidInputFileError, GOOD_NC_FV00,
+                                        allowed_regexes=[
                                             '^IMOS_ACORN_[A-Z].*_[0-9]{8}T[0-9]{6}Z_[A-Z]{3,4}_FV01_(radial|sea-state|wavespec|windp|wavep|1-hour-avg)\.nc$'],
-                                            allowed_dest_path_regexes=["^IMOS/ACORN/.*FV01.*\.nc$"]
+                                        allowed_dest_path_regexes=["^IMOS/ACORN/.*FV01.*\.nc$"]
                                         )
 
     def test_fv01_in_rt(self):
         # check that a FV01 file is not allowed in RT folder/pipeline
-        self.run_handler_with_exception(AttributeValidationError, GOOD_NC_FV01,
-                                        include_regexes=[
+        # mock JSON file by adding allowed_regexes & allowed_dest_path_regexes
+        self.run_handler_with_exception(InvalidInputFileError, GOOD_NC_FV01,
+                                        allowed_regexes=[
                                             '^IMOS_ACORN_[A-Z].*_[0-9]{8}T[0-9]{6}Z_[A-Z]{3,4}_FV00_(radial|sea-state|wavespec|windp|wavep|1-hour-avg)\.nc$'],
                                         allowed_dest_path_regexes=["^IMOS/ACORN/.*FV00.*\.nc$"]
                                         )
