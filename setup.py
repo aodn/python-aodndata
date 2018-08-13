@@ -9,6 +9,7 @@ ENTRY_POINTS = {
         'AatamsNrtHandler = aodndata.aatams.aatams_nrt:AatamsNrtHandler',
         'AbosHandler = aodndata.moorings.handlers:AbosHandler',
         'AnfogHandler = aodndata.anfog.handlers:AnfogHandler',
+        'AcornHandler = aodndata.acorn.handler:AcornHandler',
         'AnmnNrsAimsHandler = aodndata.aims.anmn_nrs:AnmnNrsAimsHandler',
         'AuvHandler = aodndata.auv.handler:AuvHandler',
         'ArgoHandler = aodndata.argo.handler:ArgoHandler',
