@@ -21,6 +21,11 @@ install:
   - pip install $(aodnfetcher ${CC_PLUGIN_IMOS_URL} | python -c "import sys, json; print json.load(sys.stdin)['${CC_PLUGIN_IMOS_URL}']['local_file']")
   - pip install $(aodnfetcher ${AODNCORE_URL} | python -c "import sys, json; print json.load(sys.stdin)['${AODNCORE_URL}']['local_file']")
   - pip install -r requirements.txt
+  - pip install coverage
+  - pip install codecov
 
 script:
-  - python setup.py test
+  - coverage run setup.py test
+
+after_success:
+  - codecov
