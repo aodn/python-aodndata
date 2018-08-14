@@ -24,7 +24,6 @@ class TestSoopAsfSstHandler(HandlerTestCase):
     def setUp(self):
         self.handler_class = SoopAsfSstHandler
         super(TestSoopAsfSstHandler, self).setUp()
-        self.ships = {'VLHJ': 'Southern-Surveyor'}
 
     @patch("aodndata.soop.soop_asf_sst.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_good_netcdf_asf_fmt(self, mock_callsign):
