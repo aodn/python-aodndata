@@ -36,7 +36,6 @@ import numpy as np
 from netCDF4 import Dataset, stringtochar
 import re
 import collections
-from tempfile import mkdtemp
 
 from ship_callsign import ship_callsign_list, ship_callsign
 

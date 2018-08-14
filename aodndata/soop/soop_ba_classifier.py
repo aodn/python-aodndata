@@ -1,10 +1,11 @@
 from aodncore.pipeline import FileClassifier
 from aodncore.pipeline.exceptions import InvalidFileNameError
 
-from ship_callsign import ship_callsign_list, ship_callsign
+from ship_callsign import ship_callsign_list
 
 
 class SoopBaFileClassifier(FileClassifier):
+    ship_callsign_ls = ship_callsign_list()
 
     @classmethod
     def dest_path(cls, src_file):
@@ -12,14 +13,15 @@ class SoopBaFileClassifier(FileClassifier):
         dir_list = []
         fields = cls._get_file_name_fields(src_file.name)
         ship_code = fields[4]
-        if ship_code not in ship_callsign_list():
+
+        if ship_code not in cls.ship_callsign_ls:
             raise InvalidFileNameError(
                 "Missing vessel callsign in file name '{name}'.".format(name=src_file.name))
 
         project = fields[0]
         facility = fields[1][:4]
         sub_facility = fields[1]
-        platform = "%s_%s" % (ship_code, ship_callsign(ship_code))
+        platform = "%s_%s" % (ship_code, cls.ship_callsign_ls[ship_code])
         dir_list.extend([project, facility, sub_facility, platform])
 
         deployment_id = cls.get_deployment_id(src_file, ship_code)
@@ -41,7 +43,7 @@ class SoopBaFileClassifier(FileClassifier):
         facility = fields[1][:4]
         sub_facility = fields[1]
         raw_folder = 'raw'
-        platform = "%s_%s" % (ship_code, ship_callsign(ship_code))
+        platform = "%s_%s" % (ship_code, cls.ship_callsign_ls[ship_code])
         dir_list.extend([project, facility, sub_facility, raw_folder, platform])
 
         deployment_id = cls.get_deployment_id(src_file, ship_code)
@@ -63,6 +65,6 @@ class SoopBaFileClassifier(FileClassifier):
         name_parts = deployment_id.split('_')
 
         if len(name_parts) >= 3:
-            deployment_id = "%s_%s" % (ship_callsign(ship_code), name_parts[-1])
+            deployment_id = "%s_%s" % (cls.ship_callsign_ls[ship_code], name_parts[-1])
 
         return deployment_id

@@ -23,6 +23,7 @@ CSV = os.path.join(TEST_ROOT, 'Antarctic_Discovery_20160115-20160129.gps.csv')
 PNG = os.path.join(TEST_ROOT, 'IMOS_SOOP-BA_A_20160116T152139Z_VKAD_FV02_Antarctic-'
                               'Discovery-ES60-38_END-20160129T062056Z_C-20170227T055245Z_test.nc.png')
 
+
 class TestSoopBaHandler(HandlerTestCase):
     """It is recommended to inherit from the HandlerTestCase class (which is itself a subclass of the standard
        unittest.TestCase class). This provides some useful methods and properties to shortcut some common test
