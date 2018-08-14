@@ -264,13 +264,12 @@ class AnfogHandler(HandlerBase):
             # RT file not compliant
             anfog_rt[0].check_type = PipelineFileCheckType.FORMAT_CHECK
             png = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RT_PNG_REGEX)
-            position_txtfile = self.file_collection.filter_by_attribute_regex('name',
-                                                                              AnfogFileClassifier.RT_POSITION_SUMMARY)
-            if png and position_txtfile:
+           
+            if png:
                 return "RT"
             else:
                 raise InvalidFileContentError(
-                    "Missing some ancillary files(PNGs or summary position file) in ZIP archive {name}".format(
+                    "Missing ancillary files(PNGs or summary position file) in ZIP archive {name}".format(
                         name=os.path.basename(self.input_file)))
         else:
             raise InvalidInputFileError(
