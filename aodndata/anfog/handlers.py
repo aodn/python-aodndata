@@ -163,7 +163,6 @@ class AnfogHandler(HandlerBase):
         Update the harvest_listing table of the anfog_rt_schema using the Harvestmission.csv file
         Note that to be consistent with the available message in the production DB,
         dashes need to be replaced by underscore, for ex delayed-mode =>delayed_mode
-
         :return:  Harvestmission.csv updated with deployment specific status
         """
         name = os.path.basename(input_file)
