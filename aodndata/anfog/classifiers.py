@@ -10,9 +10,9 @@ class AnfogFileClassifier(FileClassifier):
     ANFOG_BASE = 'IMOS/ANFOG'
     ANFOG_RT_REGEX = \
         '^IMOS_ANFOG_([^R]+)_[0-9]{8}T[0-9]{6}Z_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
-    RT_POSITION_SUMMARY = '^unit.*position_summary.txt$'
-    RT_PNG_TRANSECT_REGEX = '^unit.*_[0-9]{8}T[0-9]{6}-[0-9]{8}T[0-9]{6}.png$'
-    RT_PNG_REGEX = '^unit.*.png$'
+    RT_POSITION_SUMMARY = '.*position_summary.txt$'
+    RT_PNG_TRANSECT_REGEX = '.*_[0-9]{8}T[0-9]{6}-[0-9]{8}T[0-9]{6}.png$'
+    RT_PNG_REGEX = '.*.png$'
     ANFOG_DM_REGEX = \
         '^IMOS_ANFOG.*_[0-9]{8}T[0-9]{6}Z.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     DSTG_REGEX = '^DSTO_.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
