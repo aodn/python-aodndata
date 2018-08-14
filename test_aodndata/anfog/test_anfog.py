@@ -110,7 +110,7 @@ class TestAnfogHandler(HandlerTestCase):
         self.assertTrue(nc[0].is_stored)
         self.assertTrue(nc[0].is_harvested)
 
-        self.assertGreater(0, len(png))
+        self.assertGreater(len(png), 0)
         for p in png:
             self.assertEqual(p.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
             self.assertEqual(p.dest_path, 'IMOS/ANFOG/REALTIME/slocum_glider/TwoRocks20180503a/' + p.name)
