@@ -64,13 +64,16 @@ class AnfogHandler(HandlerBase):
             txt = self.file_collection.filter_by_attribute_regex('extension', '.txt')
             txt[0].check_type = PipelineFileCheckType.NO_ACTION
             txt[0].publish_type = PipelineFilePublishType.NO_ACTION
-            self.upload_destination = AnfogFileClassifier.get_destination(self.input_file)
             message = input_file_basename.split('_')[1].strip('.txt')
+
             if message not in ['completed', 'renamed', 'delayed-mode']:
                 raise InvalidInputFileError("Invalid status message {m}."
                                             "Message can be either 'delayed-mode','completed' or 'renamed'."
                                             .format(m=message))
-            elif message == 'renamed':
+
+            self.upload_destination = AnfogFileClassifier.get_destination(self.input_file)
+
+            if message == 'renamed':
                 self.delete_previous_version('RT', 'renamed')
 
             self.set_deployment_status(self.input_file, message)

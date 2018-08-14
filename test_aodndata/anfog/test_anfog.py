@@ -8,7 +8,6 @@ from aodncore.pipeline.exceptions import InvalidInputFileError, MissingFileError
 from aodncore.pipeline.storage import get_storage_broker
 from aodncore.testlib import HandlerTestCase
 
-
 from aodndata.anfog.classifiers import AnfogFileClassifier
 from aodndata.anfog.handlers import AnfogHandler
 
@@ -28,6 +27,7 @@ MISSION_STATUS = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_renamed.txt')
 MISSION_STATUS_COMPLETED = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_completed.txt')
 MISSION_STATUS_DM = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_delayed_mode.txt')
 BAD_RT_ZIP = os.path.join(TEST_ROOT, 'RT_NONETCDF.zip')
+
 
 class TestAnfogHandler(HandlerTestCase):
     """It is recommended to inherit from the HandlerTestCase class (which is itself a subclass of the standard
@@ -146,7 +146,7 @@ class TestAnfogHandler(HandlerTestCase):
 
     def test_nrl(self):
         # test processing of NRL file collection. Collection containn FV01 and FV00
-        handler = self.run_handler(ZIP_NRL,check_params={'checks': ['cf']})
+        handler = self.run_handler(ZIP_NRL, check_params={'checks': ['cf']})
 
         non_nc = handler.file_collection.filter_by_attribute_value('extension', '.jpg|.kml')
         fv01 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
