@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from netCDF4 import Dataset
 
 from aodncore.pipeline import PipelineFilePublishType, PipelineFile, PipelineFileCollection, FileType
-from aodncore.pipeline.exceptions import InvalidInputFileError, InvalidFileNameError
+from aodncore.pipeline.exceptions import InvalidInputFileError, InvalidFileNameError, InvalidFileContentError
 from aodncore.pipeline.storage import get_storage_broker
 from aodncore.util.misc import get_pattern_subgroups_from_string
 from aodndata.acorn.handler import AcornHandler, ACORN_FILE_PATTERN, get_creation_date
@@ -126,8 +126,7 @@ class TestAcornHandler(HandlerTestCase):
         handler.opendap_root = broker.prefix
         handler.run()
 
-        nc_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
-        self.assertEqual(nc_file.publish_type, PipelineFilePublishType.NO_ACTION)
+        self.assertIsInstance(handler.error, InvalidFileContentError)
 
     def test_setup_upload_location_push_file_newer_creation_date(self):
         """

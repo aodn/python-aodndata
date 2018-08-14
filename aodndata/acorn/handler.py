@@ -4,8 +4,8 @@ from datetime import datetime
 from netCDF4 import Dataset
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType
-from aodncore.pipeline.exceptions import InvalidFileNameError
-from aodncore.util.misc import get_pattern_subgroups_from_string, matches_regexes
+from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError
+from aodncore.util.misc import get_pattern_subgroups_from_string
 
 FILE_TYPE_NEED_INDEX = ('radial', 'radial_quality_controlled', 'gridded_1h-avg-current-map_non-QC',
                         'gridded_1h-avg-current-map_QC', 'gridded_1h-avg-wind-map_QC',
@@ -109,9 +109,8 @@ class AcornHandler(HandlerBase):
             creation_date_nc_s3 = get_creation_date(os.path.join(self.opendap_root, destination_s3))
 
             if creation_date_nc_pipeline < creation_date_nc_s3:
-                self.logger.warning("incoming file '{dest_path}': creation date is older than file already on storage".
-                                    format(dest_path=nc_file.name))
-                nc_file.publish_type = PipelineFilePublishType.NO_ACTION
+                raise InvalidFileContentError("file name: \"{filename}\"  creation date is older than file already on storage".
+                                           format(filename=nc_file.name))
 
     @staticmethod
     def dest_path(filepath):
