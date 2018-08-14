@@ -4,6 +4,7 @@ import unittest
 from aodncore.pipeline import PipelineFileCheckType, PipelineFilePublishType
 from aodncore.testlib import HandlerTestCase
 from aodndata.soop.soop_asf_sst import SoopAsfSstHandler
+from mock import patch
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_NC_ASF_FMT = os.path.join(TEST_ROOT,
@@ -14,15 +15,21 @@ GOOD_NC_SST = os.path.join(TEST_ROOT,
                            'IMOS_SOOP-SST_T_20150127T103500Z_9V2768_FV01_C-20150624T041651Z.nc')
 
 
+def mock_ship_callsign_list():
+    return {'VLHJ': 'Southern-Surveyor',
+            '9V2768': 'RTM-Wakmatha'}
+
+
 class TestSoopAsfSstHandler(HandlerTestCase):
     def setUp(self):
         self.handler_class = SoopAsfSstHandler
         super(TestSoopAsfSstHandler, self).setUp()
+        self.ships = {'VLHJ': 'Southern-Surveyor'}
 
-    def test_good_netcdf_asf_fmt(self):
+    @patch("aodndata.soop.soop_asf_sst.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    def test_good_netcdf_asf_fmt(self, mock_callsign):
         handler = self.run_handler(GOOD_NC_ASF_FMT,
-                                     include_regexes=['IMOS_SOOP-ASF_FMT_.*\.nc']
-                                     )
+                                     include_regexes=['IMOS_SOOP-ASF_FMT_.*\.nc'])
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
         self.assertEqual(f.check_type, PipelineFileCheckType.FORMAT_CHECK)
@@ -33,7 +40,8 @@ class TestSoopAsfSstHandler(HandlerTestCase):
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
 
-    def test_good_netcdf_asf_mt(self):
+    @patch("aodndata.soop.soop_asf_sst.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    def test_good_netcdf_asf_mt(self, mock_callsign):
         handler = self.run_handler(GOOD_NC_ASF_MT,
                                      include_regexes=['IMOS_SOOP-ASF_MT_.*\.nc']
                                      )
@@ -47,7 +55,8 @@ class TestSoopAsfSstHandler(HandlerTestCase):
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
 
-    def test_good_netcdf_sst(self):
+    @patch("aodndata.soop.soop_asf_sst.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    def test_good_netcdf_sst(self, mock_callsign):
         handler = self.handler_class(GOOD_NC_SST,
                                      include_regexes=['IMOS_SOOP-SST_.*\.nc']
                                      )
