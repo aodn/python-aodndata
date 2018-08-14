@@ -264,7 +264,6 @@ class AnfogHandler(HandlerBase):
             # RT file not compliant
             anfog_rt[0].check_type = PipelineFileCheckType.FORMAT_CHECK
             png = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RT_PNG_REGEX)
-           
             if png:
                 return "RT"
             else:

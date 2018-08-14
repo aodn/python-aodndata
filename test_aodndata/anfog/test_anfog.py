@@ -100,12 +100,14 @@ class TestAnfogHandler(HandlerTestCase):
 
         handler = self.run_handler(GOOD_ZIP_RT)
 
-        png = handler.file_collection.filter_by_attribute_regex('extension', '.png')
+        png = handler.file_collection.filter_by_attribute_id('file_type', FileType.PNG)
         nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
 
         self.assertEqual(nc[0].dest_path, 'IMOS/ANFOG/REALTIME/slocum_glider/TwoRocks20180503a/' + nc[0].name)
         self.assertTrue(nc[0].is_stored)
         self.assertTrue(nc[0].is_harvested)
+
+        self.assertGreater(len(png), 0)
 
         for p in png:
             self.assertEqual(p.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
