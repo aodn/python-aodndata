@@ -1,5 +1,8 @@
 [run]
 branch = True
+source = aodndata
+omit =
+    test_aodndata/*
 
 [report]
 exclude_lines =
