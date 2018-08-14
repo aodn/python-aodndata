@@ -109,6 +109,8 @@ class AcornHandler(HandlerBase):
             creation_date_nc_s3 = get_creation_date(os.path.join(self.opendap_root, destination_s3))
 
             if creation_date_nc_pipeline < creation_date_nc_s3:
+                self.logger.warning("incoming file '{dest_path}': creation date is older than file already on storage".
+                                    format(dest_path=nc_file.name))
                 nc_file.publish_type = PipelineFilePublishType.NO_ACTION
 
     @staticmethod
