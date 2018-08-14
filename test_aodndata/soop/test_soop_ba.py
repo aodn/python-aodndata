@@ -6,6 +6,7 @@ from aodncore.testlib import HandlerTestCase
 from aodncore.pipeline.exceptions import InvalidInputFileError, InvalidFileContentError
 from aodndata.soop.soop_ba import SoopBaHandler
 from aodncore.pipeline.storage import get_storage_broker
+from mock import patch
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 PREV_NC = os.path.join(TEST_ROOT,
@@ -22,6 +23,7 @@ BAD_ZIP = os.path.join(TEST_ROOT, 'Antarctic-Discovery_20160116-20160129_BAD.zip
 CSV = os.path.join(TEST_ROOT, 'Antarctic_Discovery_20160115-20160129.gps.csv')
 PNG = os.path.join(TEST_ROOT, 'IMOS_SOOP-BA_A_20160116T152139Z_VKAD_FV02_Antarctic-'
                               'Discovery-ES60-38_END-20160129T062056Z_C-20170227T055245Z_test.nc.png')
+SHIP_CALLSIGN_LS = {'VKAD': 'Antarctic-Discovery'}
 
 
 class TestSoopBaHandler(HandlerTestCase):
@@ -37,6 +39,7 @@ class TestSoopBaHandler(HandlerTestCase):
         self.handler_class = SoopBaHandler
         super(TestSoopBaHandler, self).setUp()
 
+    @patch("aodndata.soop.soop_ba.SHIP_CALLSIGN_LS", SHIP_CALLSIGN_LS)
     def test_good_ba_file(self):
         # we expect this to succeed, so if the handler experiences an error, it is considered a
         # "failed test"
@@ -51,6 +54,7 @@ class TestSoopBaHandler(HandlerTestCase):
                          + f.name)
         self.assertTrue(f.is_stored)
 
+    @patch("aodndata.soop.soop_ba.SHIP_CALLSIGN_LS", SHIP_CALLSIGN_LS)
     def test_good_nc_zip(self):
         handler = self.run_handler(GOOD_ZIP)
         nc_files = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
@@ -83,6 +87,7 @@ class TestSoopBaHandler(HandlerTestCase):
         """Test with invalid netcdf missing a report_id"""
         self.run_handler_with_exception(InvalidFileContentError, BAD_NC)
 
+    @patch("aodndata.soop.soop_ba.SHIP_CALLSIGN_LS", SHIP_CALLSIGN_LS)
     def test_delete_previous_file(self):
         # create some PipelineFiles to represent the existing files on 'S3'
         preexisting_files = PipelineFileCollection()
@@ -132,6 +137,7 @@ class TestSoopBaHandler(HandlerTestCase):
             if png.name == os.path.basename(PNG):
                 self.assertEqual(png.is_deleted, True)
 
+    @patch("aodndata.soop.soop_ba.SHIP_CALLSIGN_LS", SHIP_CALLSIGN_LS)
     def test_overwrite_same_file(self):
         # check that files with same name are overwritten
         preexisting_files = PipelineFileCollection()
