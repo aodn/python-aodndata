@@ -45,13 +45,15 @@ class AnfogHandler(HandlerBase):
         Processes ZIP, single NetCDF and single TXT files
         Set destination path based on info in NetCDF files
         Update ANFOG deployment status record table stored in anforg_rt schema
-        Valid status are : 'in-progress', 'completed', 'delayed_mode', 'renamed'
-        Status are either set by pipeline case : 'in-progress'
-        or read from status text file : 'completed', 'renamed', 'delayed_mode'
+        Valid status are : 'in-progress', 'completed', 'delayed-mode', 'renamed'
+        Status are either set by pipeline case : 'in_progress'
+        or read from status text file : 'completed', 'renamed', 'delayed-mode'
 
         These status text files are manually pushed in incoming by POs, NOT by facility. File requirements:
         1- File name like : PL-Mission_status.txt (PL platform: SG seaglider or SL slocum_glider)
                            For ex: SL-Yamba20180609_completed.txt
+                           Note that the message cannot contain undercores otherwise the process fails
+                           (in function get_destination)
         2- File must be size > 0 but it's content is not relevant.
 
         Status renamed used when error in deployment name (either error in date or deployement name):
@@ -64,9 +66,9 @@ class AnfogHandler(HandlerBase):
             txt[0].publish_type = PipelineFilePublishType.NO_ACTION
             self.upload_destination = AnfogFileClassifier.get_destination(self.input_file)
             message = input_file_basename.split('_')[1].strip('.txt')
-            if message not in ['completed', 'renamed', 'delayed_mode']:
+            if message not in ['completed', 'renamed', 'delayed-mode']:
                 raise InvalidInputFileError("Invalid status message {m}."
-                                            "Message can be either 'delayed_mode','completed' or 'renamed'."
+                                            "Message can be either 'delayed-mode','completed' or 'renamed'."
                                             .format(m=message))
             elif message == 'renamed':
                 self.delete_previous_version('RT', 'renamed')
@@ -159,7 +161,9 @@ class AnfogHandler(HandlerBase):
     def set_deployment_status(self, input_file, message):
         """
         Update the harvest_listing table of the anfog_rt_schema using the Harvestmission.csv file
-        Note that 'platform' cannot be determinate from txt file so set to na = not available
+        Note that to be consistent with the available message in the production DB,
+        dashes need to be replaced by underscore, for ex delayed-mode =>delayed_mode
+
         :return:  Harvestmission.csv updated with deployment specific status
         """
         name = os.path.basename(input_file)
@@ -169,7 +173,7 @@ class AnfogHandler(HandlerBase):
         listing_path = os.path.join(self.products_dir, AnfogFileClassifier.MISSION_LISTING)
         with open(listing_path, 'w') as f:
             f.write('deployment_name, platform_type, status' + os.linesep)
-            row = "%s,%s,%s" % (deployment, platform, message)
+            row = "%s,%s,%s" % (deployment, platform, message.replace('-', '_'))
             f.write(row)
 
         product = PipelineFile(listing_path)
