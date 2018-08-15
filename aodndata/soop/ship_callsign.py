@@ -14,8 +14,10 @@ author : Besnard, Laurent
 """
 
 from aodncore.vocab.platform_code_vocab import platform_altlabels_per_preflabel
+from functools32 import lru_cache
 
 
+@lru_cache(maxsize=32)
 def ship_callsign_list():
     """
     renaming of platform_code_vocab function and create exceptions for
