@@ -14,6 +14,7 @@ GOOD_ZIP = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01
 
 # GOOD_RT = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20180122T000135Z_VLMJ_FV00_END-20180123T000058Z.nc')
 
+
 def mock_ship_callsign_list():
     return {'VNAA': 'Aurora-Australis',
             '9V2768': 'RTM-Wakmatha'}

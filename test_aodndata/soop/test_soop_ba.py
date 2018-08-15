@@ -82,11 +82,13 @@ class TestSoopBaHandler(HandlerTestCase):
                          + raw.name)
         self.assertEqual(raw.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
 
-    def test_bad_zip(self):
+    @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    def test_bad_zip(self, mock_callsign):
         """ test with missing netcdf in ZIP archive"""
         self.run_handler_with_exception(InvalidInputFileError, BAD_ZIP)
 
-    def test_bad_nc(self):
+    @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    def test_bad_nc(self, mock_callsign):
         """Test with invalid netcdf missing a report_id"""
         self.run_handler_with_exception(InvalidFileContentError, BAD_NC)
 
