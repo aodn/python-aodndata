@@ -10,7 +10,7 @@ from ship_callsign import ship_callsign_list
 ALLOWED_CONTENT_EXTENSIONS = re.compile(r".*\.(?P<extension>nc|inf|nc\.png|pitch\.csv|roll\.csv|gps\.csv)$")
 
 
-def dest_path(src_file):
+def dest_path_soop_ba(src_file):
     dir_list = []
     fields = FileClassifier._get_file_name_fields(src_file.name)
     ship_code = fields[4]
@@ -23,7 +23,7 @@ def dest_path(src_file):
     project = fields[0]
     facility = fields[1][:4]
     sub_facility = fields[1]
-    platform = "%s_%s" % (ship_code, ship_callsign_ls[ship_code])
+    platform = "{ship_code}_{ship_name}".format(ship_code=ship_code, ship_name=ship_callsign_ls[ship_code])
     dir_list.extend([project, facility, sub_facility, platform])
 
     deployment_id = get_deployment_id(src_file, ship_code)
@@ -32,7 +32,7 @@ def dest_path(src_file):
     return FileClassifier._make_path(dir_list)
 
 
-def archive_path(src_file):
+def archive_path_soop_ba(src_file):
     """Define the archive path based on info from NetCDF"""
     dir_list = []
     fields = FileClassifier._get_file_name_fields(src_file.name)
@@ -47,7 +47,7 @@ def archive_path(src_file):
     facility = fields[1][:4]
     sub_facility = fields[1]
     raw_folder = 'raw'
-    platform = "%s_%s" % (ship_code, ship_callsign_ls[ship_code])
+    platform = "{ship_code}_{ship_name}".format(ship_code=ship_code, ship_name=ship_callsign_ls[ship_code])
     dir_list.extend([project, facility, sub_facility, raw_folder, platform])
 
     deployment_id = get_deployment_id(src_file, ship_code)
@@ -69,9 +69,8 @@ def get_deployment_id(src_file, ship_code):
     name_parts = deployment_id.split('_')
     ship_callsign_ls = ship_callsign_list()
 
-
     if len(name_parts) >= 3:
-        deployment_id = "%s_%s" % (ship_callsign_ls[ship_code], name_parts[-1])
+        deployment_id = "{ship_name}_{dateend}".format(ship_name=ship_callsign_ls[ship_code], dateend=name_parts[-1])
 
     return deployment_id
 
@@ -105,7 +104,7 @@ class SoopBaHandler(HandlerBase):
                 "Expecting one netCDF file from input file '{infile}'".format(infile=os.path.basename(self.input_file)))
 
         nc = netcdf[0]
-        destination = dest_path(nc)
+        destination = dest_path_soop_ba(nc)
         nc.dest_path = os.path.join(destination, nc.name)
 
         results = self.state_query.query_storage(destination)
@@ -119,7 +118,7 @@ class SoopBaHandler(HandlerBase):
                 non_nc.check_type = PipelineFileCheckType.FORMAT_CHECK
                 if non_nc.extension in ['.ek5', '.out', '.raw']:
                     non_nc.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
-                    dest_archive = archive_path(nc)
+                    dest_archive = archive_path_soop_ba(nc)
                     non_nc.archive_path = os.path.join(dest_archive, non_nc.name)
                 else:
                     non_nc.publish_type = PipelineFilePublishType.UPLOAD_ONLY
@@ -187,5 +186,5 @@ class SoopBaHandler(HandlerBase):
 
         return files_to_delete
 
-    dest_path = dest_path
-    archive_path = archive_path
+    dest_path = dest_path_soop_ba
+    archive_path = archive_path_soop_ba
