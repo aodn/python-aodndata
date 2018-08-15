@@ -82,6 +82,8 @@ class SoopBaHandler(HandlerBase):
          * ZIP;
          * NetCDF;
     """
+    dest_path = dest_path_soop_ba
+    archive_path = archive_path_soop_ba
 
     def __init__(self, *args, **kwargs):
         super(SoopBaHandler, self).__init__(*args, **kwargs)
@@ -185,6 +187,3 @@ class SoopBaHandler(HandlerBase):
             files_to_delete.add(file_to_delete)
 
         return files_to_delete
-
-    dest_path = dest_path_soop_ba
-    archive_path = archive_path_soop_ba
