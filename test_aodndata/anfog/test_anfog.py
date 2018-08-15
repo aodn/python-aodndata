@@ -2,8 +2,9 @@ import os
 import re
 import unittest
 
-from aodncore.pipeline import PipelineFileCheckType, PipelineFilePublishType, FileType, PipelineFileCollection, \
+from aodncore.pipeline import PipelineFilePublishType, FileType, PipelineFileCollection, \
     PipelineFile
+from aodncore.pipeline.exceptions import InvalidInputFileError, MissingFileError
 from aodncore.pipeline.storage import get_storage_broker
 from aodncore.testlib import HandlerTestCase
 
@@ -24,6 +25,8 @@ PREV_PNG_TRANSECT = os.path.join(TEST_ROOT, 'unit210_b700_tser_20180503T000000-2
 PREV_PNG_MISSION = os.path.join(TEST_ROOT, 'unit210_b700_tser_mission.png')
 MISSION_STATUS = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_renamed.txt')
 MISSION_STATUS_COMPLETED = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_completed.txt')
+MISSION_STATUS_DM = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_delayed_mode.txt')
+BAD_RT_ZIP = os.path.join(TEST_ROOT, 'RT_NONETCDF.zip')
 
 
 class TestAnfogHandler(HandlerTestCase):
@@ -100,13 +103,14 @@ class TestAnfogHandler(HandlerTestCase):
 
         handler = self.run_handler(GOOD_ZIP_RT)
 
-        png = handler.file_collection.filter_by_attribute_regex('extension', '.png')
+        png = handler.file_collection.filter_by_attribute_id('file_type', FileType.PNG)
         nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
 
         self.assertEqual(nc[0].dest_path, 'IMOS/ANFOG/REALTIME/slocum_glider/TwoRocks20180503a/' + nc[0].name)
         self.assertTrue(nc[0].is_stored)
         self.assertTrue(nc[0].is_harvested)
 
+        self.assertGreater(len(png), 0)
         for p in png:
             self.assertEqual(p.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
             self.assertEqual(p.dest_path, 'IMOS/ANFOG/REALTIME/slocum_glider/TwoRocks20180503a/' + p.name)
@@ -142,7 +146,7 @@ class TestAnfogHandler(HandlerTestCase):
 
     def test_nrl(self):
         # test processing of NRL file collection. Collection containn FV01 and FV00
-        handler = self.run_handler(ZIP_NRL,check_params={'checks': ['cf']})
+        handler = self.run_handler(ZIP_NRL, check_params={'checks': ['cf']})
 
         non_nc = handler.file_collection.filter_by_attribute_value('extension', '.jpg|.kml')
         fv01 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
@@ -266,7 +270,7 @@ class TestAnfogHandler(HandlerTestCase):
         for png in pngs:
             self.assertTrue(png.is_deleted)
 
-    def test_handling_status_file(self):
+    def test_handling_status_completed(self):
         # test processing of product file
         handler = self.run_handler(MISSION_STATUS_COMPLETED)
 
@@ -310,6 +314,18 @@ class TestAnfogHandler(HandlerTestCase):
         for png in pngs:
             self.assertEqual(png.publish_type, PipelineFilePublishType.DELETE_ONLY)
             self.assertTrue(png.is_deleted)
+
+    def test_bad_rt_status_file(self):
+        # test invalid message
+        self.run_handler_with_exception(InvalidInputFileError, MISSION_STATUS_DM)
+
+    def test_rt_zip_no_netcdf(self):
+        "ZIP should contain one FV00 NetCDF file"
+        self.run_handler_with_exception(InvalidInputFileError, BAD_RT_ZIP)
+
+    def test_missing_material_DM(self):
+        "new DM missions should nbe submitted with ancillary material"
+        self.run_handler_with_exception(MissingFileError, GOOD_NC)
 
     if __name__ == '__main__':
         unittest.main()

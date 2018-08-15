@@ -64,13 +64,16 @@ class AnfogHandler(HandlerBase):
             txt = self.file_collection.filter_by_attribute_regex('extension', '.txt')
             txt[0].check_type = PipelineFileCheckType.NO_ACTION
             txt[0].publish_type = PipelineFilePublishType.NO_ACTION
-            self.upload_destination = AnfogFileClassifier.get_destination(self.input_file)
             message = input_file_basename.split('_')[1].strip('.txt')
+
             if message not in ['completed', 'renamed', 'delayed-mode']:
                 raise InvalidInputFileError("Invalid status message {m}."
                                             "Message can be either 'delayed-mode','completed' or 'renamed'."
                                             .format(m=message))
-            elif message == 'renamed':
+
+            self.upload_destination = AnfogFileClassifier.get_destination(self.input_file)
+
+            if message == 'renamed':
                 self.delete_previous_version('RT', 'renamed')
 
             self.set_deployment_status(self.input_file, message)
@@ -163,7 +166,6 @@ class AnfogHandler(HandlerBase):
         Update the harvest_listing table of the anfog_rt_schema using the Harvestmission.csv file
         Note that to be consistent with the available message in the production DB,
         dashes need to be replaced by underscore, for ex delayed-mode =>delayed_mode
-
         :return:  Harvestmission.csv updated with deployment specific status
         """
         name = os.path.basename(input_file)
@@ -264,13 +266,11 @@ class AnfogHandler(HandlerBase):
             # RT file not compliant
             anfog_rt[0].check_type = PipelineFileCheckType.FORMAT_CHECK
             png = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RT_PNG_REGEX)
-            position_txtfile = self.file_collection.filter_by_attribute_regex('name',
-                                                                              AnfogFileClassifier.RT_POSITION_SUMMARY)
-            if png and position_txtfile:
+            if png:
                 return "RT"
             else:
                 raise InvalidFileContentError(
-                    "Missing some ancillary files(PNGs or summary position file) in ZIP archive {name}".format(
+                    "Missing ancillary files(PNGs or summary position file) in ZIP archive {name}".format(
                         name=os.path.basename(self.input_file)))
         else:
             raise InvalidInputFileError(
