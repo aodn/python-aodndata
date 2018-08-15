@@ -3,7 +3,7 @@ import unittest
 from aodncore.pipeline import PipelineFilePublishType, PipelineFileCheckType
 from aodncore.testlib import HandlerTestCase
 from aodndata.soop.soop_co2 import SoopCo2Handler
-from aodncore.pipeline.exceptions import ComplianceCheckFailedError
+from mock import patch
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.nc')
@@ -12,8 +12,12 @@ GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.
 GOOD_FRMAP = os.path.join(TEST_ROOT, 'FutureReefMap_GST_20150518T124011Z_9V2768_FV01.nc')
 GOOD_ZIP = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.zip')
 
-
 # GOOD_RT = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20180122T000135Z_VLMJ_FV00_END-20180123T000058Z.nc')
+
+def mock_ship_callsign_list():
+    return {'VNAA': 'Aurora-Australis',
+            '9V2768': 'RTM-Wakmatha'}
+
 
 class TestSoopCo2Handler(HandlerTestCase):
     """It is recommended to inherit from the HandlerTestCase class (which is itself a subclass of the standard
@@ -27,7 +31,8 @@ class TestSoopCo2Handler(HandlerTestCase):
         self.handler_class = SoopCo2Handler
         super(TestSoopCo2Handler, self).setUp()
 
-    def test_good_co2_file(self):
+    @patch("aodndata.soop.soop_co2.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    def test_good_co2_file(self, mock_callsign):
         # we expect this to succeed, so if the handler experiences an error, it is considered a
         # "failed test"
         handler = self.run_handler(GOOD_NC, check_params={'checks': ['cf']})
@@ -59,7 +64,8 @@ class TestSoopCo2Handler(HandlerTestCase):
     #                         'IMOS/SOOP/SOOP-CO2/VLMJ_Investigator/REALTIME/2018/1/' + nc.name)
     #         self.assertTrue(nc.is_stored)
 
-    def test_frmap_file(self):
+    @patch("aodndata.soop.soop_co2.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    def test_frmap_file(self, mock_callsign):
         # test future Reef Map processing
         handler = self.run_handler(GOOD_FRMAP)
         self.assertEqual(len(handler.file_collection), 1)
@@ -70,7 +76,8 @@ class TestSoopCo2Handler(HandlerTestCase):
                          'Future_Reef_MAP/underway/RTM-Wakmatha/2015/WK201505N/FutureReefMap_GST_20150518T124011Z_9V2768_FV01.nc')
         self.assertTrue(f.is_stored)
 
-    def test_good_nc_zip(self):
+    @patch("aodndata.soop.soop_co2.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    def test_good_nc_zip(self, mock_callsign):
 
         handler = self.handler_class(GOOD_ZIP,
                                      check_params={'checks': ['cf']}
@@ -95,7 +102,8 @@ class TestSoopCo2Handler(HandlerTestCase):
             self.assertEqual(f.check_type, PipelineFileCheckType.NONEMPTY_CHECK)
             self.assertEqual(f.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
 
-    def test_good_file_with_compliance_check(self):
+    @patch("aodndata.soop.soop_co2.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    def test_good_file_with_compliance_check(self, mock_callsign):
         # we also expect this to succeed, since the test file is known be CF compliant
         self.run_handler(GOOD_NC, check_params={'checks': ['cf']})
 
