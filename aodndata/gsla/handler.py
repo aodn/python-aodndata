@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 
 from aodncore.pipeline import HandlerBase, FileType, PipelineFilePublishType, PipelineFile
-from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidInputFileError, InvalidPathFunctionError
+from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidInputFileError
 from aodncore.util.misc import get_pattern_subgroups_from_string
 
 
@@ -104,7 +104,8 @@ class GslaHandler(HandlerBase):
                     # yearly file should never be harvested
                     netcdf_file_gz.publish_type = PipelineFilePublishType.UPLOAD_ONLY
             else:
-                netcdf_file_gz.publish_type = PipelineFilePublishType.NO_ACTION
+                raise InvalidFileNameError("file name: \"{filename}\"  creation date is older than file already on storage".
+                                           format(filename=netcdf_file_gz.name))
 
             # deletion of the previous file
             if remove_previous_version:

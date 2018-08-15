@@ -198,14 +198,9 @@ class TestGslaHandler(HandlerTestCase):
         broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         broker.upload(preexisting_files)
 
-        # run the handler
-        handler = self.run_handler(OLDER_CREATION_DATE_NC)
+        # run the handler on the new file with an older creation date
+        self.run_handler_with_exception(InvalidFileNameError, OLDER_CREATION_DATE_NC)
 
-        nc_gz_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)[0]
-        self.assertEqual(nc_gz_file.publish_type, PipelineFilePublishType.NO_ACTION)
-
-        nc_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
-        self.assertEqual(nc_file.publish_type, PipelineFilePublishType.NO_ACTION)
 
     def test_push_yearly_file(self):
         """
