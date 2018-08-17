@@ -218,9 +218,7 @@ class TestAnfogHandler(HandlerTestCase):
 
         pngs = handler.file_collection.filter_by_attribute_id('file_type', FileType.PNG)
         for png in pngs:
-            if png.name == os.path.basename(PREV_PNG_TRANSECT):
-                self.assertTrue(png.is_deleted)
-            elif png.name == os.path.basename(PREV_PNG_MISSION):
+            if png.name == os.path.basename(PREV_PNG_MISSION):
                 self.assertTrue(png.is_overwrite)
             else:
                 self.assertTrue(png.is_uploaded)

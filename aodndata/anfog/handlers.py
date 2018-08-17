@@ -187,7 +187,7 @@ class AnfogHandler(HandlerBase):
     def delete_previous_version(self, mode, deployment_status):
         """
            In RT mode: 2 cases 1) update of deployment in progress :select previous version of a file that needs to be
-                       deleted (.nc and transect pngs) other files are automatically overwritten
+                       deleted (.nc)  other files are automatically overwritten
                        2) deletion of files when deployment name changed (status "renamed")
 
            In DM mode either - new DM (deployment_status = delayed_mode): delete RT deployment files
@@ -212,8 +212,8 @@ class AnfogHandler(HandlerBase):
                                               AnfogFileClassifier.RT_POSITION_SUMMARY)
         elif mode == 'RT' and deployment_status == 'in_progress':
             destination = self.upload_destination
-            delete_file_regex = '%s|%s' % (AnfogFileClassifier.ANFOG_RT_REGEX,
-                                           AnfogFileClassifier.RT_PNG_TRANSECT_REGEX)
+            delete_file_regex = AnfogFileClassifier.ANFOG_RT_REGEX
+
         else:
             raise ValueError(
                 "Invalid combination of mode '{mode}' and status'{st}'".format(mode=mode, st=deployment_status))
