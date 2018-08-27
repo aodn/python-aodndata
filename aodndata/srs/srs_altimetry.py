@@ -9,7 +9,8 @@ class SrsAltHandler(HandlerBase):
         super(SrsAltHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.nc']
 
-    def dest_path(self, filepath):
+    @staticmethod
+    def dest_path(filepath):
         srs_alt_dir = os.path.join('IMOS', 'SRS', 'ALTIMETRY', 'calibration_validation')
         with Dataset(filepath, mode='r') as n:
             site_code = n.site_code
@@ -20,6 +21,8 @@ class SrsAltHandler(HandlerBase):
         elif instrument == 'SBE26':
             product_type = 'Pressure_gauge'
         elif instrument == 'Aquad':
+            product_type = 'Velocity'
+        elif instrument == 'ST_CM':
             product_type = 'Velocity'
         else:
             raise ValueError("unknown instrument '{instrument}'".format(instrument=instrument))
