@@ -10,7 +10,7 @@ from aodncore.pipeline.exceptions import InvalidFileFormatError
 class FaimmsHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(FaimmsHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.nc']
+        self.allowed_extensions = ['.nc', '.dir_manifest']
 
     @staticmethod
     def get_main_faimms_var(filepath):
