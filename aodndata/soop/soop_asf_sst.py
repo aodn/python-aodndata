@@ -1,8 +1,9 @@
 import os
 
 from aodncore.pipeline import HandlerBase
-from aodndata.soop.ship_callsign import ship_callsign_list
 from aodncore.pipeline.exceptions import InvalidFileFormatError
+
+from .ship_callsign import ship_callsign_list
 
 
 class SoopAsfSstHandler(HandlerBase):

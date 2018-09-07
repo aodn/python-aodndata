@@ -2,6 +2,7 @@ import os
 
 from aodncore.pipeline.exceptions import InvalidFileNameError
 
+
 def dest_path_soop_xbt_nrt(filepath):
     " return the path of a CSV SOOP XBT NRT file stored in $WIP_DIR containing the string sbddata"
     try:

@@ -2,9 +2,8 @@ import datetime
 import os
 import re
 
-from netCDF4 import Dataset
-
 from aodncore.pipeline import HandlerBase
+from netCDF4 import Dataset
 
 
 class SoopTrvHandler(HandlerBase):

@@ -1,7 +1,7 @@
 """
-# class to generate NetCDF file storing realtime SOOP-CO2 data.
+# generate NetCDF file storing realtime SOOP-CO2 data.
 # Script processes data from 2 vessels: RV Aurora Australis and RV Investigator
-# -Exctract varaiable relevant to CO2 measurements and processing from input text file.
+# -Extract variable relevant to CO2 measurements and processing from input text file.
 # -Map vessel specific variable to set of common output variables
 # Mapping as follows:
 #       Input Variable                  NetCDF Variable
@@ -28,16 +28,17 @@
 #    -             LabMainSwFlow            LabMain_sw_flow_raw
 """
 
-from aodncore.pipeline.exceptions import InvalidFileContentError
-import os
-from datetime import datetime
-import pandas as pd
-import numpy as np
-from netCDF4 import Dataset, stringtochar
-import re
 import collections
+import os
+import re
+from datetime import datetime
 
-from ship_callsign import ship_callsign_list, ship_callsign
+import numpy as np
+import pandas as pd
+from aodncore.pipeline.exceptions import InvalidFileContentError
+from netCDF4 import Dataset, stringtochar
+
+from .ship_callsign import ship_callsign_list, ship_callsign
 
 VALID_PROJECT = ['IMOS', 'FutureReefMap', 'SOOP-CO2_RT']
 INPUT_RT_PARAMETERS = {'Type', 'PcDate', 'PcTime', 'GpsShipLatitude',

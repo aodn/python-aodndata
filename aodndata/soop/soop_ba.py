@@ -1,11 +1,12 @@
 import os
 import re
 
+from aodncore.pipeline import FileClassifier
 from aodncore.pipeline import HandlerBase, PipelineFile, PipelineFilePublishType, PipelineFileCheckType, FileType
 from aodncore.pipeline import PipelineFileCollection
 from aodncore.pipeline.exceptions import InvalidInputFileError, InvalidFileNameError
-from aodncore.pipeline import FileClassifier
-from ship_callsign import ship_callsign_list
+
+from .ship_callsign import ship_callsign_list
 
 ALLOWED_CONTENT_EXTENSIONS = re.compile(r".*\.(?P<extension>nc|inf|nc\.png|pitch\.csv|roll\.csv|gps\.csv)$")
 
