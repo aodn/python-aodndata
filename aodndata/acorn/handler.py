@@ -112,6 +112,14 @@ class AcornHandler(HandlerBase):
                 raise InvalidFileContentError("file name: \"{filename}\"  creation date is older than file already on storage".
                                            format(filename=nc_file.name))
 
+    def postprocess(self):
+        """Set error_cleanup_regexes so that if the same file was uploaded previously and failed, it can now be
+        removed from the error directory (by setting "success_exit_policies" in the pipeline config to
+        "DELETE_CUSTOM_REGEXES_FROM_ERROR_STORE").
+        """
+        self.error_cleanup_regexes = self.file_basename
+        self.logger.info("error_cleanup_regexes set to {}".format(self.file_basename))
+
     @staticmethod
     def dest_path(filepath):
         file_basename = os.path.basename(filepath)
