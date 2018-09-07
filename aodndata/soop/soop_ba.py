@@ -1,13 +1,79 @@
 import os
 import re
 
+from aodncore.pipeline import FileClassifier
 from aodncore.pipeline import HandlerBase, PipelineFile, PipelineFilePublishType, PipelineFileCheckType, FileType
 from aodncore.pipeline import PipelineFileCollection
-from aodncore.pipeline.exceptions import InvalidInputFileError
+from aodncore.pipeline.exceptions import InvalidInputFileError, InvalidFileNameError
 
-from aodndata.soop.soop_ba_classifier import SoopBaFileClassifier
+from .ship_callsign import ship_callsign_list
 
 ALLOWED_CONTENT_EXTENSIONS = re.compile(r".*\.(?P<extension>nc|inf|nc\.png|pitch\.csv|roll\.csv|gps\.csv)$")
+
+
+def dest_path_soop_ba(src_file):
+    dir_list = []
+    fields = FileClassifier._get_file_name_fields(src_file.name)
+    ship_code = fields[4]
+    ship_callsign_ls = ship_callsign_list()
+
+    if ship_code not in ship_callsign_ls:
+        raise InvalidFileNameError(
+            "Missing vessel callsign in file name '{name}'.".format(name=src_file.name))
+
+    project = fields[0]
+    facility = fields[1][:4]
+    sub_facility = fields[1]
+    platform = "{ship_code}_{ship_name}".format(ship_code=ship_code, ship_name=ship_callsign_ls[ship_code])
+    dir_list.extend([project, facility, sub_facility, platform])
+
+    deployment_id = get_deployment_id(src_file, ship_code)
+
+    dir_list.append(deployment_id)
+    return FileClassifier._make_path(dir_list)
+
+
+def archive_path_soop_ba(src_file):
+    """Define the archive path based on info from NetCDF"""
+    dir_list = []
+    fields = FileClassifier._get_file_name_fields(src_file.name)
+    ship_code = fields[4]
+    ship_callsign_ls = ship_callsign_list()
+
+    if ship_code not in ship_callsign_ls:
+        raise InvalidFileNameError(
+            "Missing vessel callsign in file name '{name}'.".format(name=src_file.name))
+
+    project = fields[0]
+    facility = fields[1][:4]
+    sub_facility = fields[1]
+    raw_folder = 'raw'
+    platform = "{ship_code}_{ship_name}".format(ship_code=ship_code, ship_name=ship_callsign_ls[ship_code])
+    dir_list.extend([project, facility, sub_facility, raw_folder, platform])
+
+    deployment_id = get_deployment_id(src_file, ship_code)
+    dir_list.append(deployment_id)
+    return FileClassifier._make_path(dir_list)
+
+
+def get_deployment_id(src_file, ship_code):
+    """
+    harmonise way shipcallsign are written in  deployment codes: replace underscore by hyphen
+    deployment_id format : shipcallsign_datestart-dateend
+    get_nc_att will raise a n exception if the attribute is missing
+    :param src_file:
+    :param ship_code:
+    :return: deployment_id
+    """
+
+    deployment_id = FileClassifier._get_nc_att(src_file.src_path, 'deployment_id')
+    name_parts = deployment_id.split('_')
+    ship_callsign_ls = ship_callsign_list()
+
+    if len(name_parts) >= 3:
+        deployment_id = "{ship_name}_{dateend}".format(ship_name=ship_callsign_ls[ship_code], dateend=name_parts[-1])
+
+    return deployment_id
 
 
 class SoopBaHandler(HandlerBase):
@@ -17,6 +83,8 @@ class SoopBaHandler(HandlerBase):
          * ZIP;
          * NetCDF;
     """
+    dest_path = dest_path_soop_ba
+    archive_path = archive_path_soop_ba
 
     def __init__(self, *args, **kwargs):
         super(SoopBaHandler, self).__init__(*args, **kwargs)
@@ -39,7 +107,7 @@ class SoopBaHandler(HandlerBase):
                 "Expecting one netCDF file from input file '{infile}'".format(infile=os.path.basename(self.input_file)))
 
         nc = netcdf[0]
-        destination = SoopBaFileClassifier.dest_path(nc)
+        destination = dest_path_soop_ba(nc)
         nc.dest_path = os.path.join(destination, nc.name)
 
         results = self.state_query.query_storage(destination)
@@ -53,7 +121,7 @@ class SoopBaHandler(HandlerBase):
                 non_nc.check_type = PipelineFileCheckType.FORMAT_CHECK
                 if non_nc.extension in ['.ek5', '.out', '.raw']:
                     non_nc.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
-                    dest_archive = SoopBaFileClassifier.archive_path(nc)
+                    dest_archive = archive_path_soop_ba(nc)
                     non_nc.archive_path = os.path.join(dest_archive, non_nc.name)
                 else:
                     non_nc.publish_type = PipelineFilePublishType.UPLOAD_ONLY
@@ -120,6 +188,3 @@ class SoopBaHandler(HandlerBase):
             files_to_delete.add(file_to_delete)
 
         return files_to_delete
-
-    dest_path = SoopBaFileClassifier.dest_path
-    archive_path = SoopBaFileClassifier.archive_path

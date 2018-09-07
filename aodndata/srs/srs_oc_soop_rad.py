@@ -10,7 +10,6 @@ class SrsOcSoopRadHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(SrsOcSoopRadHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.nc']
-        self.ships = ship_callsign_list()
 
     @staticmethod
     def dest_path(filepath):
