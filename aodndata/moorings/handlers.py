@@ -46,8 +46,8 @@ class MooringsHandler(HandlerBase):
         """
 
         # remove creation date from file name, as this can change when the same file is re-processed
-        infile_base = re.sub(r"_C-[0-9]{8}.*", r".*\.[0-9a-f\-]{36}", self.file_basename)
-        cleanup_regexes = [infile_base]
+        base = re.sub(r"_C-[0-9]{8}.*", r"_C-", self.file_basename)
+        cleanup_regexes = ["{base}{wildcard}".format(base=re.escape(base), wildcard=r".*\.[0-9a-f\-]{36}")]
         self.error_cleanup_regexes = cleanup_regexes
         self.logger.info("error_cleanup_regexes set to {}".format(cleanup_regexes))
 
