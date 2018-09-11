@@ -27,10 +27,10 @@ def get_creation_date(filepath):
     """ :return: creation date    """
     file_basename = os.path.basename(filepath)
     if GSLA_REGEX.match(file_basename):
-        fields = get_pattern_subgroups_from_string(file_basename, pattern=GSLA_REGEX)
+        fields = get_pattern_subgroups_from_string(file_basename, GSLA_REGEX)
 
     elif GSLA_REGEX_YEARLY.match(file_basename):
-        fields = get_pattern_subgroups_from_string(file_basename, pattern=GSLA_REGEX_YEARLY)
+        fields = get_pattern_subgroups_from_string(file_basename, GSLA_REGEX_YEARLY)
 
     else:
         raise InvalidFileNameError(

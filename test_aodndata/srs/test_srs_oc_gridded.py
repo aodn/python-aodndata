@@ -58,7 +58,7 @@ class TestSrsOcGriddedHandler(HandlerTestCase):
                 SrsOcGriddedHandler.dest_path(os.path.join(TEST_ROOT, nc_file))
 
     def test_get_fields_from_filename(self):
-        fields = get_pattern_subgroups_from_string(SRS_GOOD, pattern=IMOS_OC_FILE_PATTERN)
+        fields = get_pattern_subgroups_from_string(SRS_GOOD, IMOS_OC_FILE_PATTERN)
 
         self.assertEqual(fields['data_parameter_code'], 'A')
         self.assertEqual(fields['time_coverage_resolution'], 'P1D')

@@ -42,11 +42,11 @@ def get_info_nc(filepath):
     file_basename = os.path.basename(filepath)
 
     if L3S_L3C_FILE_PATTERN.match(file_basename):
-        fields = get_pattern_subgroups_from_string(file_basename, pattern=L3S_L3C_FILE_PATTERN)
+        fields = get_pattern_subgroups_from_string(file_basename, L3S_L3C_FILE_PATTERN)
         day_time = fields['day_time']
         temporal_extent = fields['temporal_extent']
     elif L3U_FILE_PATTERN.match(file_basename):
-        fields = get_pattern_subgroups_from_string(file_basename, pattern=L3U_FILE_PATTERN)
+        fields = get_pattern_subgroups_from_string(file_basename, L3U_FILE_PATTERN)
         day_time = None
         temporal_extent = None
     else:
@@ -96,14 +96,14 @@ class SrsGhrsstHandler(HandlerBase):
         file_basename = os.path.basename(filepath)
 
         if L3P_FILE_PATTERN.match(file_basename):
-            fields = get_pattern_subgroups_from_string(file_basename, pattern=L3P_FILE_PATTERN)
+            fields = get_pattern_subgroups_from_string(file_basename, L3P_FILE_PATTERN)
             year = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%d').year
             return os.path.join(GHRSST_PREFIX_PATH, fields['product_type'], '14d',
                                 str(year),
                                 file_basename)
 
         if L4_FILE_PATTERN.match(file_basename):
-            fields = get_pattern_subgroups_from_string(file_basename, pattern=L4_FILE_PATTERN)
+            fields = get_pattern_subgroups_from_string(file_basename, L4_FILE_PATTERN)
             year = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%d%H%M%S').year
             return os.path.join(GHRSST_PREFIX_PATH, fields['product_type'], fields['product_name'],
                                 str(year),
