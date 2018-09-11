@@ -1,4 +1,5 @@
 import os
+import re
 import unittest
 
 from aodncore.pipeline import PipelineFilePublishType, PipelineFileCheckType, FileType
@@ -49,6 +50,13 @@ class TestMooringsHandler(HandlerTestCase):
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
         self.assertTrue(f.is_harvested)
+        cleanup_regexes = [
+            "{base}{wildcard}".format(
+                base=re.escape("IMOS_ANMN-NRS_CDEKOSTUZ_20140703T021045Z_NRSMAI_FV01_Profile-SBE-19plus_C-"),
+                wildcard=r".*\.[0-9a-f\-]{36}"
+            )
+        ]
+        self.assertEqual(cleanup_regexes, handler.error_cleanup_regexes)
 
     def test_missing_attribute_for_dest_path(self):
         self.run_handler_with_exception(InvalidFileContentError, BAD_NC, include_regexes=['IMOS_ANMN-NRS_.*\.nc'])
@@ -68,6 +76,10 @@ class TestMooringsHandler(HandlerTestCase):
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
         self.assertTrue(f.is_harvested)
+        cleanup_regexes = [
+            "{base}{wildcard}".format(base=re.escape(GOOD_PDF_BASENAME), wildcard=r".*\.[0-9a-f\-]{36}")
+        ]
+        self.assertEqual(cleanup_regexes, handler.error_cleanup_regexes)
 
     # TODO: def test_bad_format_pdf(self):
 
