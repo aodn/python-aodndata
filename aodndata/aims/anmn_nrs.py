@@ -9,7 +9,7 @@ from aodncore.pipeline.handlerbase import HandlerBase
 class AnmnNrsAimsHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(AnmnNrsAimsHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.nc']
+        self.allowed_extensions = ['.nc', '.dir_manifest']
 
     @staticmethod
     def get_main_anmn_nrs_var(filepath):
