@@ -41,7 +41,7 @@ class SrsOcGriddedHandler(HandlerBase):
 
         # NON CONTRIBUTED DATA SET
         if IMOS_OC_FILE_PATTERN.match(file_basename):
-            fields = get_pattern_subgroups_from_string(file_basename, pattern=IMOS_OC_FILE_PATTERN)
+            fields = get_pattern_subgroups_from_string(file_basename, IMOS_OC_FILE_PATTERN)
             nc_time_cov_start = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%dT%H%M%SZ')
             data_parameter_code = fields['data_parameter_code']
 
@@ -57,7 +57,7 @@ class SrsOcGriddedHandler(HandlerBase):
 
         # CONTRIBUTED DATA SET
         elif RJOHNSON_FILE_PATTERN.match(file_basename):
-            fields = get_pattern_subgroups_from_string(file_basename, pattern=RJOHNSON_FILE_PATTERN)
+            fields = get_pattern_subgroups_from_string(file_basename, RJOHNSON_FILE_PATTERN)
             data_parameter_code = fields['data_parameter_code']
             time_coverage_resolution =  fields['time_coverage_resolution']
 
