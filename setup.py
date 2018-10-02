@@ -41,12 +41,14 @@ ENTRY_POINTS = {
         'dest_path_soop_xbt_nrt = aodndata.soop.soop_xbt_nrt:dest_path_soop_xbt_nrt'
     ],
     'pipeline.module_versions': [
-        'aodndata = aodndata.version:__version__'
+        'aodndata = aodndata.version:__version__',
+        'cc-plugin-imos = cc_plugin_imos:__version__'
     ]
 }
 
 INSTALL_REQUIRES = [
     'aodncore>=0.12.0',
+    'cc-plugin-imos>=1.3.0',
     'matplotlib==1.5.1',
     'pandas==0.22.0'
 ]
