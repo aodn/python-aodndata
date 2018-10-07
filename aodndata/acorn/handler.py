@@ -4,7 +4,7 @@ from datetime import datetime
 from netCDF4 import Dataset
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType
-from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError
+from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError, MissingConfigParameterError
 from aodncore.util.misc import get_pattern_subgroups_from_string
 
 FILE_TYPE_NEED_INDEX = ('radial', 'radial_quality_controlled', 'gridded_1h-avg-current-map_non-QC',
@@ -84,7 +84,11 @@ class AcornHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(AcornHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.nc']
-        self.opendap_root = self.config.pipeline_config['global'].get('opendap_root')
+
+        try:
+            self.opendap_root = self.config.pipeline_config['global']['opendap_root']
+        except KeyError:
+            raise MissingConfigParameterError("missing required config item 'opendap_root' in the pipeline config")
 
     def preprocess(self):
         nc_file = self.file_collection[0]
