@@ -1,23 +1,25 @@
+import gzip
 import os
+import shutil
 import unittest
+from datetime import datetime
 
-from aodncore.testlib import HandlerTestCase
 from aodncore.pipeline import PipelineFilePublishType, FileType, PipelineFile, PipelineFileCollection
-from aodncore.pipeline.storage import get_storage_broker
 from aodncore.pipeline.exceptions import InvalidFileFormatError, InvalidFileNameError, AttributeValidationError
+from aodncore.pipeline.storage import get_storage_broker
+from aodncore.testlib import HandlerTestCase
 from aodncore.util.misc import get_pattern_subgroups_from_string
+from mock import patch
 
 from aodndata.gsla.handler import GslaHandler, GSLA_PREFIX_PATH, GSLA_REGEX, get_creation_date
-
-from datetime import datetime
-from mock import patch
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 
 GOOD_NC_DM00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_19930101T000000Z_GSLA_FV02_DM00_C-20130913T082343Z.nc.gz")
 GOOD_NC_NRT00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_NRT00_C-20180105T222006Z.nc.gz")
-GOOD_YEARLY_FILE = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_2018_C-20180806T000000Z.nc.gz")
+GOOD_YEARLY_FILE_DM00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_2018_C-20180806T000000Z.nc.gz")
+GOOD_YEARLY_FILE_DM01 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_2018_C-20181025T000000Z.nc.gz")
 
 PREV_YEARLY_NC_STORAGE = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_2018_C-20180801T000000Z.nc.gz')
 PREV_NC_STORAGE = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20180130T224000Z.nc.gz')
@@ -48,9 +50,22 @@ class TestGslaHandler(HandlerTestCase):
         expected_path = os.path.join(GSLA_PREFIX_PATH, "NRT00/2018", os.path.basename(GOOD_NC_NRT00))
         self.assertEqual(dest_path, expected_path)
 
-        dest_path = GslaHandler.dest_path(GOOD_YEARLY_FILE)
-        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM00/yearfiles", os.path.basename(GOOD_YEARLY_FILE))
-        self.assertEqual(dest_path, expected_path)
+        # for YEARLY_FILES, the dest_path will need to read the global attributes to find the product_type. In this case
+        # since we're only testing the dest_path function and not the hanlder. we're ungzipping the gz
+        nc_file_gunzip_path = os.path.join(self.temp_dir, os.path.basename(GOOD_YEARLY_FILE_DM00.rstrip('.gz')))
+        with open(os.path.join(self.temp_dir, os.path.basename(GOOD_YEARLY_FILE_DM00.rstrip('.gz'))), "wb") as tmp:
+            shutil.copyfileobj(gzip.open(GOOD_YEARLY_FILE_DM00), tmp)
+            dest_path = GslaHandler.dest_path(nc_file_gunzip_path)
+            expected_path = os.path.join(GSLA_PREFIX_PATH, "DM00/yearfiles", os.path.basename(GOOD_YEARLY_FILE_DM00))
+            self.assertEqual(expected_path, dest_path)
+
+        # DM01
+        nc_file_gunzip_path = os.path.join(self.temp_dir, os.path.basename(GOOD_YEARLY_FILE_DM01.rstrip('.gz')))
+        with open(os.path.join(self.temp_dir, os.path.basename(GOOD_YEARLY_FILE_DM01.rstrip('.gz'))), "wb") as tmp:
+            shutil.copyfileobj(gzip.open(GOOD_YEARLY_FILE_DM01), tmp)
+            dest_path = GslaHandler.dest_path(nc_file_gunzip_path)
+            expected_path = os.path.join(GSLA_PREFIX_PATH, "DM01/yearfiles", os.path.basename(GOOD_YEARLY_FILE_DM01))
+            self.assertEqual(expected_path, dest_path)
 
     def test_bad_file(self):
         self.run_handler_with_exception(InvalidFileNameError, BAD_PATH)
@@ -75,7 +90,7 @@ class TestGslaHandler(HandlerTestCase):
         creation_date = get_creation_date(GOOD_NC_DM00)
         self.assertEqual(creation_date, datetime(2013, 9, 13, 8, 23, 43))
 
-        yearly_creation_date = get_creation_date(GOOD_YEARLY_FILE)
+        yearly_creation_date = get_creation_date(GOOD_YEARLY_FILE_DM00)
         self.assertEqual(yearly_creation_date, datetime(2018, 8, 6, 0, 0, 0))
 
         with self.assertRaises(InvalidFileNameError):
@@ -201,13 +216,12 @@ class TestGslaHandler(HandlerTestCase):
         # run the handler on the new file with an older creation date
         self.run_handler_with_exception(InvalidFileNameError, OLDER_CREATION_DATE_NC)
 
-
     def test_push_yearly_file(self):
         """
         Test case: Push new yearly file *.nc.gz with UPLOAD_ONLY
         """
         # run the handler
-        handler = self.run_handler(GOOD_YEARLY_FILE)
+        handler = self.run_handler(GOOD_YEARLY_FILE_DM00)
 
         nc_gz_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)[0]
         self.assertEqual(nc_gz_file.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
@@ -239,7 +253,7 @@ class TestGslaHandler(HandlerTestCase):
         broker.upload(preexisting_files)
 
         # run the handler
-        handler = self.run_handler(GOOD_YEARLY_FILE)
+        handler = self.run_handler(GOOD_YEARLY_FILE_DM00)
 
         nc_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(nc_file.publish_type, PipelineFilePublishType.NO_ACTION)
