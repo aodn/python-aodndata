@@ -1,20 +1,16 @@
 import os
-import tempfile
 import unittest
-import zipfile
 
-from aodncore.pipeline import PipelineFilePublishType, PipelineFileCheckType, FileType
+from aodncore.pipeline import PipelineFilePublishType, FileType
 from aodncore.pipeline.exceptions import InvalidFileContentError
-
 from aodncore.testlib import HandlerTestCase
 
 from aodndata.moorings.handlers import AbosHandler
 
-
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 IMAGES_ZIP_BASENAME = 'images_SAZ47-15-2012.zip'
 IMAGES_ZIP = os.path.join(TEST_ROOT, IMAGES_ZIP_BASENAME)
-IMAGES_ZIP_CONTENTS = {'saz_2012_47_1000_01.jpg', 'saz_2012_47_1000_02.jpg', 'saz_2012_47_1050_IRS_01.jpg'}
+IMAGES_ZIP_CONTENTS = {'saz_2012_47_1000_01.jpg', 'saz_2012_47_1000_02.JPG', 'saz_2012_47_1050_IRS_01.tiff'}
 MIXED_ZIP = os.path.join(TEST_ROOT, 'images_and_nc.zip')
 
 
@@ -28,11 +24,11 @@ class TestAbosHandler(HandlerTestCase):
         super(TestAbosHandler, self).setUp()
 
     def test_images_zip(self):
-        handler = self.run_handler(IMAGES_ZIP, include_regexes=['saz_[12][0-9]{3}_.*\\.jpg'])
+        handler = self.run_handler(IMAGES_ZIP, include_regexes=['.*\\.(jpe?g|JPE?G|tiff?|TIFF?)'])
 
         self.assertEqual(4, len(handler.file_collection))
 
-        images = handler.file_collection.filter_by_attribute_id('file_type', FileType.JPEG)
+        images = handler.file_collection.filter_by_attribute_id_not('file_type', FileType.ZIP)
         self.assertSetEqual(IMAGES_ZIP_CONTENTS, set(images.get_attribute_list('name')))
         for f in images:
             self.assertIs(f.publish_type, PipelineFilePublishType.NO_ACTION)
