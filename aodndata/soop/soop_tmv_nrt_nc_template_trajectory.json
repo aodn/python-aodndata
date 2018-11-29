@@ -1,0 +1,130 @@
+{
+  "_dimensions": {
+    "TIME": null
+  },
+  "_variables": {
+    "TIME": {
+      "_dimensions": ["TIME"],
+      "_datatype": "float64",
+      "units": "days since 1950-01-01 00:00:00 UTC",
+      "calendar": "gregorian",
+      "standard_name": "time",
+      "long_name": "time",
+      "axis": "T",
+      "valid_min": 0.0,
+      "valid_max": 90000.0
+    },
+    "LATITUDE": {
+      "_FillValue": 999999.0,
+      "_dimensions": ["TIME"],
+      "_datatype": "float64",
+      "standard_name": "latitude",
+      "long_name": "latitude",
+      "units": "degrees_north",
+      "axis": "Y",
+      "valid_min": -90.0,
+      "valid_max": 90.0,
+      "reference_datum": "WGS84 coordinate reference system"
+    },
+    "LONGITUDE": {
+      "_FillValue": 999999.0,
+      "_dimensions": ["TIME"],
+      "_datatype": "float64",
+      "standard_name": "longitude",
+      "long_name": "longitude",
+      "units": "degrees_east",
+      "axis": "X",
+      "valid_min": -180.0,
+      "valid_max": 180.0,
+      "reference_datum": "WGS84 coordinate reference system"
+    },
+    "TRAJECTORY":{
+      "_datatype": "int8",
+      "cf_role": "trajectory_id",
+      "long_name": "unique_identifier_for_each_trajectory_feature_instance_in_this_file",
+      "_data": 1
+    },
+    "NOMINAL_DEPTH":{
+      "_datatype": "float64",
+      "axis": "Z",
+      "long_name": "nominal depth",
+      "positive": "down",
+      "reference_datum": "sea surface",
+      "standard_name": "depth",
+      "units": "m",
+      "valid_max": 12000.0,
+      "valid_min": -5.0,
+      "_data": 0.6
+    },
+    "TEMP": {
+      "_dimensions": ["TIME"],
+      "_datatype": "float64",
+      "standard_name": "sea_water_temperature",
+      "long_name": "sea_water_temperature",
+      "units": "Celsius",
+      "_FillValue": 999999.0,
+      "valid_min": 5.0,
+      "valid_max": 30.0,
+      "coordinates": "TIME LATITUDE LONGITUDE NOMINAL_DEPTH"
+    },
+    "PSAL": {
+      "_dimensions": ["TIME"],
+      "_datatype": "float64",
+      "standard_name": "sea_water_salinity",
+      "long_name": "sea_water_salinity",
+      "units": "1e-3",
+      "_FillValue": 999999.0,
+      "valid_min": 10.0,
+      "valid_max": 40.0,
+      "coordinates": "TIME LATITUDE LONGITUDE NOMINAL_DEPTH"
+    },
+    "TURB": {
+      "_dimensions": ["TIME"],
+      "_datatype": "float64",
+      "standard_name": "sea_water_turbidity",
+      "long_name": "sea_water_turbidity",
+      "units": "1",
+      "_FillValue": 999999.0,
+      "valid_min": 0.0,
+      "valid_max": 1000.0,
+      "coordinates": "TIME LATITUDE LONGITUDE NOMINAL_DEPTH"
+    },
+    "CPHL": {
+      "_dimensions": ["TIME"],
+      "_datatype": "float64",
+      "long_name": "mass_concentration_of_inferred_chlorophyll_from_relative_fluorescence_units_in_sea_water_concentration_of_chlorophyll_in_sea_water",
+      "units": "mg m-3",
+      "_FillValue": 999999.0,
+      "valid_min": 0.0,
+      "valid_max": 3.0,
+      "coordinates": "TIME LATITUDE LONGITUDE NOMINAL_DEPTH"
+    }
+  },
+  "project": "Integrated Marine Observing System (IMOS)",
+  "Conventions": "CF-1.6,IMOS-1.4",
+  "title": "Temperature, salinity, fluorescence and turbidity Data collected by the Spirit of Tasmania ferry 1",
+  "institution": "Environment Protection Authority Victoria (EPA Vic)",
+  "abstract": "Measurements on Ships of Opportunity (SOOP)-Temperate Merchant Vessel (TMV) collects data from an autonomous marine monitoring system on the Spirit of Tasmania 1 to monitor long-term climate change indicators and measures of ecosystem health in Bass Strait surface waters and coastal waters of Victoria and Tasmania",
+  "source": "ship observation",
+  "keywords": "Oceans>Ocean Temperature>Sea Water Temperature ;Oceans>Salinity/Density>Salinity;Oceans>Oceans Optics>Fluorescence ;Oceans>Ocean Optics>Turbidity; Oceans>Ocean Chemistry>Pigments>Chlorophyll",
+  "references": "http://www.imos.org.au",
+  "naming_authority": "IMOS",
+  "file_version": "Level 0 - Raw data",
+  "acknowledgement": "Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: \"Data was sourced from the Integrated Marine Observing System (IMOS) - IMOS is a national collaborative research infrastructure, supported by the Australian Government. This data was collected by the Environmental Protection Authority (EPA) of Victoria. Assistance with logistical and technical support for this project has been provided by the Spirit of Tasmania 1 vessel operator, TT lines.\"",
+  "author": "Besnard, Laurent",
+  "author_email": "info@aodn.org.au",
+  "citation": "The citation in a list of references is: \"IMOS [year-of-data-download], [Title], [data-access-URL], accessed [date-of-access].\".",
+  "comment": "Geospatial vertical min/max information has been filled using the NOMINAL_DEPTH.",
+  "data_centre": "Australian Ocean Data Network (AODN)",
+  "data_centre_email": "info@aodn.org.au",
+  "disclaimer": "Data, products and services from IMOS are provided \"as is\" without any warranty as to fitness for a particular purpose.",
+  "distribution_statement": "Data may be re-used, provided that related metadata explaining the data has been reviewed by the user, and the data is appropriately acknowledged.",
+  "instrument_nominal_depth": 0.6,
+  "geospatial_vertical_min": 0.6,
+  "geospatial_vertical_max": 0.6,
+  "geospatial_vertical_positive": "down",
+  "license": "http://creativecommons.org/licenses/by/4.0/",
+  "principal_investigator": "Lee, Randall",
+  "principal_investigator_email": "randall.lee@epa.vic.gov.au",
+  "standard_name_vocabulary": "NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table 60"
+}
