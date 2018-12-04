@@ -58,9 +58,9 @@ def get_gsla_type(filepath):
 
 def get_product_type(netcdf_path):
     with Dataset(netcdf_path, mode='r') as nc_obj:
-        if hasattr(nc_obj, 'product_type'):
+        try:
             return nc_obj.product_type
-        else:
+        except AttributeError:
             raise InvalidInputFileError(
                 "Expecting 'product_type' attribute in netCDF'{gzip}'".format(gzip=os.path.basename(netcdf_path))
             )
@@ -88,13 +88,14 @@ class GslaHandler(HandlerBase):
                 )
 
             netcdf_file = netcdf_collection[0]
-            # setting the path of the gz file with the gunqipped file
+            # setting the path of the gz file with the gunzipped file
             netcdf_file_gz.dest_path = self.dest_path(netcdf_file.src_path)
             # Nothing to do with *.nc. Talend can harvest *.nc.gz. Set to NO_ACTION
             netcdf_file.publish_type = PipelineFilePublishType.NO_ACTION
 
-            # we don't know the product type (DM00 or DM01) of the file already on s3 in order to deduce its path. So we
-            # to get the product type from the file in incoming
+            # we don't know the product type (DM00 or DM01) of the file already
+            # on s3 in order to deduce its path. We need to get the product
+            # type from the file in incoming
             result_previous_version_creation_date = self.get_previous_version_creation_date(netcdf_file.src_path)
 
             """ default values
@@ -145,7 +146,7 @@ class GslaHandler(HandlerBase):
         if len(res) > 1:
             raise RuntimeError('More than 1 previous version of {filename} was found on storage.'.
                                format(filename=os.path.basename(filepath)))
-        elif len(res) == 1 :
+        elif len(res) == 1:
             return res.keys()[0]
         else:
             return False
@@ -175,7 +176,5 @@ class GslaHandler(HandlerBase):
             dest_path_val = os.path.join(GSLA_PREFIX_PATH, gsla_type, str(gsla_year), file_basename)
 
         # destination path should always be for nc.gz files. So we force it
-        if dest_path_val.endswith('.nc'):
-            return '{val}.gz'.format(val=dest_path_val)
-        else:
-            return dest_path_val
+        return '{val}.gz'.format(val=dest_path_val) if dest_path_val.endswith('.nc') else dest_path_val
+
