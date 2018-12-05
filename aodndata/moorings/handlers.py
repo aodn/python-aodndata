@@ -66,11 +66,11 @@ class AbosHandler(MooringsHandler):
         self.allowed_extensions = ['.nc', '.zip']
 
     def process(self):
-        """Handle a zip file containing *only* jpg images. In this case we just want to publish the zip file itself,
-        not the individual images. If we encounter a "mixed" zip file with images and netCDF files, we're just going
-        to give up, for now.
+        """Handle a zip file containing images and no NetCDF files. In this case we just want to publish the zip file
+        itself, not the individual images. If we encounter a "mixed" zip file with images and netCDF files,
+        we're just going to give up, for now.
         """
-        images = PipelineFileCollection(f for f in self.file_collection if f.mime_type.startswith('image'))
+        images = PipelineFileCollection(f for f in self.file_collection if f.file_type.is_image_type)
         netcdfs = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
         is_zip = self.file_type is FileType.ZIP
         have_images = len(images) > 0
