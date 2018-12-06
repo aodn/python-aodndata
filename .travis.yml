@@ -11,8 +11,16 @@ env:
   global:
     - MPLBACKEND=agg
     - AODNFETCHER_URL="git+https://github.com/aodn/python-aodnfetcher.git@master"
-    - AODNCORE_URL="jenkins://imos-binary/aodncore_prod?pattern=^.*\.whl$"
     - CC_PLUGIN_IMOS_URL="jenkins://imos-binary/cc_plugin_imos_prod?pattern=^.*\.whl$"
+
+matrix:
+  include:
+    - name: "aodncore_build"
+      env: AODNCORE_URL="jenkins://imos-binary/aodncore_build?pattern=^.*\.whl$"
+    - name: "aodncore_systest"
+      env: AODNCORE_URL="jenkins://imos-binary/aodncore_systest?pattern=^.*\.whl$"
+    - name: "aodncore_prod"
+      env: AODNCORE_URL="jenkins://imos-binary/aodncore_prod?pattern=^.*\.whl$"
 
 before_install:
   - pip install ${AODNFETCHER_URL}
