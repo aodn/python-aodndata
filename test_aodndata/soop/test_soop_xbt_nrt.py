@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import unittest
 
 from aodndata.soop.soop_xbt_nrt import dest_path_soop_xbt_nrt

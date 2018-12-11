@@ -19,9 +19,9 @@ pip install ${AODNFETCHER_URL}
 
 echo "##### Installing dependencies into virtual environment #####"
 pip install $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${CC_PLUGIN_IMOS_URL} \
-    | python -c "import sys, json; print json.load(sys.stdin)['${CC_PLUGIN_IMOS_URL}']['local_file']")
+    | python -c "import sys, json; print(json.load(sys.stdin)['${CC_PLUGIN_IMOS_URL}']['local_file'])")
 pip install $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNCORE_URL} \
-    | python -c "import sys, json; print json.load(sys.stdin)['${AODNCORE_URL}']['local_file']")
+    | python -c "import sys, json; print(json.load(sys.stdin)['${AODNCORE_URL}']['local_file'])")
 pip install -r requirements.txt
 
 cat<<EOF

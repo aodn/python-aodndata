@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import datetime
 import os
 import re
@@ -13,7 +15,7 @@ class SoopTrvHandler(HandlerBase):
 
     def get_main_soop_trv_var(self, filepath):
         netcdf_file_obj = Dataset(filepath, mode='r')
-        variables = netcdf_file_obj.variables.keys()
+        variables = list(netcdf_file_obj.variables.keys())
         netcdf_file_obj.close()
 
         if 'CPHL' in variables:

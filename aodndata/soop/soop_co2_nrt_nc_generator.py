@@ -351,4 +351,4 @@ if __name__ == '__main__':
     # call main function to generate to process RT files"
     netcdf_file_path = process_co2_rt()
 
-    print netcdf_file_path
+    print(netcdf_file_path)

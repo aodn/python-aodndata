@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from itertools import chain
 from pkg_resources import EntryPoint
 from setuptools import setup, find_packages
@@ -54,6 +56,11 @@ INSTALL_REQUIRES = [
     'pandas==0.22.0'
 ]
 
+EXTRAS_REQUIRE = {
+    ':python_version < "3.2"': ['functools32 == 3.2.3-2']
+}
+
+
 # validate entry points
 for item in chain(ENTRY_POINTS['pipeline.handlers'], ENTRY_POINTS['pipeline.path_functions']):
     if item.count('=') != 1:
@@ -72,7 +79,8 @@ setup(
     author_email='developers@emii.org.au',
     description='AODN pipeline library',
     zip_safe=False,
-    install_requires=INSTALL_REQUIRES ,
+    install_requires=INSTALL_REQUIRES,
+    extras_require=EXTRAS_REQUIRE,
     test_suite='test_aodndata',
     entry_points=ENTRY_POINTS
 )

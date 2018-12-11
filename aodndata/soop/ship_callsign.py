@@ -13,8 +13,14 @@ How to use:
 author : Besnard, Laurent
 """
 
+from __future__ import absolute_import
+from __future__ import unicode_literals
 from aodncore.vocab.platform_code_vocab import platform_altlabels_per_preflabel
-from functools32 import lru_cache
+
+try:
+    from functools32 import lru_cache
+except ImportError:
+    from functools import lru_cache
 
 
 @lru_cache(maxsize=32)
@@ -27,7 +33,7 @@ def ship_callsign_list():
     platform_codes = platform_altlabels_per_preflabel('Vessel')
     platform_codes = {key: item.replace(' ', '-') for key, item in platform_codes.items()}
 
-    if 'FHZI' in platform_codes.keys():
+    if 'FHZI' in list(platform_codes.keys()):
         platform_codes['FHZI'] = 'Astrolabe'
 
     return platform_codes
@@ -39,7 +45,7 @@ def ship_callsign(callsign):
     returns none if the vessel name does not exist
     """
     callsigns = ship_callsign_list()
-    if callsign in callsigns.keys():
+    if callsign in list(callsigns.keys()):
         return callsigns[callsign]
     else:
         return None

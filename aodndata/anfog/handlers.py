@@ -1,3 +1,5 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import os
 import re
 
@@ -132,7 +134,7 @@ class AnfogHandler(HandlerBase):
         results = self.state_query.query_storage(self.upload_destination)
         self._set_dm_collection_attributes()
         if results:
-            self.logger.info("found previous versions: '{results}'".format(results=results.keys()))
+            self.logger.info("found previous versions: '{results}'".format(results=list(results.keys())))
             self.delete_previous_version('DM', 'update')
         elif not results and re.match(AnfogFileClassifier.ANFOG_DM_REGEX,
                                       os.path.basename(self.primary_nc.src_path)):
