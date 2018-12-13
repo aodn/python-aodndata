@@ -81,6 +81,10 @@ class AbosHandler(MooringsHandler):
                     "Zip file contains both images and netCDFs. Don't know what to do!"
                     " They are handled differently, so please upload only one at a time."
                 )
+            if not AbosFileClassifier.SAZ_IMAGES_ZIP_PATTERN.match(self.file_basename):
+                raise InvalidFileNameError(
+                    "Zip file contains images, but its name does not match pattern for images zip file"
+                )
 
             self.logger.info("Zip file contains images and no netCDF files. "
                              "Publishing original zip file instead of its contents.")

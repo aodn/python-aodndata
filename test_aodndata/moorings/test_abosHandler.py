@@ -1,8 +1,9 @@
 import os
 import unittest
+import shutil
 
 from aodncore.pipeline import PipelineFilePublishType, FileType
-from aodncore.pipeline.exceptions import InvalidFileContentError
+from aodncore.pipeline.exceptions import InvalidFileContentError, InvalidFileNameError
 from aodncore.testlib import HandlerTestCase
 
 from aodndata.moorings.handlers import AbosHandler
@@ -38,6 +39,13 @@ class TestAbosHandler(HandlerTestCase):
             self.assertEqual(f.dest_path, os.path.join('IMOS', 'ABOS', 'SOTS', 'images', IMAGES_ZIP_BASENAME))
             self.assertTrue(f.is_stored)
             self.assertTrue(f.is_harvested)
+
+    def test_bad_name_image_zip(self):
+        bad_images_zip = os.path.join(self.temp_dir, 'NOT_matching_pattern.zip')
+        shutil.copy(IMAGES_ZIP, bad_images_zip)
+        handler = self.run_handler_with_exception(InvalidFileNameError, bad_images_zip,
+                                                  include_regexes=['.*\\.(jpe?g|JPE?G|tiff?|TIFF?)'])
+        self.assertRegexpMatches(handler.error.args[0], r"name does not match pattern for images zip file")
 
     def test_mixed_zip(self):
         self.run_handler_with_exception(InvalidFileContentError, MIXED_ZIP)
