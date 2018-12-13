@@ -20,6 +20,7 @@ ENTRY_POINTS = {
         'MooringsHandler = aodndata.moorings.handlers:MooringsHandler',
         'SoopAsfSstHandler = aodndata.soop.soop_asf_sst:SoopAsfSstHandler',
         'SoopBaHandler = aodndata.soop.soop_ba:SoopBaHandler',
+        'SoopCo2Handler = aodndata.soop.soop_co2:SoopCo2Handler',
         'SoopTrvHandler = aodndata.soop.soop_trv:SoopTrvHandler',
         'SoopXbtDmHandler = aodndata.soop.soop_xbt_dm:SoopXbtDmHandler',
         'SrsAltHandler = aodndata.srs.srs_altimetry:SrsAltHandler',
@@ -28,8 +29,8 @@ ENTRY_POINTS = {
         'SrsOcGriddedHandler = aodndata.srs.srs_oc_gridded:SrsOcGriddedHandler',
         'SrsOcLjcoHandler = aodndata.srs.srs_oc_ljco:SrsOcLjcoHandler',
         'SrsOcSoopRadHandler = aodndata.srs.srs_oc_soop_rad:SrsOcSoopRadHandler',
-        'SstaarsHandler = aodndata.csiro.sstaars:SstaarsHandler',
-        'SoopCo2Handler = aodndata.soop.soop_co2:SoopCo2Handler'
+        'SrsSurfaceWavesHandler = aodndata.srs.srs_surface_waves:SrsSurfaceWavesHandler',
+        'SstaarsHandler = aodndata.csiro.sstaars:SstaarsHandler'
     ],
     'pipeline.path_functions': [
         'dest_path_aatams_sattag_qc_ctd = aodndata.aatams:dest_path_aatams_sattag_qc_ctd',
@@ -38,8 +39,7 @@ ENTRY_POINTS = {
         'dest_path_cars = aodndata.csiro.cars:dest_path_cars',
         'dest_path_deakin_bathymetry = aodndata.deakin.deakin_bathymetry:dest_path_deakin_bathymetry',
         'dest_path_oa = aodndata.csiro.ocean_acidification:dest_path_oa',
-        'dest_path_soop_xbt_nrt = aodndata.soop.soop_xbt_nrt:dest_path_soop_xbt_nrt',
-        'dest_path_srs_surface_waves = aodndata.srs.srs_surface_waves:dest_path_srs_surface_waves'
+        'dest_path_soop_xbt_nrt = aodndata.soop.soop_xbt_nrt:dest_path_soop_xbt_nrt'
     ],
     'pipeline.module_versions': [
         'aodndata = aodndata.version:__version__',
