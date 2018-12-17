@@ -39,16 +39,16 @@ def dest_path_srs_surface_waves(filepath):
         lon = int(fields['longitude'])
         lat_dir = fields['latitude_dir']
 
-        def round_down_div_10(val, divisor=10):
-            """ return div 10 rounded value of a value"""
+        def round_down_div(val, divisor=20):
+            """ return div rounded value of a value"""
             return val - (val % divisor)
 
         if lat_dir == 'S':
-            lat_bottom_left = round_down_div_10(lat) + 10
+            lat_bottom_left = round_down_div(lat) + 20
         elif lat_dir == 'N':
-            lat_bottom_left = round_down_div_10(lat)
+            lat_bottom_left = round_down_div(lat)
 
-        lon_bottom_left = round_down_div_10(lon)
+        lon_bottom_left = round_down_div(lon)
 
         coord_dirname = '{lat_bottom_left}{lat_dir}_{lon_bottom_left}E'.format(
             lat_bottom_left=str(lat_bottom_left).zfill(3),
