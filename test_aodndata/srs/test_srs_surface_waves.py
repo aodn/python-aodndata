@@ -29,6 +29,12 @@ class TestSrsSurfaceWavesHandler(unittest.TestCase):
             basename=os.path.basename(good_nc_0_south)
         ))
 
+        good_nc_112_south = os.path.join(TEST_ROOT, 'IMOS_SRS-Surface-Waves_MW_CRYOSAT-2_FV02_112S-013E-DM00.nc')
+        self.assertEqual(dest_path_srs_surface_waves(good_nc_112_south),
+                         'IMOS/SRS/Surface-Waves/Wave-Wind-Altimetry-DM00/CRYOSAT-2/120S_010E/{basename}'.format(
+            basename=os.path.basename(good_nc_112_south)
+        ))
+
         bad_product = os.path.join(TEST_ROOT, 'IMOS_SRS-Surface-Waves_MW_UNKNOWN-2_FV02_052S-000E-DM00.nc')
         with self.assertRaises(InvalidFileNameError):
             dest_path_srs_surface_waves(bad_product)
