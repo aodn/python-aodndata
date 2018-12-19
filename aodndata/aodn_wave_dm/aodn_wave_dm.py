@@ -8,7 +8,9 @@ from aodncore.util.misc import get_pattern_subgroups_from_string
 BOM_DIR = 'Bureau_of_Meteorology'
 DOT_WA_DIR = 'Department_of_Transport-Western_Australia'
 DES_QLD_DIR = 'Department_of_Environment_and_Science-Queensland'
-
+MHL_DIR_BASE = 'NSW-OEH'
+MHL_DIR = 'Manly_Hydraulics_Laboratory'
+MHL_WAVERIDER_DIR = 'Wave'
 WAVERIDER_DIR = 'Waverider_Buoys'
 AWAC_DIR = 'Acoustic_Wave-Current_Profiler'
 DELAYED_DIR = 'DELAYED'
@@ -43,6 +45,12 @@ DES_QLD_WAVERIDER = re.compile(r"""
                                (?P<nc_time_cov_end>[0-9]{8}T[0-9]{6}Z)\.nc$
                                """, re.VERBOSE)
 
+MHL_WAVERIDER = re.compile(r"""
+                               IMOS_ANMN-NSW_W_
+                               (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)_
+                               (?P<site_code>(.*))_WAVERIDER_FV01_END-
+                               (?P<nc_time_cov_end>[0-9]{8}T[0-9]{6}Z)\.nc$
+                               """, re.VERBOSE)
 
 def dest_path_aodn_wave_dm(filepath):
     file_basename = os.path.basename(filepath)
@@ -62,6 +70,10 @@ def dest_path_aodn_wave_dm(filepath):
         data_base_dir = os.path.join(DOT_WA_DIR, WAVERIDER_DIR, DELAYED_DIR)
         fields = get_pattern_subgroups_from_string(file_basename, DOT_WA_WAVERIDER)
         product_dir = os.path.join(site_name.replace(' ', '_'), fields['site_code'])
+
+    elif MHL_WAVERIDER.match(file_basename):
+        data_base_dir = os.path.join(MHL_DIR_BASE, MHL_DIR, MHL_WAVERIDER_DIR)
+        product_dir = site_name.replace(' ', '_')
 
     elif DOT_WA_AWAC.match(file_basename):
         data_base_dir = os.path.join(DOT_WA_DIR, AWAC_DIR, DELAYED_DIR)

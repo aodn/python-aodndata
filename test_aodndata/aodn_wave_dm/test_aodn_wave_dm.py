@@ -66,6 +66,16 @@ class TestAodnWaveDmHandler(unittest.TestCase):
                              'Mackay',
                              os.path.basename(good_nc)))
 
+        good_nc = os.path.join(TEST_ROOT,
+                               'IMOS_ANMN-NSW_W_20140529T010000Z_WAVEBYB_WAVERIDER_FV01_END-20151231T130000Z.nc')
+        self.assertEqual(dest_path_aodn_wave_dm(good_nc),
+                         os.path.join(
+                             'NSW-OEH',
+                             'Manly_Hydraulics_Laboratory',
+                             'Wave',
+                             'Byron_Bay',
+                             os.path.basename(good_nc)))
+
         bad = os.path.join(TEST_ROOT, 'bad.nc')
         with self.assertRaises(InvalidFileNameError):
             dest_path_aodn_wave_dm(bad)
@@ -74,6 +84,5 @@ class TestAodnWaveDmHandler(unittest.TestCase):
         with self.assertRaises(InvalidFileNameError):
             dest_path_aodn_wave_dm(bad)
 
-
-if __name__ == '__main__':
-    unittest.main()
+        if __name__ == '__main__':
+            unittest.main()
