@@ -84,5 +84,5 @@ class TestAodnWaveDmHandler(unittest.TestCase):
         with self.assertRaises(InvalidFileNameError):
             dest_path_aodn_wave_dm(bad)
 
-        if __name__ == '__main__':
-            unittest.main()
+if __name__ == '__main__':
+    unittest.main()
