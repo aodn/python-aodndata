@@ -18,6 +18,9 @@ GOOD_NC = os.path.join(TEST_ROOT,
 BAD_NC = os.path.join(TEST_ROOT,
                       'IMOS_SOOP-BA_A_20160116T152139Z_VKAD_FV02_Antarctic-Discovery'
                       '-ES60-38_END-20160129T062056Z_C-20170227T055245Z_BAD.nc')
+TRANSECT_WITH_FRQUENCY = os.path.join(TEST_ROOT,
+                                      'IMOS_SOOP-BA_AE_20170126T100839Z_VKAD_FV02_Antarctic-Discovery'
+                                      '-ES60-38_END-20170201T144253Z_C-20181211T230659Z.nc')
 GOOD_ZIP = os.path.join(TEST_ROOT, 'Antarctic-Discovery_20160116-20160129.zip')
 BAD_ZIP = os.path.join(TEST_ROOT, 'Antarctic-Discovery_20160116-20160129_BAD.zip')
 CSV = os.path.join(TEST_ROOT, 'Antarctic_Discovery_20160115-20160129.gps.csv')
@@ -172,5 +175,19 @@ class TestSoopBaHandler(HandlerTestCase):
                 self.assertEqual(csv.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
                 self.assertEqual(csv.is_deleted, False)
 
-        if __name__ == '__main__':
-            unittest.main()
+    @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    def test_deployment_id_with_frequency(self, mock_callsign):
+        handler = self.run_handler(TRANSECT_WITH_FRQUENCY)
+
+        f = handler.file_collection[0]
+        # self.assertEqual(f.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+        self.assertEqual(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(f.name, os.path.basename(TRANSECT_WITH_FRQUENCY))
+        self.assertEqual(f.dest_path,
+                         'IMOS/SOOP/SOOP-BA/VKAD_Antarctic-Discovery/Antarctic-Discovery_20170126-20170201_38/'
+                         + f.name)
+        self.assertTrue(f.is_stored)
+
+
+if __name__ == '__main__':
+    unittest.main()

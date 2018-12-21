@@ -70,9 +70,11 @@ def get_deployment_id(src_file, ship_code):
     name_parts = deployment_id.split('_')
     ship_callsign_ls = ship_callsign_list()
 
-    if len(name_parts) >= 3:
+    if len(name_parts) == 3:
         deployment_id = "{ship_name}_{dateend}".format(ship_name=ship_callsign_ls[ship_code], dateend=name_parts[-1])
-
+    elif len(name_parts) == 4:
+        deployment_id = "{ship_name}_{dateend}_{frequency}".format(ship_name=ship_callsign_ls[ship_code],
+                                                                   dateend=name_parts[-2], frequency=name_parts[-1])
     return deployment_id
 
 
@@ -160,8 +162,9 @@ class SoopBaHandler(HandlerBase):
 
             if extension == 'nc':
                 if len(previous_file) != 1:
-                    raise ValueError("Expected exactly 1 previous versions of the netcdf file, found {n}. Aborting ".format(
-                        n=len(previous_file)))
+                    raise ValueError(
+                        "Expected exactly 1 previous versions of the netcdf file, found {n}. Aborting ".format(
+                            n=len(previous_file)))
             else:
                 # if uploaded file name has the same name published file => no action, file will be overwritten, otherwise
                 # sort file per wildcard and work out which one to delete (
