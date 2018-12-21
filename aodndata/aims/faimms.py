@@ -92,12 +92,12 @@ class FaimmsHandler(HandlerBase):
 
         if site_name == []:
             raise InvalidFileFormatError(
-                "Don't know where to put file '{name}' (Unknown site name)".format(name=input_file)
+                "Don't know where to put file '{name}' (Unknown site name)".format(name=os.path.basename(filepath))
             )
 
         if platform_type == []:
             raise InvalidFileFormatError(
-                "Don't know where to put file '{name}' (Unknown platform type)".format(name=input_file)
+                "Don't know where to put file '{name}' (Unknown platform type)".format(name=os.path.basename(filepath))
             )
 
         return os.path.join(site_name, platform_type)
