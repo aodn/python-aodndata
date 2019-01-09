@@ -2,14 +2,29 @@ import datetime
 import os
 import re
 
-from aodncore.pipeline import HandlerBase
 from netCDF4 import Dataset
+from aodncore.pipeline import HandlerBase, PipelineFile, PipelineFilePublishType
 
 
 class SoopTrvHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(SoopTrvHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.nc']
+
+    def preprocess(self):
+        """
+        Files to be deleted as found in 'soop_trv_duplicate_ls' wfs layer
+        """
+        files_to_delete = self.state_query.query_wfs_urls_for_layer('soop_trv_duplicate_ls')
+
+        for f in files_to_delete:
+            file_to_delete = PipelineFile(os.path.basename(f),
+                                          is_deletion=True,
+                                          dest_path=f,
+                                          file_update_callback=self._file_update_callback
+                                          )
+            file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
+            self.file_collection.add(file_to_delete)
 
     def get_main_soop_trv_var(self, filepath):
         netcdf_file_obj = Dataset(filepath, mode='r')
