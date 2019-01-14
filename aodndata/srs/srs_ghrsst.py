@@ -10,16 +10,41 @@ from aodncore.pipeline.exceptions import InvalidFileNameError
 L3S_L3C_FILE_PATTERN = re.compile(r"""
                                 (?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L3S|L3C)_.*-AVHRR
-                                (?P<sat_number>.*)_D-
+                                (?P<sat_value>.*)_D-
                                 (?P<temporal_extent>1d|3d|6d|14d|1m)_
                                 (?P<day_time>day|night|dn).*\.nc$
+                                """, re.VERBOSE)
+
+L3S_MULTISENSOR_FILE_PATTERN = re.compile(r"""
+                                (?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<product_type>L3S)_.*-MultiSensor-
+                                (?P<temporal_extent>1d|3d|6d|14d|1m)_
+                                (?P<day_time>day|night|dn)
+                                (?P<optional>_Southern|)
+                                \.nc$
                                 """, re.VERBOSE)
 
 L3U_FILE_PATTERN = re.compile(r"""
                                 (?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L3U)_.*-AVHRR
-                                (?P<sat_number>[0-9].*)_D-
+                                (?P<sat_value>[0-9].*)_D-
                                 (?P<pass_direction>Asc|Des)
+                                (?P<optional>_Southern|)
+                                \.nc$
+                                """, re.VERBOSE)
+
+L3U_VIIRS_FILE_PATTERN = re.compile(r"""
+                                (?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<product_type>L3U)_.*-VIIRS_NPP.*
+                                (?P<optional>_Southern|)
+                                \.nc$
+                                """, re.VERBOSE)
+
+L3C_VIIRS_FILE_PATTERN = re.compile(r"""
+                                (?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<product_type>L3C)_.*-VIIRS_NPP.*
+                                (?P<temporal_extent>1d|3d|6d|14d|1m)_
+                                (?P<day_time>day|night|dn)
                                 (?P<optional>_Southern|)
                                 \.nc$
                                 """, re.VERBOSE)
@@ -49,6 +74,21 @@ def get_info_nc(filepath):
         fields = get_pattern_subgroups_from_string(file_basename, L3U_FILE_PATTERN)
         day_time = None
         temporal_extent = None
+    elif L3S_MULTISENSOR_FILE_PATTERN.match(file_basename):
+        fields = get_pattern_subgroups_from_string(file_basename, L3S_MULTISENSOR_FILE_PATTERN)
+        day_time = fields['day_time']
+        temporal_extent = fields['temporal_extent']
+        fields['product_type'] = '%sM' % fields['product_type']
+    elif L3U_VIIRS_FILE_PATTERN.match(file_basename):
+        fields = get_pattern_subgroups_from_string(file_basename, L3U_VIIRS_FILE_PATTERN)
+        day_time = ''
+        temporal_extent = None
+        fields['sat_value'] = 'snpp'
+    elif L3C_VIIRS_FILE_PATTERN.match(file_basename):
+        fields = get_pattern_subgroups_from_string(file_basename, L3C_VIIRS_FILE_PATTERN)
+        day_time = fields['day_time']
+        temporal_extent = fields['temporal_extent']
+        fields['sat_value'] = 'snpp'
     else:
         raise InvalidFileNameError(
             "file name: \"{filename}\" not matching regex to deduce dest_path".format(
@@ -61,9 +101,15 @@ def get_info_nc(filepath):
 
     date_nc = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%d%H%M%S')
 
-    sat_number = fields['sat_number']
-    if sat_number == '':
-        sat_number = None
+    if 'sat_value' in fields.keys():
+        sat_value = fields['sat_value']
+    else:
+        sat_value = None
+    if sat_value == '':
+        sat_value = None
+    if isinstance(sat_value, str):
+        if sat_value.isdigit():
+            sat_value = 'n%s' % sat_value
 
     if prod_lev != 'L3U':
         product_path = '%s-%s' % (prod_lev, temporal_extent)
@@ -80,7 +126,7 @@ def get_info_nc(filepath):
                  'temporal_extent': temporal_extent,
                  'day_time': day_time,
                  'date_data': date_nc,
-                 'sat_number': sat_number,
+                 'sat_value': sat_value,
                  'product_path': product_path}
 
     return file_info
@@ -111,7 +157,7 @@ class SrsGhrsstHandler(HandlerBase):
 
         file_info = get_info_nc(filepath)
 
-        if file_info['sat_number'] is None:
+        if file_info['sat_value'] is None:
             path = os.path.join(GHRSST_PREFIX_PATH,
                                 file_info['product_path'],
                                 file_info['day_time'],
@@ -121,7 +167,7 @@ class SrsGhrsstHandler(HandlerBase):
         elif file_info['day_time'] is None:
             path = os.path.join(GHRSST_PREFIX_PATH,
                                 file_info['product_path'],
-                                'n%s' % file_info['sat_number'],
+                                file_info['sat_value'],
                                 str(file_info['date_data'].year),
                                 file_basename)
 
@@ -129,7 +175,7 @@ class SrsGhrsstHandler(HandlerBase):
             path = os.path.join(GHRSST_PREFIX_PATH,
                                 file_info['product_path'],
                                 file_info['day_time'],
-                                'n%s' % file_info['sat_number'],
+                                file_info['sat_value'],
                                 str(file_info['date_data'].year),
                                 file_basename)
 
