@@ -101,15 +101,9 @@ def get_info_nc(filepath):
 
     date_nc = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%d%H%M%S')
 
-    if 'sat_value' in fields.keys():
-        sat_value = fields['sat_value']
-    else:
-        sat_value = None
-    if sat_value == '':
-        sat_value = None
-    if isinstance(sat_value, str):
-        if sat_value.isdigit():
-            sat_value = 'n%s' % sat_value
+    sat_value = fields.get('sat_value', '')
+    if sat_value.isdigit():
+        sat_value = 'n%s' % sat_value
 
     if prod_lev != 'L3U':
         product_path = '%s-%s' % (prod_lev, temporal_extent)
