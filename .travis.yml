@@ -11,6 +11,7 @@ env:
   global:
     - MPLBACKEND=agg
     - AODNFETCHER_URL="git+https://github.com/aodn/python-aodnfetcher.git@master"
+    - NCWRITER_URL="jenkins://imos-binary/ncwriter_prod?pattern=^.*\.whl$"
     - CC_PLUGIN_IMOS_URL="jenkins://imos-binary/cc_plugin_imos_prod?pattern=^.*\.whl$"
 
 matrix:
@@ -28,6 +29,7 @@ before_install:
 install:
   - pip install $(aodnfetcher ${CC_PLUGIN_IMOS_URL} | python -c "import sys, json; print json.load(sys.stdin)['${CC_PLUGIN_IMOS_URL}']['local_file']")
   - pip install $(aodnfetcher ${AODNCORE_URL} | python -c "import sys, json; print json.load(sys.stdin)['${AODNCORE_URL}']['local_file']")
+  - pip install $(aodnfetcher ${NCWRITER_URL} | python -c "import sys, json; print json.load(sys.stdin)['${NCWRITER_URL}']['local_file']")
   - pip install -r requirements.txt
   - pip install coverage
   - pip install codecov
