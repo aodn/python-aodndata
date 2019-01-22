@@ -1,5 +1,4 @@
 import datetime
-import itertools
 import os
 import tempfile
 
@@ -24,12 +23,12 @@ class SoopXbtDmHandler(HandlerBase):
 
     @staticmethod
     def dest_path(filepath):
-        F = Dataset(filepath, mode='r')
-        xbt_line = F.XBT_line
-        xbt_line_description = F.XBT_line_description
-        date_start = datetime.datetime.strptime(F.time_coverage_start, "%Y-%m-%dT%H:%M:%SZ")
+        with Dataset(filepath, mode='r') as F:
+            xbt_line = F.XBT_line
+            xbt_line_description = F.XBT_line_description
+            date_start = datetime.datetime.strptime(F.time_coverage_start, "%Y-%m-%dT%H:%M:%SZ")
+
         year_line = date_start.strftime('%Y')
-        F.close()
 
         soop_xbt_dm_path = os.path.join('IMOS', 'SOOP', 'SOOP-XBT', 'DELAYED')
 
@@ -42,42 +41,54 @@ class SoopXbtDmHandler(HandlerBase):
 
 def create_plot(netcdfFilePath, output_dir):
     """ create plot to be ingested in SOOP XBT NRT pipeline"""
-    F = Dataset(netcdfFilePath, 'r', format='NETCDF4')
-    cruise_id = F.XBT_cruise_ID
-    sea_water_temperature = F.variables['TEMP']
-    depth = F.variables['DEPTH']
-    time = F.variables['TIME']
-    time = num2date(time[:], time.units, time.calendar)
-    lat = F.variables['LATITUDE'][:]
-    lon = F.variables['LONGITUDE'][:]
-    xbt_unique_id = F.XBT_uniqueid
+    with Dataset(netcdfFilePath, 'r', format='NETCDF4') as F:
+        cruise_id = F.XBT_cruise_ID
+        xbt_unique_id = F.XBT_uniqueid
+        title_dataset = F.title
+        time_coverage_start = F.time_coverage_start
+        xbt_line_description = F.XBT_line_description
+
+        sea_water_temperature = F.variables['TEMP']
+        temp_qc = F.variables['TEMP_quality_control'][:]
+        temp_values = sea_water_temperature[:]
+
+        depth = F.variables['DEPTH']
+        depth_values = depth[:]
+
+        lat = F.variables['LATITUDE'][:]
+        lon = F.variables['LONGITUDE'][:]
+
+        sst_fillvalue = sea_water_temperature._FillValue
+        sst_units = sea_water_temperature.units
+        sst_longname = sea_water_temperature.long_name
+
+        depth_units = depth.units
+        depth_longname = depth.long_name
+        depth_fillvalue = getattr(depth, '_FillValue', None)
 
     # Load only the data which does not have a quality control value equal to qcFlag and greater than good_flag
     bad_flag = 4
     good_flag = 1
-    i_good_data = (F.variables['TEMP_quality_control'][:] != bad_flag) & (
-        F.variables['TEMP_quality_control'][:] >= good_flag)
-    temp_values = sea_water_temperature[:]
-    depth_values = depth[:]
+    i_good_data = (temp_qc != bad_flag) & (temp_qc >= good_flag)
 
     # Modify the values which we don't want to plot to replace them with the Fillvalue
-    temp_values[~i_good_data] = sea_water_temperature._FillValue
+    temp_values[~i_good_data] = sst_fillvalue
 
     # new XBT files dont have a FillValue att for DEPTH since DEPTH is a
     # dimension. However previous files do. Need to handle both case if we do
     # some reprocessing
-    if hasattr(depth, '_FillValue'):
-        depth_values[~i_good_data] = depth._FillValue
-        depth_values = ma.masked_values(depth_values, F.variables['DEPTH']._FillValue)
+    if depth_fillvalue:
+        depth_values[~i_good_data] = depth_fillvalue
+        depth_values = ma.masked_values(depth_values, depth_fillvalue)
 
     # Modify the mask in order to change the boolean, since some previous non Fillvalue data are now Fillvalue
-    temp_values = ma.masked_values(temp_values, F.variables['TEMP']._FillValue)
+    temp_values = ma.masked_values(temp_values, sst_fillvalue)
 
     fig, ax1 = subplots(figsize=(13, 9.2), dpi=80, facecolor='w', edgecolor='k')
     subplots_adjust(left=0.075, right=0.95, top=0.9, bottom=0.25)
 
-    ax1.set_xlabel(sea_water_temperature.long_name + ' in ' + sea_water_temperature.units)
-    ax1.set_ylabel(depth.long_name + ' in ' + depth.units)
+    ax1.set_xlabel(sst_longname + ' in ' + sst_units)
+    ax1.set_ylabel(depth_longname + ' in ' + depth_units)
 
     try:
         if all(temp_values.mask):
@@ -87,20 +98,25 @@ def create_plot(netcdfFilePath, output_dir):
                  verticalalignment='center',
                  transform=ax1.transAxes)
         else:
-            plot(temp_values[:], -depth_values[:])
+            plot(temp_values, -depth_values)
     except:
-        plot(temp_values[:], -depth_values[:])
+        plot(temp_values, -depth_values)
 
     ax1.set_ylim(-1100, 0)
     xticks([-3, 0, 5, 10, 15, 20, 25, 30, 35])
 
-    date_start = datetime.datetime.strptime(F.time_coverage_start, "%Y-%m-%dT%H:%M:%SZ").strftime(
+    date_start = datetime.datetime.strptime(time_coverage_start, "%Y-%m-%dT%H:%M:%SZ").strftime(
         "%Y-%m-%d %H:%M:%S UTC")
-    title(F.title + '\n Cruise  ' + cruise_id + '-' + F.XBT_line_description +
-          ' - XBT id ' + str(xbt_unique_id) + '\nlocation ' + "%0.2f" % lat +
-          ' S ; ' + "%0.2f" % lon + ' E\n' + date_start, fontsize=10)
 
-    F.close()
+    title('{title_dataset} \n Cruise {cruise_id}-{xbt_line_desc} - XBT id {xbt_unique_id}\nlocation {lat}S ; {lon}E\n {date_start}'
+          .format(title_dataset=title_dataset,
+                  cruise_id=cruise_id,
+                  xbt_line_desc=xbt_line_description,
+                  xbt_unique_id=str(xbt_unique_id),
+                  lat="%0.2f" % lat,
+                  lon="%0.2f" % lon,
+                  date_start=date_start))
+
     jpg_output = tempfile.NamedTemporaryFile(delete=False, dir=output_dir)
     savefig(jpg_output)
 
