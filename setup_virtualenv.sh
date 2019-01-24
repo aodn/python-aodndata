@@ -4,9 +4,11 @@ set -e
 
 AODNCORE_ARTIFACT=aodncore_prod
 CC_PLUGIN_ARTIFACT=cc_plugin_imos_prod
+NCWRITER_ARTIFACT=ncwriter_prod
 
 AODNFETCHER_URL="git+https://github.com/aodn/python-aodnfetcher.git@master"
 AODNCORE_URL="jenkins://imos-binary/${AODNCORE_ARTIFACT}?pattern=^.*\.whl$"
+NCWRITER_URL="jenkins://imos-binary/${NCWRITER_ARTIFACT}?pattern=^.*\.whl$"
 CC_PLUGIN_IMOS_URL="jenkins://imos-binary/${CC_PLUGIN_ARTIFACT}?pattern=^.*\.whl$"
 
 VIRTUALENV_DIR=python-aodndata-virtualenv
@@ -22,6 +24,8 @@ pip install $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${CC_PLUGIN_IMOS_URL} \
     | python -c "import sys, json; print json.load(sys.stdin)['${CC_PLUGIN_IMOS_URL}']['local_file']")
 pip install $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNCORE_URL} \
     | python -c "import sys, json; print json.load(sys.stdin)['${AODNCORE_URL}']['local_file']")
+pip install $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${NCWRITER_URL} \
+    | python -c "import sys, json; print json.load(sys.stdin)['${NCWRITER_URL}']['local_file']")
 pip install -r requirements.txt
 
 cat<<EOF
