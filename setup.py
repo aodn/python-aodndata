@@ -80,5 +80,7 @@ setup(
     install_requires=INSTALL_REQUIRES,
     tests_require=TESTS_REQUIRE,
     test_suite='test_aodndata',
-    entry_points=ENTRY_POINTS
+    entry_points=ENTRY_POINTS,
+    include_package_data=True,
+    package_data={'aodndata': ['templates/*.json']}
 )
