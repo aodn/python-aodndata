@@ -8,6 +8,7 @@ from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFile
 from aodncore.util.misc import get_pattern_subgroups_from_string
 from ncwriter import DatasetTemplate
 from netCDF4 import date2num, Dataset
+from pkg_resources import resource_filename
 
 from ship_callsign import ship_callsign_list
 
@@ -20,8 +21,8 @@ SOOP_NRT_LOG_PATTERN = re.compile(r"""
                                   \.log$
                                   """, re.VERBOSE)
 
-NC_JSON_TEMPLATE_MOORING = os.path.join(os.path.dirname(__file__), 'soop_tmv_nrt_nc_template_mooring.json')
-NC_JSON_TEMPLATE_TRAJECTORY = os.path.join(os.path.dirname(__file__), 'soop_tmv_nrt_nc_template_trajectory.json')
+NC_JSON_TEMPLATE_MOORING = resource_filename("aodndata", "templates/soop_tmv_nrt_nc_template_mooring.json")
+NC_JSON_TEMPLATE_TRAJECTORY = resource_filename("aodndata", "templates/soop_tmv_nrt_nc_template_trajectory.json")
 
 
 def parse_log_file(log_path):
