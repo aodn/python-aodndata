@@ -15,6 +15,8 @@ from mock import patch
 def mock_platform_altlabels_per_preflabel(category_name='Vessel'):
     return {'VLHJ': 'Southern-Surveyor',
             '9V2768': 'RTM-Wakmatha',
+            'FASB': 'Astrolabe',
+            'FHZI': 'Astrolabe',
             '3FLZ': 'Tropical-Islander'}
 
 
