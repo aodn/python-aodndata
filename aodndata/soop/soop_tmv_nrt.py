@@ -17,7 +17,7 @@ SHIP_CODE = 'VLST'
 SOOP_NRT_LOG_PATTERN = re.compile(r"""
                                   EPA_
                                   (?P<facility>SOOP_TMV1)_
-                                  (?P<product_code>D2M|M2D|MEL|DEV)_.*
+                                  (?P<product_code>D2M|M2D|MEL|DEV|M2S|S2M|SYD)_.*
                                   \.log$
                                   """, re.VERBOSE)
 
