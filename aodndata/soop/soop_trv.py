@@ -13,9 +13,9 @@ class SoopTrvHandler(HandlerBase):
 
     def preprocess(self):
         """
-        Files to be deleted as found in 'soop_trv_duplicate_ls' wfs layer
+        Files to be deleted as found in 'soop_trv_duplicate_url' wfs layer
         """
-        files_to_delete = self.state_query.query_wfs_urls_for_layer('soop_trv_duplicate_ls')
+        files_to_delete = self.state_query.query_wfs_urls_for_layer('soop_trv_duplicate_url')
 
         for f in files_to_delete:
             file_to_delete = PipelineFile(os.path.basename(f),

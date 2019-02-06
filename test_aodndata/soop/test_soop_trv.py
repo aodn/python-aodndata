@@ -122,10 +122,10 @@ TEST_GETCAPABILITIES_RESPONSE = httpretty.Response('''<?xml version="1.0" encodi
       <Lock />
     </Operations>
     <FeatureType>
-      <Name>imos:soop_trv_duplicate_ls</Name>
+      <Name>imos:soop_trv_duplicate_url</Name>
       <Title>soop trv duplicates</Title>
       <Abstract>soop trv duplicates.</Abstract>
-      <Keywords>soop_trv_duplicate_ls, features</Keywords>
+      <Keywords>soop_trv_duplicate_url, features</Keywords>
       <SRS>EPSG:4326</SRS>
       <LatLongBoundingBox minx="-180.0" miny="-90.0" maxx="180.0" maxy="90.0" />
     </FeatureType>
@@ -401,7 +401,7 @@ TEST_GETCAPABILITIES_RESPONSE = httpretty.Response('''<?xml version="1.0" encodi
 
 TEST_DESCRIBEFEATURETYPE_RESPONSE = httpretty.Response('''<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:gml="http://www.opengis.net/gml" xmlns:imos="imos.mod" xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="imos.mod">
   <xsd:import namespace="http://www.opengis.net/gml" schemaLocation="http://geoserver-123.aodn.org.au/geoserver/schemas/gml/2.1.2/feature.xsd"/>
-  <xsd:complexType name="soop_trv_duplicate_lsType">
+  <xsd:complexType name="soop_trv_duplicate_urlType">
     <xsd:complexContent>
       <xsd:extension base="gml:AbstractFeatureType">
         <xsd:sequence>          
@@ -410,11 +410,11 @@ TEST_DESCRIBEFEATURETYPE_RESPONSE = httpretty.Response('''<?xml version="1.0" en
       </xsd:extension>
     </xsd:complexContent>
   </xsd:complexType>
-  <xsd:element name="soop_trv_duplicate_ls" substitutionGroup="gml:_Feature" type="imos:soop_trv_duplicate_lsType"/>
+  <xsd:element name="soop_trv_duplicate_url" substitutionGroup="gml:_Feature" type="imos:soop_trv_duplicate_urlType"/>
 </xsd:schema>
 ''')
 
-TEST_GETFEATURE_RESPONSE = httpretty.Response('{"type":"FeatureCollection","totalFeatures":780,"features":[{"type":"Feature","id":"soop_trv_duplicate_ls.fid-6f08f674_166ec2b1090_-67e1","geometry":null,"properties":{"url":"IMOS/SOOP/SOOP-TRV/VMQ9273_Solander/By_Cruise/Cruise_START-20181205T035932Z_END-20181206T045722Z/temperature/IMOS_SOOP-TRV_T_20181205T035932Z_VMQ9273_FV01_END-20181206T045722Z.nc"}},{"type":"Feature","id":"soop_trv_duplicate_ls.fid-6f08f674_166ec2b1090_-67e0","geometry":null,"properties":{"url":"IMOS/SOOP/SOOP-TRV/VMQ9273_Solander/By_Cruise/Cruise_START-20181205T035932Z_END-20181206T045722Z/salinity/IMOS_SOOP-TRV_S_20181205T035932Z_VMQ9273_FV01_END-20181206T045722Z.nc"}}],"crs":null}')
+TEST_GETFEATURE_RESPONSE = httpretty.Response('{"type":"FeatureCollection","totalFeatures":780,"features":[{"type":"Feature","id":"soop_trv_duplicate_url.fid-6f08f674_166ec2b1090_-67e1","geometry":null,"properties":{"url":"IMOS/SOOP/SOOP-TRV/VMQ9273_Solander/By_Cruise/Cruise_START-20181205T035932Z_END-20181206T045722Z/temperature/IMOS_SOOP-TRV_T_20181205T035932Z_VMQ9273_FV01_END-20181206T045722Z.nc"}},{"type":"Feature","id":"soop_trv_duplicate_url.fid-6f08f674_166ec2b1090_-67e0","geometry":null,"properties":{"url":"IMOS/SOOP/SOOP-TRV/VMQ9273_Solander/By_Cruise/Cruise_START-20181205T035932Z_END-20181206T045722Z/salinity/IMOS_SOOP-TRV_S_20181205T035932Z_VMQ9273_FV01_END-20181206T045722Z.nc"}}],"crs":null}')
 
 
 class TestSoopTrvHandler(HandlerTestCase):
@@ -439,7 +439,7 @@ class TestSoopTrvHandler(HandlerTestCase):
                                           TEST_DESCRIBEFEATURETYPE_RESPONSE,
                                           TEST_GETFEATURE_RESPONSE])
 
-        files_for_layer = self.broker.query_urls_for_layer('soop_trv_duplicate_ls')
+        files_for_layer = self.broker.query_urls_for_layer('soop_trv_duplicate_url')
         self.assertIsInstance(files_for_layer, IndexedSet)
 
         handler = self.handler_class(GOOD_NC,
@@ -477,7 +477,7 @@ class TestSoopTrvHandler(HandlerTestCase):
         httpretty.register_uri(httpretty.GET, self.config.pipeline_config['global']['wfs_url'],
                                responses=[TEST_DESCRIBEFEATURETYPE_RESPONSE, TEST_GETFEATURE_RESPONSE])
 
-        files_for_layer = self.broker.query_urls_for_layer('soop_trv_duplicate_ls')
+        files_for_layer = self.broker.query_urls_for_layer('soop_trv_duplicate_url')
 
         self.assertIsInstance(files_for_layer, IndexedSet)
         self.assertEqual(files_for_layer[0],
