@@ -17,9 +17,9 @@ class AnfogFileClassifier(FileClassifier):
         '^IMOS_ANFOG.*_[0-9]{8}T[0-9]{6}Z.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     DSTG_REGEX = '^DSTO_.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     DSTG_BASE = 'Department_of_Defence/DSTG'
-    NRL_REGEX = '^IMOS_NRL_.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
-    NRL_BASE = 'US_Naval_Research_Laboratory'
-    DM_REGEX = '%s|%s|%s' % (ANFOG_DM_REGEX, DSTG_REGEX, NRL_REGEX)
+    ADAPTER_REGEX = '^IMOS_UWA_.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
+    ADAPTER_BASE = 'UWA'
+    DM_REGEX = '%s|%s|%s' % (ANFOG_DM_REGEX, DSTG_REGEX, ADAPTER_REGEX)
     RAW_DATA_REGEX = '^IMOS_.*R.*_[0-9]{8}T[0-9]{6}Z_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     RAW_BATTERY_REGEX = '^ANFOG_E_[0-9]{8}T[0-9]{6}Z_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     RAW_FILES_REGEX = '%s|%s|%s|%s' % ('.*rawfiles.zip$', '.*rawfiles.rar$', RAW_DATA_REGEX, RAW_BATTERY_REGEX)
@@ -32,7 +32,7 @@ class AnfogFileClassifier(FileClassifier):
         """ work out platform type from filename
             DSTG and NRL deployments are slocum glider only
             ANFOG deployments are either seaglider or slocum glider """
-        if (re.match(cls.DSTG_REGEX, filename)) or (re.match(cls.NRL_REGEX, filename)):
+        if (re.match(cls.DSTG_REGEX, filename)) or (re.match(cls.ADAPTER_REGEX, filename)):
             platform = 'slocum_glider'
         elif (re.match(cls.ANFOG_DM_REGEX, filename)) or (re.match(cls.ANFOG_RT_REGEX, filename)):
             fields = cls._get_file_name_fields(filename)
@@ -59,7 +59,7 @@ class AnfogFileClassifier(FileClassifier):
                 raise InvalidFileContentError(
                     "Missing deployment code in {file} ".format(file=name))
 
-        elif re.match(cls.ANFOG_DM_REGEX, name) or re.match(cls.NRL_REGEX, name):
+        elif re.match(cls.ANFOG_DM_REGEX, name) or re.match(cls.ADAPTER_REGEX, name):
             deployment_code = cls._get_nc_att(src_path, 'deployment_code')
         elif name.endswith('.txt'):
             # extract deployment code from filename like SL-Yamba20180609_completed.txt
@@ -99,8 +99,8 @@ class AnfogFileClassifier(FileClassifier):
             platform = cls.get_platform(name)
             deployment_code = cls.get_deployment_code(src_path)
 
-        if re.match(cls.NRL_REGEX, name):
-            dir_list.append(cls.NRL_BASE)
+        if re.match(cls.ADAPTER_REGEX, name):
+            dir_list.append(cls.ADAPTER_BASE)
         elif re.match(cls.DSTG_REGEX, name):
             dir_list.append(cls.DSTG_BASE)
         else:  # IMOS ANFOG RT, DM, or status text file

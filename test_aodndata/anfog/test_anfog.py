@@ -15,7 +15,7 @@ TEST_ROOT = os.path.join(os.path.dirname(__file__))
 TEST_MISSION_LIST = os.path.join(TEST_ROOT, 'HarvestmissionList.csv')
 GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_ANFOG_BCEOPSTUV_20180503T080042Z_SL210_FV01_timeseries_END-20180505T054942Z.nc')
 DSTG = os.path.join(TEST_ROOT, 'DSTO_MD_CEPSTUV_20130706T122916Z_SL090_FV01_timeseries_END-20130715T040955Z.nc')
-ZIP_NRL = os.path.join(TEST_ROOT, 'NRL_test.zip')
+ZIP_ADAPTER = os.path.join(TEST_ROOT, 'AdapterNWS20120415.zip')
 GOOD_ZIP_DM = os.path.join(TEST_ROOT,
                            'IMOS_ANFOG_BCEOPSTUV_20180503T080042Z_SL210_FV01_timeseries_END-20180505T054942Z.zip')
 GOOD_ZIP_RT = os.path.join(TEST_ROOT, 'TwoRocks20180503a.zip')
@@ -144,9 +144,9 @@ class TestAnfogHandler(HandlerTestCase):
         self.assertTrue(f.is_stored)
         self.assertTrue(f.is_harvested)
 
-    def test_nrl(self):
+    def test_adapter(self):
         # test processing of NRL file collection. Collection containn FV01 and FV00
-        handler = self.run_handler(ZIP_NRL, check_params={'checks': ['cf']})
+        handler = self.run_handler(ZIP_ADAPTER, check_params={'checks': ['cf']})
 
         non_nc = handler.file_collection.filter_by_attribute_value('extension', '.jpg|.kml')
         fv01 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
@@ -155,14 +155,14 @@ class TestAnfogHandler(HandlerTestCase):
         for n in non_nc:
             self.assertEqual(n.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
             self.assertEqual(n.dest_path,
-                             'US_Naval_Research_Laboratory/slocum_glider/AdapterNSW20120415/' + n.name)
+                             'UWA/slocum_glider/AdapterNWS20120415/' + n.name)
             self.assertTrue(n.is_stored)
 
         # FV01
         f = fv01[0]
         self.assertEqual(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertEqual(f.dest_path,
-                         'US_Naval_Research_Laboratory/slocum_glider/AdapterNSW20120415/' + f.name)
+                         'UWA/slocum_glider/AdapterNWS20120415/' + f.name)
         self.assertTrue(f.is_checked)
         self.assertTrue(f.is_stored)
         self.assertTrue(f.is_harvested)
@@ -172,7 +172,7 @@ class TestAnfogHandler(HandlerTestCase):
         for a in fv00:
             self.assertEqual(a.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
             self.assertEqual(a.archive_path,
-                             'US_Naval_Research_Laboratory/slocum_glider/AdapterNSW20120415/' + a.name)
+                             'UWA/slocum_glider/AdapterNWS20120415/' + a.name)
             self.assertTrue(a.is_archived)
 
     def test_rt_update(self):
