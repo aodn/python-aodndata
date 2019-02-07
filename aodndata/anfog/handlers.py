@@ -97,7 +97,7 @@ class AnfogHandler(HandlerBase):
                     raise MissingFileError(
                         "New delayed mode deployment. NetCDF file '{file}' "
                         "should have been submitted with ancillary material"
-                            .format(file=os.path.basename(self.primary_nc.src_path)))
+                        .format(file=os.path.basename(self.primary_nc.src_path)))
         else:
             raise InvalidInputFileError("Cannot process the uploaded file {name}."
                                         .format(name=input_file_basename))
@@ -253,12 +253,12 @@ class AnfogHandler(HandlerBase):
             2) Set format_check type specific to product type(FV00/01) and origin(ANFOG, DSTG or NRL)
         """
         fv01 = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
-        nrl_dstg = '%s|%s' % (AnfogFileClassifier.NRL_REGEX, AnfogFileClassifier.DSTG_REGEX)
+        adapter_dstg = '%s|%s' % (AnfogFileClassifier.ADAPTER_REGEX, AnfogFileClassifier.DSTG_REGEX)
         anfog_rt = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.ANFOG_RT_REGEX)
 
         if fv01:
-            if re.match(nrl_dstg, fv01[0].name):
-                # NRL and DSTG file not cf and imos compliant
+            if re.match(adapter_dstg, fv01[0].name):
+                # Adapter and DSTG file not cf and imos compliant
                 fv01[0].check_type = PipelineFileCheckType.FORMAT_CHECK
 
             return 'DM'
