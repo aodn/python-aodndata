@@ -13,7 +13,6 @@ from pkg_resources import resource_filename
 from ship_callsign import ship_callsign_list
 
 SHIP_CODE = 'VLST'
-
 SOOP_NRT_LOG_PATTERN = re.compile(r"""
                                   EPA_
                                   (?P<facility>SOOP_TMV1)_
@@ -43,20 +42,15 @@ def parse_log_file(log_path):
     return df
 
 
-def netcdf_writer(log_path, output_dir):
+def netcdf_writer(log_path, output_dir, ship_name):
     df = parse_log_file(log_path)
-    ship_callsign_ls = ship_callsign_list()
     log_filename = os.path.basename(log_path)
-
-    if SHIP_CODE not in ship_callsign_ls:
-        raise ValueError(
-            "Missing vessel callsign in file name '{name}'.".format(name=log_filename))
 
     if SOOP_NRT_LOG_PATTERN.match(log_filename):
         fields = get_pattern_subgroups_from_string(log_filename, SOOP_NRT_LOG_PATTERN)
         product_code = fields['product_code']
 
-    if product_code in ['D2M', 'M2D']:
+    if product_code in ['D2M', 'M2D', 'S2M', 'M2S']:
         product_type = "transect"
         featureType = "trajectory"
         template = DatasetTemplate.from_json(NC_JSON_TEMPLATE_TRAJECTORY)
@@ -84,10 +78,7 @@ def netcdf_writer(log_path, output_dir):
     template.variables['TURB']['_data'] = df.TURB.values
     template.variables['CPHL']['_data'] = df.CPHL.values
 
-    if '1SecRaw' in log_filename:
-        time_period = '1sec'
-    else:
-        time_period = '10secs'
+    time_period = '1sec' if '1SecRaw' in log_filename else '10secs'
 
     template.global_attributes.update({
         'time_coverage_start': df.index.strftime('%Y-%m-%dT%H:%M:%SZ')[0],
@@ -95,13 +86,14 @@ def netcdf_writer(log_path, output_dir):
         'featureType': featureType,
         'date_created': pd.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
         'platform_code': SHIP_CODE,
-        'vessel_name': ship_callsign_ls[SHIP_CODE],
+        'vessel_name': ship_name,
         'geospatial_lat_min': df.LATITUDE.dropna().min(),
         'geospatial_lat_max': df.LATITUDE.dropna().max(),
         'geospatial_lon_min': df.LONGITUDE.dropna().min(),
         'geospatial_lon_max': df.LONGITUDE.dropna().max(),
         'time_period': time_period,
-        'history': "File created %s" % pd.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        'history': "File created {date_created}".format(
+            date_created=pd.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"))
     })
 
     nc_filename = 'IMOS_SOOP-TMV_TSUB_{time_start}_{vessel_code}_FV0{product_number}_{product_type}-{product_code}_END-{time_end}.nc'.format(
@@ -121,29 +113,39 @@ class SoopTmvNrtHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(SoopTmvNrtHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.nc', '.log']
+        self.ship_callsign_ls = None
 
     def preprocess(self):
+        if self.custom_params is not None and self.custom_params.get('ship_callsign_ls'):
+            self.ship_callsign_ls = self.custom_params['ship_callsign_ls']
+        else:
+            self.ship_callsign_ls = ship_callsign_list()
+
         f = self.file_collection[0]
+        log_filename = os.path.basename(f.src_path)
+
+        if SHIP_CODE not in self.ship_callsign_ls:
+            raise ValueError(
+                "Missing vessel callsign in file name '{name}'.".format(name=log_filename))
+
         if f.extension == '.nc':
             # case where we repush an existing netcdf file
             f.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-            f.dest_path = self.dest_path(f.src_path)
 
         elif f.extension == '.log':
             # case to create netcdf files from log files
             f.publish_type = PipelineFilePublishType.NO_ACTION
 
-            log_path = self.file_collection[0].src_path
-            netcdf_filepath = netcdf_writer(log_path, self.temp_dir)
+            netcdf_filepath = netcdf_writer(f.src_path, self.temp_dir, self.ship_callsign_ls[SHIP_CODE])
 
-            nc_file = PipelineFile(netcdf_filepath, dest_path=self.dest_path(netcdf_filepath))
+            nc_file = PipelineFile(netcdf_filepath)
             nc_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(nc_file)
 
     def dest_path(self, filepath):
-        ship_callsign_ls = ship_callsign_list()
         soop_tmv_dir = os.path.join('IMOS', 'SOOP', 'SOOP-TMV',
-                                    '%s_%s' %(SHIP_CODE, ship_callsign_ls[SHIP_CODE]),
+                                    '{ship_code}_{ship_name}'.format(ship_code=SHIP_CODE,
+                                                                     ship_name=self.ship_callsign_ls[SHIP_CODE]),
                                     'realtime')
 
         with Dataset(filepath,  mode='r') as nc_obj:
