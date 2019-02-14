@@ -46,18 +46,21 @@ def netcdf_writer(log_path, output_dir, ship_name):
     df = parse_log_file(log_path)
     log_filename = os.path.basename(log_path)
 
-    if SOOP_NRT_LOG_PATTERN.match(log_filename):
-        fields = get_pattern_subgroups_from_string(log_filename, SOOP_NRT_LOG_PATTERN)
-        product_code = fields['product_code']
+    fields = get_pattern_subgroups_from_string(log_filename, SOOP_NRT_LOG_PATTERN)
+    product_code = fields['product_code']
 
     if product_code in ['D2M', 'M2D', 'S2M', 'M2S']:
         product_type = "transect"
-        featureType = "trajectory"
+        feature_type = "trajectory"
         template = DatasetTemplate.from_json(NC_JSON_TEMPLATE_TRAJECTORY)
-    else:
+    elif product_code in ['DEV', 'MEL', 'SYD']:
         product_type = "mooring"
-        featureType = "timeSeries"
+        feature_type = "timeSeries"
         template = DatasetTemplate.from_json(NC_JSON_TEMPLATE_MOORING)
+    else:
+        raise ValueError(
+            "SOOP NRT input logfile has incorrect product_code '{product_code}'. Not belonging to any of "
+            "('D2M', 'M2D', 'S2M', 'M2S','DEV', 'MEL', 'SYD').".format(product_code=product_code))
 
     template.global_attributes.update({
         'product_type': product_type})
@@ -83,7 +86,7 @@ def netcdf_writer(log_path, output_dir, ship_name):
     template.global_attributes.update({
         'time_coverage_start': df.index.strftime('%Y-%m-%dT%H:%M:%SZ')[0],
         'time_coverage_end': df.index.strftime('%Y-%m-%dT%H:%M:%SZ')[-1],
-        'featureType': featureType,
+        'featureType': feature_type,
         'date_created': pd.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
         'platform_code': SHIP_CODE,
         'vessel_name': ship_name,
@@ -122,17 +125,22 @@ class SoopTmvNrtHandler(HandlerBase):
             self.ship_callsign_ls = ship_callsign_list()
 
         f = self.file_collection[0]
-        log_filename = os.path.basename(f.src_path)
 
         if SHIP_CODE not in self.ship_callsign_ls:
             raise ValueError(
-                "Missing vessel callsign in file name '{name}'.".format(name=log_filename))
+                "Missing vessel callsign {callsign} from vocabulary'.".format(callsign=SHIP_CODE))
 
         if f.extension == '.nc':
-            # case where we repush an existing netcdf file
+            # case where we re-push an existing netcdf file
             f.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
 
         elif f.extension == '.log':
+            log_filename = os.path.basename(f.src_path)
+
+            if SOOP_NRT_LOG_PATTERN.match(log_filename) is None:
+                raise ValueError(
+                    "SOOP NRT input logfile has incorrect naming '{name}'.".format(name=log_filename))
+
             # case to create netcdf files from log files
             f.publish_type = PipelineFilePublishType.NO_ACTION
 
