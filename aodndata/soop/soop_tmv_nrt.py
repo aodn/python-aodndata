@@ -5,6 +5,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFile
+from aodncore.pipeline.exceptions import InvalidFileNameError
 from aodncore.util.misc import get_pattern_subgroups_from_string
 from ncwriter import DatasetTemplate
 from netCDF4 import date2num, Dataset
@@ -58,7 +59,7 @@ def netcdf_writer(log_path, output_dir, ship_name):
         feature_type = "timeSeries"
         template = DatasetTemplate.from_json(NC_JSON_TEMPLATE_MOORING)
     else:
-        raise ValueError(
+        raise InvalidFileNameError(
             "SOOP NRT input logfile has incorrect product_code '{product_code}'. Not belonging to any of "
             "('D2M', 'M2D', 'S2M', 'M2S','DEV', 'MEL', 'SYD').".format(product_code=product_code))
 
@@ -127,7 +128,7 @@ class SoopTmvNrtHandler(HandlerBase):
         f = self.file_collection[0]
 
         if SHIP_CODE not in self.ship_callsign_ls:
-            raise ValueError(
+            raise RuntimeError(
                 "Missing vessel callsign {callsign} from vocabulary'.".format(callsign=SHIP_CODE))
 
         if f.extension == '.nc':
@@ -138,7 +139,7 @@ class SoopTmvNrtHandler(HandlerBase):
             log_filename = os.path.basename(f.src_path)
 
             if SOOP_NRT_LOG_PATTERN.match(log_filename) is None:
-                raise ValueError(
+                raise InvalidFileNameError(
                     "SOOP NRT input logfile has incorrect naming '{name}'.".format(name=log_filename))
 
             # case to create netcdf files from log files

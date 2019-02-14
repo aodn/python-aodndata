@@ -1,15 +1,16 @@
 import os
 
 from aodncore.pipeline import PipelineFilePublishType, PipelineFileCheckType
+from aodncore.pipeline.exceptions import InvalidFileNameError
 from aodncore.testlib import HandlerTestCase
 
 from aodndata.soop.soop_tmv_nrt import netcdf_writer, SoopTmvNrtHandler
-
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 MOORING_LOG_10secs = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_DEV_20181102185130.log')
 TRANSECT_LOG_10secs = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20181101090420.log')
 TRANSECT_LOG_1sec = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20131006082240.log.1SecRaw.log')
+BAD_LOG = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_DVE_20181102185130.log')
 
 ship_callsign_ls = {'VLST': 'Spirit-of-Tasmania-1'}
 
@@ -106,3 +107,6 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
 
         self.assertTrue(f_nc.is_checked)
         self.assertTrue(f_nc.is_stored)
+
+    def test_push_invalid_log(self):
+        self.run_handler_with_exception(InvalidFileNameError, BAD_LOG)
