@@ -29,7 +29,8 @@ ENTRY_POINTS = {
         'SrsOcLjcoHandler = aodndata.srs.srs_oc_ljco:SrsOcLjcoHandler',
         'SrsOcSoopRadHandler = aodndata.srs.srs_oc_soop_rad:SrsOcSoopRadHandler',
         'SstaarsHandler = aodndata.csiro.sstaars:SstaarsHandler',
-        'SoopCo2Handler = aodndata.soop.soop_co2:SoopCo2Handler'
+        'SoopCo2Handler = aodndata.soop.soop_co2:SoopCo2Handler',
+        'SoopTmvNrtHandler = aodndata.soop.soop_tmnv_nrt:SoopTmvNrtHandler'
     ],
     'pipeline.path_functions': [
         'dest_path_aatams_sattag_qc_ctd = aodndata.aatams:dest_path_aatams_sattag_qc_ctd',
@@ -79,5 +80,7 @@ setup(
     install_requires=INSTALL_REQUIRES,
     tests_require=TESTS_REQUIRE,
     test_suite='test_aodndata',
-    entry_points=ENTRY_POINTS
+    entry_points=ENTRY_POINTS,
+    include_package_data=True,
+    package_data={'aodndata': ['templates/*.json']}
 )
