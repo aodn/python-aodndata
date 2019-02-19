@@ -109,4 +109,5 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
         self.assertTrue(f_nc.is_stored)
 
     def test_push_invalid_log(self):
-        self.run_handler_with_exception(InvalidFileNameError, BAD_LOG)
+        self.run_handler_with_exception(InvalidFileNameError, BAD_LOG,
+                                        custom_params={'ship_callsign_ls': ship_callsign_ls})
