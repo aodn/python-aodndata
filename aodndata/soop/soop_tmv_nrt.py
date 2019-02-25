@@ -116,7 +116,7 @@ def netcdf_writer(log_path, output_dir, ship_name):
 class SoopTmvNrtHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(SoopTmvNrtHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.nc', '.log']
+        self.allowed_extensions = ['.nc', '.log', '.zip']
         self.ship_callsign_ls = None
 
     def preprocess(self):
@@ -125,11 +125,11 @@ class SoopTmvNrtHandler(HandlerBase):
         else:
             self.ship_callsign_ls = ship_callsign_list()
 
-        f = self.file_collection[0]
-
         if SHIP_CODE not in self.ship_callsign_ls:
             raise RuntimeError(
                 "Missing vessel callsign {callsign} from vocabulary'.".format(callsign=SHIP_CODE))
+
+        f = self.file_collection[0]
 
         if f.extension == '.nc':
             # case where we re-push an existing netcdf file
