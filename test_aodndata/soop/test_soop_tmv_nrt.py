@@ -11,7 +11,7 @@ MOORING_LOG_10secs = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_DEV_20181102185130.l
 TRANSECT_LOG_10secs = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20181101090420.log')
 TRANSECT_LOG_1sec = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20131006082240.log.1SecRaw.log')
 BAD_LOG = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_DVE_20181102185130.log')
-
+GOOD_ZIP = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20181101090420.log.zip')
 ship_callsign_ls = {'VLST': 'Spirit-of-Tasmania-1'}
 
 
@@ -103,6 +103,23 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertEqual('IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/mooring/10secs/2018/'
                          'IMOS_SOOP-TMV_TSUB_20181102T185140Z_VLST_FV00_mooring-DEV_END-20181102T215350Z.nc',
+                         f_nc.dest_path)
+
+        self.assertTrue(f_nc.is_checked)
+        self.assertTrue(f_nc.is_stored)
+
+    def test_push_good_zip(self):
+
+        handler = self.run_handler(GOOD_ZIP,
+                                   custom_params={'ship_callsign_ls': ship_callsign_ls})
+
+        f_log = handler.file_collection[0]
+        self.assertEqual(f_log.publish_type, PipelineFilePublishType.NO_ACTION)
+
+        f_nc = handler.file_collection[1]
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual('IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/transect/10secs/2018/'
+                         'IMOS_SOOP-TMV_TSUB_20181101T090430Z_VLST_FV00_transect-D2M_END-20181101T184840Z.nc',
                          f_nc.dest_path)
 
         self.assertTrue(f_nc.is_checked)
