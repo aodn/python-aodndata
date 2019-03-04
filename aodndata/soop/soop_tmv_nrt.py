@@ -28,10 +28,15 @@ NC_JSON_TEMPLATE_TRAJECTORY = resource_filename("aodndata", "templates/soop_tmv_
 def parse_log_file(log_path):
     df = pd.read_csv(log_path, header=None,
                      engine='python')
-    df.columns = ["TIME", "unknown1", "product_code", "unknown2", "LATITUDE", "LONGITUDE", "TEMP", "PSAL",
-                  "CPHL", "TURB"]
-    date_format = '%Y/%m/%d %H:%M:%S'
-    df['TIME'] = pd.to_datetime(df['TIME'], format=date_format)
+    df.columns = ["TIME", "status_flag", "product_code", "distance_from_port_km",
+                  "LATITUDE", "LONGITUDE", "TEMP", "PSAL", "CPHL", "TURB"]
+
+    try:
+        date_format = '%Y/%m/%d %H:%M:%S'
+        df['TIME'] = pd.to_datetime(df['TIME'], format=date_format)
+    except ValueError, e:
+        date_format = '%d/%m/%Y %H:%M:%S'
+        df['TIME'] = pd.to_datetime(df['TIME'], format=date_format)
 
     df = df[np.isfinite(df['LATITUDE'])]
     df = df[np.isfinite(df['LONGITUDE'])]

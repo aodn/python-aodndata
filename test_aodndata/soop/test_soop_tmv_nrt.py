@@ -12,6 +12,7 @@ TRANSECT_LOG_10secs = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20181101090420.
 TRANSECT_LOG_1sec = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20131006082240.log.1SecRaw.log')
 BAD_LOG = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_DVE_20181102185130.log')
 GOOD_ZIP = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20181101090420.log.zip')
+DIFFERENT_TIME_FORMAT_LOG = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_M2S_20180805220350.log')
 ship_callsign_ls = {'VLST': 'Spirit-of-Tasmania-1'}
 
 
@@ -128,3 +129,21 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
     def test_push_invalid_log(self):
         self.run_handler_with_exception(InvalidFileNameError, BAD_LOG,
                                         custom_params={'ship_callsign_ls': ship_callsign_ls})
+
+    def test_push_log_different_time_format(self):
+        # test to push a 10secs mooring log file triggering the creation of a NetCDF
+
+        handler = self.run_handler(DIFFERENT_TIME_FORMAT_LOG,
+                                   custom_params={'ship_callsign_ls': ship_callsign_ls})
+
+        f_log = handler.file_collection[0]
+        self.assertEqual(f_log.publish_type, PipelineFilePublishType.NO_ACTION)
+
+        f_nc = handler.file_collection[1]
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual('IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/transect/10secs/2018/'
+                         'IMOS_SOOP-TMV_TSUB_20180805T220400Z_VLST_FV00_transect-M2S_END-20180806T212840Z.nc',
+                         f_nc.dest_path)
+
+        self.assertTrue(f_nc.is_checked)
+        self.assertTrue(f_nc.is_stored)
