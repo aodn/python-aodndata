@@ -16,7 +16,7 @@ VALID_SATS = ["CRYOSAT-2",
               "JASON-2",
               "JASON-3",
               "SARAL",
-              "SENTINEL-3",
+              "SENTINEL-3A",
               "TOPEX"]
 
 
@@ -61,5 +61,3 @@ def dest_path_srs_surface_waves(filepath):
                 filename=os.path.basename(filepath)))
 
     return os.path.join(PREFIX_PATH, fields['platform_code'], coord_dirname, file_basename)
-
-
