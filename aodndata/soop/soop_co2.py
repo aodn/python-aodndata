@@ -86,7 +86,7 @@ class SoopCo2Handler(HandlerBase):
             for non_nc in non_nc_files:
                 non_nc.check_type = PipelineFileCheckType.FORMAT_CHECK
                 non_nc.publish_type = PipelineFilePublishType.UPLOAD_ONLY
-                non_nc.dest_path = os.path.join(nc_dir_path, non_nc._name)
+                non_nc.dest_path = os.path.join(nc_dir_path, non_nc.name)
 
         elif self.input_file.endswith('dat.txt'):
             # Single text file Realtime files (*dat.txt)

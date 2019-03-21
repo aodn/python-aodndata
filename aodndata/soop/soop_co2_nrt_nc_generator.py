@@ -71,7 +71,7 @@ def process_co2_rt(realtime_file, temp_dir):
     (dtime, time) = get_time_formatted(dataf)
     # generate nc file name
     netcdf_filename = create_netcdf_filename(platform_code, dtime)
-    netcdf_file_path = os.path.join(temp_dir, "%s.nc") % netcdf_filename
+    netcdf_file_path = os.path.join(temp_dir, "{filename}.nc").format(filename=netcdf_filename)
 
     netcdf_writer(netcdf_file_path, dataf, dtime, time, realtime_file.src_path, platform_code)
 
@@ -86,8 +86,13 @@ def create_netcdf_filename(platform_code, dtime):
     prodtype = 'FV00'
     time_start = min(dtime).strftime("%Y%m%dT%H%M%SZ")
     time_end = max(dtime).strftime("%Y%m%dT%H%M%SZ")
-    filename = "%s_%s_%s_%s_END-%s" % (facility_param, time_start, platform_code, prodtype, time_end)
-
+    filename = "{facility_param}_{time_start}_{platform_code}_{prodtype}_END-{time_end}".format(
+        facility_param=facility_param,
+        time_start=time_start,
+        platform_code=platform_code,
+        prodtype=prodtype,
+        time_end=time_end
+    )
     return filename
 
 
@@ -132,10 +137,11 @@ def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code)
         'date_created': datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
         'history': 'file created on {date}'.format(date=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")),
 
-        'abstract':  " This dataset contains underway CO2 measurements collected onboard the %s "
-                     "between the %s and %s" % (vessel_name,
-                                                min(dtime).strftime("%d-%b-%Y %H:%M:%S"),
-                                                max(dtime).strftime("%d-%b-%Y %H:%M:%S")),
+        'abstract':  "This dataset contains underway CO2 measurements collected onboard the {vessel_name} "
+                     "between the {start_date} and {end_date}".format(
+            vessel_name=vessel_name,
+            start_date=min(dtime).strftime("%d-%b-%Y %H:%M:%S"),
+            end_date=max(dtime).strftime("%d-%b-%Y %H:%M:%S")),
         'time_coverage_start': min(dtime).strftime("%Y-%m-%dT%H:%M:%SZ"),
         'time_coverage_end': max(dtime).strftime("%Y-%m-%dT%H:%M:%SZ"),
         'geospatial_lat_min': np.nanmin(np.array(dataf['GpsShipLatitude'])),
@@ -153,7 +159,7 @@ def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code)
         template.variables.update({"LabMain_sw_flow_raw": {
             "_datatype": "float64",
             "_dimensions": ["TIME"],
-            "long_name": "Sneceawater flow in main laboratory",
+            "long_name": "Seawater flow in main laboratory",
             "reference_datum": "sea surface",
             "units": "l min-1",
             "coordinates": "TIME LATITUDE LONGITUDE"}
