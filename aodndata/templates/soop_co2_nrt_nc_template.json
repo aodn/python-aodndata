@@ -1,0 +1,221 @@
+{
+  "_dimensions": {
+    "TIME": null,
+    "string_10": 10
+  },
+  "_variables": {
+    "TIME": {
+      "_dimensions": ["TIME"],
+      "_datatype": "float64",
+      "units": "days since 1950-01-01 00:00:00 UTC",
+      "calendar": "gregorian",
+      "standard_name": "time",
+      "long_name": "time",
+      "axis": "T",
+      "valid_min": 0.0,
+      "valid_max": 90000.0
+    },
+    "LATITUDE": {
+      "_FillValue": -999.0,
+      "_dimensions": ["TIME"],
+      "_datatype": "float64",
+      "standard_name": "latitude",
+      "long_name": "latitude",
+      "units": "degrees_north",
+      "axis": "Y",
+      "valid_min": -90.0,
+      "valid_max": 90.0,
+      "reference_datum": "WGS84 coordinate reference system"
+    },
+    "LONGITUDE": {
+      "_FillValue": -999.0,
+      "_dimensions": ["TIME"],
+      "_datatype": "float64",
+      "standard_name": "longitude",
+      "long_name": "longitude",
+      "units": "degrees_east",
+      "axis": "X",
+      "valid_min": -180.0,
+      "valid_max": 180.0,
+      "reference_datum": "WGS84 coordinate reference system"
+    },
+    "TYPE":{
+      "_datatype": "S1",
+      "_dimensions": ["TIME", "string_10"],
+      "long_name":  "measurement type (equilibrator, standard or atmosphere)",
+      "units": "categorical"
+    },
+    "TEQ_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "equilibrator water temperature",
+      "reference_datum": "sea surface",
+      "units": "degree_Celsius",
+      "valid_max": 40.0,
+      "valid_min": -2.0,
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "CO2_STD_Value":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "CO2 reference value",
+      "reference_datum": "sea surface",
+      "units": "1e-6",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "xCO2_PPM_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "mole fraction of CO2",
+      "comment": "the unit 1e-6 is also called parts per million (ppm)",
+      "reference_datum": "sea surface",
+      "units": "1e-6",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "xH2O_PPT_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "mole fraction of H2O",
+      "reference_datum": "sea surface",
+      "units": "1e-3",
+      "comment": "the unit 1e-6 is also called parts per million (ppt)",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "Press_Licor_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "pressure in the infrared gas analyser",
+      "reference_datum": "sea surface",
+      "units": "hPa",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "Diff_Press_Equ_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "differential pressure between equilibrator and ambient air",
+      "reference_datum": "sea surface",
+      "units": "hPa",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "H2O_flow_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "water flow to equilibrator",
+      "reference_datum": "sea surface",
+      "units": "l min-1",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "Licor_flow_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "Gas flow through infrared gas analyser",
+      "reference_datum": "sea surface",
+      "units": "ml min-1",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "TEMP_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "sea surface temperature",
+      "standard_name": "sea_surface_temperature",
+      "reference_datum": "sea surface",
+      "units": "degree_Celsius",
+      "valid_max": 40.0,
+      "valid_min": -2.0,
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "PSAL_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "sea surface salinity",
+      "standard_name": "sea_surface_salinity",
+      "reference_datum": "sea surface",
+      "units": "1e-3",
+      "valid_max": 42.0,
+      "valid_min": 0.0,
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "ATMP_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "atmospheric pressure",
+      "standard_name": "air_pressure",
+      "reference_datum": "sea surface",
+      "units": "hPa",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "WSPD_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "wind speed",
+      "standard_name": "wind_speed",
+      "reference_datum": "sea surface",
+      "units": "m s-1",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "WDIR_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "wind direction",
+      "standard_name": "wind_from_direction",
+      "reference_datum": "magnetic north",
+      "positive": "clockwise",
+      "comment": "true wind direction where 0 is North and 90 is East",
+      "units": "degree",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "Tsg_flow_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "thermosalinograph water flow",
+      "reference_datum": "sea surface",
+      "units": "l min-1",
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "TEMP_Tsg_raw":{
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": ["TIME"],
+      "long_name": "Sea water temperature measured by thermosalinograph",
+      "standard_name": "sea_surface_temperature",
+      "reference_datum": "sea surface",
+      "units": "degree_Celsius",
+      "valid_max": 40.0,
+      "valid_min": -2.0,
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    }
+  },
+  "project": "Integrated Marine Observing System (IMOS)",
+  "Conventions": "CF-1.6,IMOS-1.4",
+  "source": "ship observation",
+  "keywords": "Oceans>Ocean Temperature>Sea Water Temperature ;Oceans>Salinity/Density>Salinity;Oceans>Oceans Optics>Fluorescence ;Oceans>Ocean Optics>Turbidity; Oceans>Ocean Chemistry>Pigments>Chlorophyll",
+  "references": "http://www.imos.org.au",
+  "naming_authority": "IMOS",
+  "file_version": "Level 0 - Raw data",
+  "acknowledgement": "Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: \"Data was sourced from the Integrated Marine Observing System (IMOS) - IMOS is a national collaborative research infrastructure, supported by the Australian Government.\"",
+  "author": "Pasquer, Benedicte",
+  "author_email": "info@aodn.org.au",
+  "citation": "The citation in a list of references is: \"IMOS [year-of-data-download], [Title], [data-access-URL], accessed [date-of-access].\".",
+  "data_centre": "Australian Ocean Data Network (AODN)",
+  "data_centre_email": "info@aodn.org.au",
+  "disclaimer": "Data, products and services from IMOS are provided \"as is\" without any warranty as to fitness for a particular purpose.",
+  "distribution_statement": "Data may be re-used, provided that related metadata explaining the data has been reviewed by the user, and the data is appropriately acknowledged.",
+  "geospatial_vertical_positive": "down",
+  "license": "http://creativecommons.org/licenses/by/4.0/",
+  "principal_investigator": "Tilbrook, Bronte, CSIRO",
+  "standard_name_vocabulary": "NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table 60"
+}

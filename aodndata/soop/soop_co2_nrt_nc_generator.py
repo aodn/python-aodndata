@@ -36,7 +36,9 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from aodncore.pipeline.exceptions import InvalidFileContentError
-from netCDF4 import Dataset, stringtochar
+from ncwriter import DatasetTemplate
+from netCDF4 import stringtochar
+from pkg_resources import resource_filename
 
 from .ship_callsign import ship_callsign_list, ship_callsign
 
@@ -53,7 +55,10 @@ IN_SPECIFIC_INPUT_PARAMS = {'TsgShipTemp',
 
 VESSEL = {
     'AA': 'VNAA',
-    'IN': 'VLMJ'}
+    'IN': 'VLMJ'
+}
+
+NC_JSON_TEMPLATE = resource_filename("aodndata", "templates/soop_co2_nrt_nc_template.json")
 
 
 def process_co2_rt(realtime_file, temp_dir):
@@ -66,9 +71,9 @@ def process_co2_rt(realtime_file, temp_dir):
     (dtime, time) = get_time_formatted(dataf)
     # generate nc file name
     netcdf_filename = create_netcdf_filename(platform_code, dtime)
-    netcdf_file_path = os.path.join(temp_dir, "%s.nc") % netcdf_filename
+    netcdf_file_path = os.path.join(temp_dir, "{filename}.nc").format(filename=netcdf_filename)
 
-    create_netcdf(netcdf_file_path, dataf, dtime, time, realtime_file.src_path, platform_code)
+    netcdf_writer(netcdf_file_path, dataf, dtime, time, realtime_file.src_path, platform_code)
 
     return netcdf_file_path
 
@@ -81,8 +86,13 @@ def create_netcdf_filename(platform_code, dtime):
     prodtype = 'FV00'
     time_start = min(dtime).strftime("%Y%m%dT%H%M%SZ")
     time_end = max(dtime).strftime("%Y%m%dT%H%M%SZ")
-    filename = "%s_%s_%s_%s_END-%s" % (facility_param, time_start, platform_code, prodtype, time_end)
-
+    filename = "{facility_param}_{time_start}_{platform_code}_{prodtype}_END-{time_end}".format(
+        facility_param=facility_param,
+        time_start=time_start,
+        platform_code=platform_code,
+        prodtype=prodtype,
+        time_end=time_end
+    )
     return filename
 
 
@@ -106,152 +116,103 @@ def get_time_formatted(dataf):
     return dtime, np.array(time) / 3600. / 24.
 
 
-def create_netcdf(netcdf_file_path, dataf, dtime, time, src_file, platform_code):
+def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code):
     """
     Create the netcdf file
     """
-    ncfile = Dataset(netcdf_file_path, "w", format="NETCDF4")
-    # TO ENABLE
-    #  config_file = os.path.join(
-    #     os.getenv('DATA_SERVICES_DIR'), 'SOOP', 'SOOP_CO2', 'global_att_soop_co2.att')
-
     if platform_code in ship_callsign_list():
         vessel_name = ship_callsign(platform_code)
     else:
-        raise InvalidFileContentError("Unknow ship code '{code}'from '{file}'".format(code=platform_code,
-                                                                                      file=netcdf_file_path))
+        raise InvalidFileContentError("Unknown ship code '{code}'from '{file}'".format(code=platform_code,
+                                                                                       file=netcdf_file_path))
+
+    template = DatasetTemplate.from_json(NC_JSON_TEMPLATE)
 
     # write voyage specific attributes
-    ncfile.title = ("IMOS SOOP Underway CO2 dataset measured onboard the %s "
-                    "between the %s and %s") % (
-                       vessel_name,
-                       min(dtime).strftime(
-                           "%d-%b-%Y %H:%M:%S"),
-                       max(dtime).strftime("%d-%b-%Y %H:%M:%S"))
-    ncfile.date_created = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
-    ncfile.abstract = (" This dataset contains underway CO2 measurements collected onboard the %s "
-                       "between the %s and %s") % (vessel_name,
-                                                   min(dtime).strftime(
-                                                       "%d-%b-%Y %H:%M:%S"),
-                                                   max(dtime).strftime("%d-%b-%Y %H:%M:%S"))
+    template.global_attributes.update({
+        'title': "IMOS SOOP Underway CO2 dataset measured onboard the %s "
+                 "between the %s and %s" % (vessel_name,
+                                            min(dtime).strftime("%d-%b-%Y %H:%M:%S"),
+                                            max(dtime).strftime("%d-%b-%Y %H:%M:%S")),
+        'date_created': datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        'history': 'file created on {date}'.format(date=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")),
 
-    ncfile.time_coverage_start = min(dtime).strftime("%Y-%m-%dT%H:%M:%SZ")
-    ncfile.time_coverage_end = max(dtime).strftime("%Y-%m-%dT%H:%M:%SZ")
-    ncfile.geospatial_lat_min = np.nanmin(np.array(dataf['GpsShipLatitude']))
-    ncfile.geospatial_lat_max = np.nanmax(np.array(dataf['GpsShipLatitude']))
-    ncfile.geospatial_lon_min = np.nanmin(np.array(dataf['GpsShipLongitude']))
-    ncfile.geospatial_lon_max = np.nanmax(np.array(dataf['GpsShipLongitude']))
-    ncfile.geospatial_vertical_min = 0.
-    ncfile.geospatial_vertical_max = 0.
-    ncfile.vessel_name = vessel_name
-    ncfile.platform_code = platform_code
-
-    ncfile.sourceFilename = os.path.basename(src_file)
-
-    # add dimension and variables
-    string_10_dim = 10  # max length of string TYPE across platform
-    ncfile.createDimension('TIME', len(time))
-    ncfile.createDimension('string_10', string_10_dim)
-    # Choose to use PCtime /Date for TIME variable
-    vartime = ncfile.createVariable('TIME', "d", 'TIME')
-    latitude = ncfile.createVariable('LATITUDE', "d", 'TIME', fill_value=-999.)
-    longitude = ncfile.createVariable(
-        'LONGITUDE', "d", 'TIME', fill_value=-999.)
-    data_type = ncfile.createVariable('TYPE', 'S1', ('TIME', 'string_10'))
-    teq_raw = ncfile.createVariable('TEQ_raw', "f", 'TIME', fill_value=-999.)
-    co2_std_value = ncfile.createVariable(
-        'CO2_STD_Value', "f", 'TIME', fill_value=-999.)
-    xco2_ppm_raw = ncfile.createVariable(
-        'xCO2_PPM_raw', "f", 'TIME', fill_value=-999.)
-    xh2o_ppt_raw = ncfile.createVariable(
-        'xH2O_PPT_raw', "f", 'TIME', fill_value=-999.)
-    # Need to use DryBoxdruck Pressure instead of LicorPress
-    press_licor_raw = ncfile.createVariable(
-        'Press_Licor_raw', "f", 'TIME', fill_value=-999.)
-    diff_press_equ_raw = ncfile.createVariable(
-        'Diff_Press_Equ_raw', "f", 'TIME', fill_value=-999.)
-    h2o_flow_raw = ncfile.createVariable(
-        'H2O_flow_raw', "f", 'TIME', fill_value=-999.)
-    licor_flow_raw = ncfile.createVariable(
-        'Licor_flow_raw', "f", 'TIME', fill_value=-999.)
-    temp_raw = ncfile.createVariable(
-        'TEMP_raw', "f", 'TIME', fill_value=-999.)  # IntakeShipTemp
-    psal_raw = ncfile.createVariable('PSAL_raw', "f", 'TIME', fill_value=-999.)
-    atmp_raw = ncfile.createVariable('ATMP_raw', "f", 'TIME', fill_value=-999.)
-    wspd_raw = ncfile.createVariable('WSPD_raw', "f", 'TIME', fill_value=-999.)  # MetTrueWindSpKts
-    wdir_raw = ncfile.createVariable('WDIR_raw', "f", 'TIME', fill_value=-999.)  # MetTrueWindDir
-    tsg_flow_raw = ncfile.createVariable(
-        'Tsg_flow_raw', "f", 'TIME', fill_value=-999.)
-    temp_tsg_raw = ncfile.createVariable(
-        'TEMP_Tsg_raw', "f", 'TIME', fill_value=-999.)
+        'abstract':  "This dataset contains underway CO2 measurements collected onboard the {vessel_name} "
+                     "between the {start_date} and {end_date}".format(
+            vessel_name=vessel_name,
+            start_date=min(dtime).strftime("%d-%b-%Y %H:%M:%S"),
+            end_date=max(dtime).strftime("%d-%b-%Y %H:%M:%S")),
+        'time_coverage_start': min(dtime).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        'time_coverage_end': max(dtime).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        'geospatial_lat_min': np.nanmin(np.array(dataf['GpsShipLatitude'])),
+        'geospatial_lat_max': np.nanmax(np.array(dataf['GpsShipLatitude'])),
+        'geospatial_lon_min': np.nanmin(np.array(dataf['GpsShipLongitude'])),
+        'geospatial_lon_max': np.nanmax(np.array(dataf['GpsShipLongitude'])),
+        'geospatial_vertical_min': 0.,
+        'geospatial_vertical_max': 0.,
+        'vessel_name': vessel_name,
+        'platform_code': platform_code,
+        'sourceFilename': os.path.basename(src_file)
+    })
 
     if platform_code == 'VLMJ':
-        labmain_sw_flow_raw = ncfile.createVariable(
-            'LabMain_sw_flow_raw', "f", 'TIME', fill_value=-999.)
+        template.variables.update({"LabMain_sw_flow_raw": {
+            "_datatype": "float64",
+            "_dimensions": ["TIME"],
+            "long_name": "Seawater flow in main laboratory",
+            "reference_datum": "sea surface",
+            "units": "l min-1",
+            "coordinates": "TIME LATITUDE LONGITUDE"}
+        }
+        )
 
-    # add IMOS standard global attributes and variable attributes
-
-    ####TO ENABLE #generate_netcdf_att(ncfile, config_file, conf_file_point_of_truth=True)
-    # set attribute value to variable type
-
-    #for nc_var in [teq_raw, psal_raw, temp_raw, temp_tsg_raw]:
-    #    nc_var.valid_max = np.float32(nc_var.valid_max)
-    #    nc_var.valid_min = np.float32(nc_var.valid_min)
-
-    # Set attribute 'units' type as string for variable whose type is interpreted as float by generate_netcdf_att
-    #for nc_var in [co2_std_value, xco2_ppm_raw]:
-    #    nc_var.units = '1e-6'
-
-    #for nc_var in [xh2o_ppt_raw, psal_raw]:
-    #    nc_var.units = '1e-3'
-### END TO ENABLE
-    # convert Wind speed to ms-1 before filling array with fillvalue
-    dataf['MetTrueWindSpKts'] = dataf['MetTrueWindSpKts'].multiply(0.514444)
+    template.variables['WSPD_raw']['_data'] = dataf['MetTrueWindSpKts'].multiply(0.514444)
 
     # replace nans with fillvalue in dataframe
     dataf.fillna(value=float(-999.), inplace=True)
     # Can use either PCDate/Time or GPS. Decided to use PCDate /Time as it
     # simplifies the code
-    vartime[:] = time
-
-    latitude[:] = dataf['GpsShipLatitude'].values
-    longitude[:] = dataf['GpsShipLongitude'].values
+    template.variables['TIME']['_data'] = time
+    template.variables['LATITUDE']['_data'] = dataf['GpsShipLatitude'].values
+    template.variables['LONGITUDE']['_data'] = dataf['GpsShipLongitude'].values
 
     # create fixed length strings padded with space
     # create variable of type string, then convert to array of char
     type_tmp = []
-
+    string_10_dim = template.dimensions['string_10']
     for id in range(len(dataf['Type'])):
         type_tmp.append(dataf['Type'][id].ljust(string_10_dim))
 
     # convert to array of char
     type_tmp = stringtochar(np.array(type_tmp))
-    data_type[:] = type_tmp
-    teq_raw[:] = dataf['EquTemp'].values
-    co2_std_value[:] = dataf['CO2StdValue'].values
-    xco2_ppm_raw[:] = dataf['CO2um_m'].values
-    xh2o_ppt_raw[:] = dataf['H2Omm_m'].values
-    press_licor_raw[:] = dataf['DryBoxDruckPress'].values
-    diff_press_equ_raw[:] = dataf['EquPress'].values
-    h2o_flow_raw[:] = dataf['EquH2OFlow'].values
-    licor_flow_raw[:] = dataf['LicorFlow'].values
-    temp_raw[:] = dataf['IntakeShipTemp'].values
-    # WSP converted to m s-1
-    wspd_raw[:] = dataf['MetTrueWindSpKts'].values
-    wdir_raw[:] = dataf['MetTrueWindDir'].values
-    atmp_raw[:] = dataf['AtmSeaLevelPress'].values
+    template.variables['TYPE']['_data'] = type_tmp
+
+    template.variables['TEQ_raw']['_data'] = dataf['EquTemp'].values
+
+    template.variables['CO2_STD_Value']['_data'] = dataf['CO2StdValue'].values
+    template.variables['xCO2_PPM_raw']['_data'] = dataf['CO2um_m'].values
+    template.variables['xH2O_PPT_raw']['_data'] = dataf['H2Omm_m'].values
+    template.variables['Press_Licor_raw']['_data'] = dataf['DryBoxDruckPress'].values
+    template.variables['Diff_Press_Equ_raw']['_data'] = dataf['EquPress'].values
+    template.variables['H2O_flow_raw']['_data'] = dataf['EquH2OFlow'].values
+    template.variables['Licor_flow_raw']['_data'] = dataf['LicorFlow'].values
+    template.variables['TEMP_raw']['_data'] = dataf['IntakeShipTemp'].values
+    template.variables['WSPD_raw']['_data'] = dataf['MetTrueWindSpKts'].values  # WSP converted to m s-1
+    template.variables['WDIR_raw']['_data'] = dataf['MetTrueWindDir'].values
+    template.variables['ATMP_raw']['_data'] = dataf['AtmSeaLevelPress'].values
 
     if platform_code == 'VLMJ':
-        temp_tsg_raw[:] = dataf['TsgShipTemp'].values
-        tsg_flow_raw[:] = dataf['TsgShipFlow'].values
-        labmain_sw_flow_raw[:] = dataf['LabMainSwFlow'].values
-        psal_raw[:] = dataf['TsgShipSalinity'].values
+        template.variables['TEMP_Tsg_raw']['_data'] = dataf['TsgShipTemp'].values
+        template.variables['Tsg_flow_raw']['_data'] = dataf['TsgShipFlow'].values
+        template.variables['LabMain_sw_flow_raw']['_data'] = dataf['LabMainSwFlow'].values
+        template.variables['PSAL_raw']['_data']= dataf['TsgShipSalinity'].values
     elif platform_code == 'VNAA':
-        temp_tsg_raw[:] = dataf['TsgSbe45Temp'].values
-        psal_raw[:] = dataf['TsgSbe45Salinity'].values
-        tsg_flow_raw[:] = dataf['SBE45Flow'].values
+        template.variables['TEMP_Tsg_raw']['_data'] = dataf['TsgSbe45Temp'].values
+        template.variables['PSAL_raw']['_data']= dataf['TsgSbe45Salinity'].values
+        template.variables['Tsg_flow_raw']['_data'] = dataf['SBE45Flow'].values
 
-    ncfile.close()
+    template.to_netcdf(netcdf_file_path)
+    return netcdf_file_path
 
 
 def read_realtime_file(self):
