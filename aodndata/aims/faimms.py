@@ -65,7 +65,9 @@ class FaimmsHandler(HandlerBase):
         if len(main_site_code) != 0:
             return site_codes[main_site_code[0]]
         else:
-            return []
+            raise InvalidFileFormatError(
+                "Don't know where to put file '{name}' (Unknown site name)".format(name=os.path.basename(filepath))
+            )
 
     @staticmethod
     def get_faimms_platform_type(filepath):
@@ -82,21 +84,13 @@ class FaimmsHandler(HandlerBase):
         elif 'BSE' in site_code or 'WS' in site_code:
             return 'Weather_Station_Platform'
         else:
-            return []
+            raise InvalidFileFormatError(
+                "Don't know where to put file '{name}' (Unknown platform type)".format(name=os.path.basename(filepath))
+            )
 
     def get_main_faimms_site_name_path(self, filepath):
         site_name = self.get_faimms_site_name(filepath)
         platform_type = self.get_faimms_platform_type(filepath)
-
-        if site_name == []:
-            raise InvalidFileFormatError(
-                "Don't know where to put file '{name}' (Unknown site name)".format(name=os.path.basename(filepath))
-            )
-
-        if platform_type == []:
-            raise InvalidFileFormatError(
-                "Don't know where to put file '{name}' (Unknown platform type)".format(name=os.path.basename(filepath))
-            )
 
         return os.path.join(site_name, platform_type)
 

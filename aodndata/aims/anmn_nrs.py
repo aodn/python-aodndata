@@ -66,10 +66,9 @@ class AnmnNrsAimsHandler(HandlerBase):
         file_version = netcdf_file_obj.file_version
         main_var_folder = self.get_main_var_folder_name(filepath)
 
-        if file_version == "Level 0 - Raw data":
-            level_name = 'NO_QAQC'
-        elif file_version == 'Level 1 - Quality Controlled Data':
-            level_name = 'QAQC'
+        file_version_dict = {"Level 0 - Raw data": 'NO_QAQC',
+                             'Level 1 - Quality Controlled Data': 'QAQC'}
+        level_name = file_version_dict.get(file_version)
 
         year = netcdf_file_obj.time_coverage_start[0:4]
         netcdf_file_obj.close()
