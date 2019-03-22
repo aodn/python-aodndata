@@ -27,7 +27,6 @@
 # SBE45Flow         TsgShipFlow             Tsg_flow_raw
 #    -             LabMainSwFlow            LabMain_sw_flow_raw
 """
-
 import collections
 import os
 import re
@@ -39,8 +38,6 @@ from aodncore.pipeline.exceptions import InvalidFileContentError
 from ncwriter import DatasetTemplate
 from netCDF4 import stringtochar
 from pkg_resources import resource_filename
-
-from .ship_callsign import ship_callsign_list, ship_callsign
 
 VALID_PROJECT = ['IMOS', 'FutureReefMap', 'SOOP-CO2_RT']
 INPUT_RT_PARAMETERS = {'Type', 'PcDate', 'PcTime', 'GpsShipLatitude',
@@ -61,7 +58,7 @@ VESSEL = {
 NC_JSON_TEMPLATE = resource_filename("aodndata", "templates/soop_co2_nrt_nc_template.json")
 
 
-def process_co2_rt(realtime_file, temp_dir):
+def process_co2_rt(realtime_file, temp_dir, ship_callsign_ls):
     """
     Read in data from co2 realtime file and produce a netcdf file
     """
@@ -69,11 +66,11 @@ def process_co2_rt(realtime_file, temp_dir):
     (dataf, platform_code) = read_realtime_file(realtime_file)
     # format data
     (dtime, time) = get_time_formatted(dataf)
-    # generate nc file name
+
     netcdf_filename = create_netcdf_filename(platform_code, dtime)
     netcdf_file_path = os.path.join(temp_dir, "{filename}.nc").format(filename=netcdf_filename)
 
-    netcdf_writer(netcdf_file_path, dataf, dtime, time, realtime_file.src_path, platform_code)
+    netcdf_writer(netcdf_file_path, dataf, dtime, time, realtime_file.src_path, platform_code, ship_callsign_ls)
 
     return netcdf_file_path
 
@@ -116,16 +113,11 @@ def get_time_formatted(dataf):
     return dtime, np.array(time) / 3600. / 24.
 
 
-def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code):
+def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code, ship_callsign_ls):
     """
     Create the netcdf file
     """
-    if platform_code in ship_callsign_list():
-        vessel_name = ship_callsign(platform_code)
-    else:
-        raise InvalidFileContentError("Unknown ship code '{code}'from '{file}'".format(code=platform_code,
-                                                                                       file=netcdf_file_path))
-
+    vessel_name = ship_callsign_ls[platform_code]
     template = DatasetTemplate.from_json(NC_JSON_TEMPLATE)
 
     # write voyage specific attributes
