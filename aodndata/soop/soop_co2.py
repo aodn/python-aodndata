@@ -93,7 +93,7 @@ class SoopCo2Handler(HandlerBase):
             rt_file = self.file_collection[0]
             rt_file.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
 
-            nrt_nc_file_path = soop_co2_nrt_nc_generator.process_co2_rt(rt_file, self.products_dir)
+            nrt_nc_file_path = soop_co2_nrt_nc_generator.process_co2_rt(rt_file, self.products_dir, self.ship_callsign_ls)
             nrt_nc_file = PipelineFile(nrt_nc_file_path)
             self.file_collection.add(nrt_nc_file)
             nrt_nc_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
