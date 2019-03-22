@@ -52,20 +52,18 @@ class FaimmsHandler(HandlerBase):
         site_code = netcdf_file_obj.site_code
         netcdf_file_obj.close()
 
-        if 'DAV' in site_code:
-            return 'Davies_Reef'
-        elif 'OI' in site_code:
-            return 'Orpheus_Island'
-        elif 'OTI' in site_code:
-            return 'One_Tree_Island'
-        elif 'RIB' in site_code:
-            return 'Rib_Reef'
-        elif 'MRY' in site_code or 'MYR' in site_code:
-            return 'Myrmidon_Reef'
-        elif 'LIZ' in site_code:
-            return 'Lizard_Island'
-        elif 'HI' in site_code:
-            return 'Heron_Island'
+        site_codes = {'DAV': 'Davies_Reef',
+                      'OI': 'Orpheus_Island',
+                      'OTI': 'One_Tree_Island',
+                      'RIB': 'Rib_Reef',
+                      'MRY': 'Myrmidon_Reef',
+                      'LIZ': 'Lizard_Island',
+                      'HI': 'Heron_Island'}
+
+        main_site_code = [site for site in site_codes.keys() if site in site_code]
+
+        if len(main_site_code) != 0:
+            return site_codes[main_site_code[0]]
         else:
             return []
 

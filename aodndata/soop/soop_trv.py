@@ -10,6 +10,10 @@ class SoopTrvHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(SoopTrvHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.nc']
+        self.var_dict = {'CPHL': 'chlorophyll',
+                         'TEMP': 'temperature',
+                         'PSAL': 'salinity',
+                         'TURB': 'turbidity'}
 
     def preprocess(self):
         """
@@ -28,29 +32,16 @@ class SoopTrvHandler(HandlerBase):
 
     def get_main_soop_trv_var(self, filepath):
         netcdf_file_obj = Dataset(filepath, mode='r')
-        variables = netcdf_file_obj.variables.keys()
+        nc_variables = netcdf_file_obj.variables.keys()
         netcdf_file_obj.close()
 
-        if 'CPHL' in variables:
-            return 'CPHL'
-        elif 'TEMP' in variables:
-            return 'TEMP'
-        elif 'PSAL' in variables:
-            return 'PSAL'
-        elif 'TURB' in variables:
-            return 'TURB'
+        main_var = [var for var in nc_variables if var in self.var_dict.keys()]
+
+        if len(main_var) != 0: return main_var[0]
 
     def get_main_var_folder_name(self, filepath):
         main_var = self.get_main_soop_trv_var(filepath)
-
-        if main_var == 'CPHL':
-            return 'chlorophyll'
-        elif main_var == 'TEMP':
-            return 'temperature'
-        elif main_var == 'PSAL':
-            return 'salinity'
-        elif main_var == 'TURB':
-            return 'turbidity'
+        return self.var_dict[main_var]
 
     def remove_creation_date_from_filename(self, filepath):
         return re.sub('_C-.*$', '.nc', filepath)
