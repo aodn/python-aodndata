@@ -101,7 +101,6 @@ class SoopCo2Handler(HandlerBase):
     def dest_path(self, src_file):
         dir_list = []
         project = def_project(src_file)
-        ship_callsign_ls = ship_callsign_list()
 
         if project not in VALID_PROJECT:
             raise InvalidFileNameError(
@@ -111,26 +110,26 @@ class SoopCo2Handler(HandlerBase):
         if project in ['IMOS', 'SOOP-CO2_RT']:
             fields = FileClassifier._get_file_name_fields(src_file)
             ship_code = fields[4]
-            if ship_code not in ship_callsign_ls:
+            if ship_code not in self.ship_callsign_ls:
                 raise InvalidFileNameError(
                     "Missing vessel callsign in file name '{name}'.".format(name=src_file))
 
             project_base = 'IMOS'
             facility = fields[1][:4]
             sub_facility = fields[1]
-            platform = "{ship_code}_{ship_name}".format(ship_code=ship_code, ship_name=ship_callsign_ls[ship_code])
+            platform = "{ship_code}_{ship_name}".format(ship_code=ship_code, ship_name=self.ship_callsign_ls[ship_code])
             dir_list.extend([project_base, facility, sub_facility, platform])
 
         if project == 'FutureReefMap':
             fields = FileClassifier._get_file_name_fields(src_file, min_fields=5)
             ship_code = fields[3]
-            if ship_code not in ship_callsign_ls:
+            if ship_code not in self.ship_callsign_ls:
                 raise InvalidFileNameError(
                     "Missing vessel callsign in file name '{name}'.".format(name=src_file))
 
             dir_list.append('Future_Reef_MAP')
             data_type = 'underway'
-            dir_list.extend([data_type, ship_callsign_ls[ship_code]])
+            dir_list.extend([data_type, self.ship_callsign_ls[ship_code]])
 
         if project in ['IMOS', 'FutureReefMap']:
             att_list = FileClassifier._get_nc_att(src_file, ['cruise_id', 'time_coverage_start'])
@@ -163,7 +162,6 @@ class SoopCo2Handler(HandlerBase):
         sub_facility = 'SOOP-CO2'
         data_type = 'REALTIME'
         dir_list.extend([project, facility, sub_facility])
-        ship_callsign_ls = ship_callsign_list()
         fields = FileClassifier._get_file_name_fields(os.path.basename(src_file), min_fields=2)
         if fields[0] in VESSEL_CODE:
             ship_code = VESSEL_CODE[fields[0]]
@@ -172,7 +170,7 @@ class SoopCo2Handler(HandlerBase):
                 "File {file} has an invalid vessel code or is not a valid SOOP-CO2 realtime file".format(
                     file=os.path.basename(src_file))
             )
-        platform = "{ship_code}_{ship_name}".format(ship_code=ship_code, ship_name=ship_callsign_ls[ship_code])
+        platform = "{ship_code}_{ship_name}".format(ship_code=ship_code, ship_name=self.ship_callsign_ls[ship_code])
         dir_list.extend([platform, data_type])
         year = int(fields[1][:4])
         dir_list.append(year)
