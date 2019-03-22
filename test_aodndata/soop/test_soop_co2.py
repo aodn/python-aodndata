@@ -31,7 +31,7 @@ class TestSoopCo2Handler(HandlerTestCase):
 
     def test_good_co2_nc(self):
         handler = self.run_handler(GOOD_NC,
-                                   check_params={'checks': ['cf']},
+                                   check_params={'checks': ['cf', 'imos:1.4']},
                                    custom_params={'ship_callsign_ls': ship_callsign_ls}
                                    )
         self.assertEqual(len(handler.file_collection), 1)
@@ -41,6 +41,7 @@ class TestSoopCo2Handler(HandlerTestCase):
         self.assertEqual(f.dest_path,
                          'IMOS/SOOP/SOOP-CO2/VNAA_Aurora-Australis/2017/AA1617_V3/IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.nc')
         self.assertTrue(f.is_stored)
+        self.assertTrue(f.is_checked)
 
     def test_frmap_file(self):
         # test future Reef Map processing
@@ -76,10 +77,6 @@ class TestSoopCo2Handler(HandlerTestCase):
                              'IMOS/SOOP/SOOP-CO2/VNAA_Aurora-Australis/2017/AA1617_V3/' + f.name)
             self.assertEqual(f.check_type, PipelineFileCheckType.NONEMPTY_CHECK)
             self.assertEqual(f.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
-
-    def test_good_file_with_compliance_check(self):
-        # we also expect this to succeed, since the test file is known be CF compliant
-        self.run_handler(GOOD_NC, check_params={'checks': ['cf']})
 
     def test_good_rt_in_txt(self):
         handler = self.run_handler(GOOD_RT_IN_TXT,
