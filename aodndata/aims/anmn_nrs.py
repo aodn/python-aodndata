@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 
 from netCDF4 import Dataset
 
@@ -70,7 +71,7 @@ class AnmnNrsAimsHandler(HandlerBase):
                              'Level 1 - Quality Controlled Data': 'QAQC'}
         level_name = file_version_dict.get(file_version)
 
-        year = netcdf_file_obj.time_coverage_start[0:4]
+        year = datetime.strptime(netcdf_file_obj.time_coverage_start, '%Y-%m-%dT%H:%M:%SZ').strftime("%Y")
         netcdf_file_obj.close()
 
         site_code = self.get_anmn_nrs_site_name(filepath)

@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType
 
@@ -23,7 +24,7 @@ class SrsOcBodBawHandler(HandlerBase):
 
         filename = os.path.basename(self.remove_creation_date_from_filename(filepath))
         m = re.search(
-            '^IMOS_SRS-OC-BODBAW_X_([0-9]+T[0-9]+)Z_(.*)-(suspended_matter|pigment|backscattering|absorption).*_END-([0-9]+T[0-9]+)Z\.(nc|csv|png)$',
+            '^IMOS_SRS-OC-BODBAW_X_([0-9]+T[0-9]+Z)_(.*)-(suspended_matter|pigment|backscattering|absorption).*_END-([0-9]+T[0-9]+Z)\.(nc|csv|png)$',
             filename)
         if m is None:
             raise ValueError("file name not matching regex to deduce dest_path")
@@ -33,6 +34,7 @@ class SrsOcBodBawHandler(HandlerBase):
             product_type = 'absorption'
 
         cruise_id = m.group(2)
-        year = int(m.group(1)[0:4])
-        return os.path.join(bodbaw_dir, '%d_cruise-%s' %
-                            (year, cruise_id), product_type, filename)
+        year = datetime.strptime(m.group(1), '%Y%m%dT%H%M%SZ').strftime("%Y")
+
+        return os.path.join(bodbaw_dir, '{year}_cruise-{cruise}'.format(year=year, cruise=cruise_id),
+                            product_type, filename)

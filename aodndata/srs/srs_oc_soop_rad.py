@@ -1,9 +1,11 @@
 import os
 import re
+from datetime import datetime
 
 from aodncore.pipeline import HandlerBase
-from aodndata.soop.ship_callsign import ship_callsign_list
 from aodncore.pipeline.exceptions import InvalidFileNameError
+
+from aodndata.soop.ship_callsign import ship_callsign_list
 
 
 class SrsOcSoopRadHandler(HandlerBase):
@@ -35,7 +37,7 @@ class SrsOcSoopRadHandler(HandlerBase):
             raise InvalidFileNameError(
                 "File_version code is unknown for '{name}'".format(name=filepath))
 
-        year = m.group(1)[0:4]
+        year = datetime.strptime(m.group(1), '%Y%m%dT%H%M%SZ').strftime("%Y")
         relative_netcdf_path = os.path.join('IMOS', 'SRS', 'OC', 'radiometer', '%s_%s' % (platform_code, vessel_name),
                                             year)
 

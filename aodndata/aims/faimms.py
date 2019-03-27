@@ -1,10 +1,10 @@
 import os
 import re
+from datetime import datetime
 
-from netCDF4 import Dataset
-
-from aodncore.pipeline.handlerbase import HandlerBase
 from aodncore.pipeline.exceptions import InvalidFileFormatError
+from aodncore.pipeline.handlerbase import HandlerBase
+from netCDF4 import Dataset
 
 
 class FaimmsHandler(HandlerBase):
@@ -108,7 +108,7 @@ class FaimmsHandler(HandlerBase):
         elif file_version == 'Level 1 - Quality Controlled Data':
             level_name = 'QAQC'
 
-        year = netcdf_file_obj.time_coverage_start[0:4]
+        year = datetime.strptime(netcdf_file_obj.time_coverage_start, '%Y-%m-%dT%H:%M:%SZ').strftime("%Y")
         netcdf_file_obj.close()
 
         site_name_path = self.get_main_faimms_site_name_path(filepath)

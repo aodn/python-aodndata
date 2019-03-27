@@ -221,6 +221,6 @@ class SoopTmvNrtHandler(HandlerBase):
         with Dataset(filepath,  mode='r') as nc_obj:
             time_period = nc_obj.time_period
             product_type = nc_obj.product_type
-            year = datetime.strptime(nc_obj.time_coverage_start, '%Y-%m-%dT%H:%M:%SZ').year
+            year = datetime.strptime(nc_obj.time_coverage_start, '%Y-%m-%dT%H:%M:%SZ').strftime("%Y")
 
-        return os.path.join(soop_tmv_dir, product_type, time_period, '%d' % year, os.path.basename(filepath))
+        return os.path.join(soop_tmv_dir, product_type, time_period, year, os.path.basename(filepath))
