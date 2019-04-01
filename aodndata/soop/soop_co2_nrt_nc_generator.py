@@ -189,7 +189,7 @@ def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code,
     template.variables['H2O_flow_raw']['_data'] = dataf['EquH2OFlow'].values
     template.variables['Licor_flow_raw']['_data'] = dataf['LicorFlow'].values
     template.variables['TEMP_raw']['_data'] = dataf['IntakeShipTemp'].values
-    template.variables['WSPD_raw']['_data'] = dataf['MetTrueWindSpKts'].values  # WSP converted to m s-1
+    template.variables['WSPD_raw']['_data'] = dataf['MetTrueWindSpKts'].values * 0.514444 # WSP converted to m s-1
     template.variables['WDIR_raw']['_data'] = dataf['MetTrueWindDir'].values
     template.variables['ATMP_raw']['_data'] = dataf['AtmSeaLevelPress'].values
 
