@@ -27,7 +27,7 @@ MISSION_STATUS = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_renamed.txt')
 MISSION_STATUS_COMPLETED = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_completed.txt')
 MISSION_STATUS_DM = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_delayed_mode.txt')
 BAD_RT_ZIP = os.path.join(TEST_ROOT, 'RT_NONETCDF.zip')
-
+SLOCUM_RU_MISSION = os.path.join(TEST_ROOT, 'Challenger20180812.zip')
 
 class TestAnfogHandler(HandlerTestCase):
     """It is recommended to inherit from the HandlerTestCase class (which is itself a subclass of the standard
@@ -324,6 +324,24 @@ class TestAnfogHandler(HandlerTestCase):
     def test_missing_material_DM(self):
         "new DM missions should nbe submitted with ancillary material"
         self.run_handler_with_exception(MissingFileError, GOOD_NC)
+
+    def test_slocumRU_data(self):
+        handler = self.run_handler(SLOCUM_RU_MISSION, check_params={'checks': ['cf']})
+        dm_file = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
+        jpg = handler.file_collection.filter_by_attribute_value('extension', '.jpg')
+        j = jpg[0]
+        self.assertEqual(j.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
+        self.assertEqual(j.dest_path,
+                         'IMOS/ANFOG/slocum_glider/Challenger20180812/' + j.name)
+        self.assertTrue(j.is_stored)
+
+        # FV01 file
+        nc = dm_file[0]
+        self.assertEqual(nc.dest_path,
+                         'IMOS/ANFOG/slocum_glider/Challenger20180812/' + nc.name)
+        self.assertTrue(nc.is_stored)
+        self.assertTrue(nc.is_checked)
+        self.assertTrue(nc.is_harvested)
 
     if __name__ == '__main__':
         unittest.main()
