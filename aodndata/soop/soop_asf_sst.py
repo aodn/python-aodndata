@@ -2,6 +2,7 @@ import os
 
 from aodncore.pipeline import HandlerBase
 from aodncore.pipeline.exceptions import InvalidFileFormatError
+from datetime import datetime
 
 from .ship_callsign import ship_callsign_list
 
@@ -26,7 +27,7 @@ class SoopAsfSstHandler(HandlerBase):
         # the file name must have at least 6 component parts to be valid
         if len(file_parts) > 5:
             facility = file_parts[1]  # <Facility-Code>
-            year = file_parts[3][:4]  # year out of <Start-date>
+            year = datetime.strptime(file_parts[3], '%Y%m%dT%H%M%SZ').strftime("%Y")
 
             # check for the code in the ships
             code = file_parts[4]
