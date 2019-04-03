@@ -24,7 +24,9 @@ class AnfogFileClassifier(FileClassifier):
     RAW_BATTERY_REGEX = '^ANFOG_E_[0-9]{8}T[0-9]{6}Z_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     RAW_FILES_REGEX = '%s|%s|%s|%s' % ('.*rawfiles.zip$', '.*rawfiles.rar$', RAW_DATA_REGEX, RAW_BATTERY_REGEX)
     PLATFORM_CODES = {'SG': 'seaglider',
-                      'SL': 'slocum_glider'}
+                      'SL': 'slocum_glider',
+                      'RU': 'slocum_glider'
+                      }
     UPLOAD_TO_S3_REGEX = '.*(.kml|.jpg|.pdf|.txt)$'
 
     @classmethod
