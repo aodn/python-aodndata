@@ -22,6 +22,7 @@ class MooringsFileClassifier(FileClassifier):
                 'VDEN', 'VDEV', 'VDEP', 'VDES', 'VDIR', 'VDIR_MAG', 'VDIRT', 'WHTE', 'WHTH', 'WPFM', 'WPMH', 'WPSM',
                 'WPTE', 'WPTH', 'WMPP', 'WMSH', 'WMXH', 'WPDI', 'WPDI_MAG', 'WPDIT', 'WPPE', 'WSMP', 'WSSH'}
     TEMP_VAR = {'PRES', 'PRES_REL', 'TEMP'}
+    CO2_VAR = {'xCO2EQ_PPM', 'xCO2ATM_PPM', 'fCO2SW_UATM', 'DfCO2', 'TPH'}
 
     @classmethod
     def _get_data_category(cls, input_file):
@@ -37,6 +38,9 @@ class MooringsFileClassifier(FileClassifier):
 
         if var_names.intersection(cls.WAVE_VAR):
             return 'Wave'
+
+        if var_names.intersection(cls.CO2_VAR):
+            return 'CO2'
 
         feature_type = cls._get_nc_att(input_file, 'featureType').lower()
         if feature_type == 'profile':
@@ -69,6 +73,14 @@ class MooringsFileClassifier(FileClassifier):
 
         """
         name_field = cls._get_file_name_fields(input_file)
+
+        if cls._get_data_category(input_file) == 'CO2':
+            if 'realtime' in name_field[6]:
+                return 'real-time'
+            elif 'delayed' in name_field[6]:
+                return 'delayed'
+            else:
+                raise InvalidFileNameError("Unknown CO2 file type '{input_file}'".format(input_file=input_file))
 
         if name_field[5] == 'FV00':
             return 'non-QC'
