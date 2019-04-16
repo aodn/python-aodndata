@@ -24,6 +24,7 @@ from util import get_git_revision_script_url
 
 DATE_UTC_NOW = datetime.utcnow()
 
+
 def get_input_file_rel_path(input_netcdf_file_path):
     """
     find the relative path hierarchy of an input FV01 file. The value will be
@@ -35,9 +36,9 @@ def create_burst_average_var(netcdf_file_obj):
     """
     create burst data from all vars available in netcdf
     """
-    time_values              = get_time_val(netcdf_file_obj)
+    time_values = get_time_val(netcdf_file_obj)
     varname_to_burst_average = list_var_to_average(netcdf_file_obj)
-    burst_vars               = {}
+    burst_vars = {}
 
     for varname in varname_to_burst_average:
         var_values, var_qc_flag_exclusion = get_var_val_var_qc_exclusion(
@@ -46,6 +47,7 @@ def create_burst_average_var(netcdf_file_obj):
         burst_vars[varname] = burst_average_data(time_values, var_values, var_qc_flag_exclusion)
 
     return trim_timestamps_burst_vars(burst_vars)
+
 
 def trim_timestamps_burst_vars(burst_vars):
     """
@@ -57,13 +59,13 @@ def trim_timestamps_burst_vars(burst_vars):
     """
     min_index = None
     for var in burst_vars.keys():
-        var_mean_burst = burst_vars[var]['var_mean'] # first non TIME product
+        var_mean_burst = burst_vars[var]['var_mean']  # first non TIME product
         if not np.isnan(var_mean_burst).all():
-            min_index_var  = next(x for x, y in enumerate(var_mean_burst) if not isnan(y))
+            min_index_var = next(x for x, y in enumerate(var_mean_burst) if not isnan(y))
         else:
             min_index_var = 0
 
-        if min_index == None:
+        if min_index is None:
             min_index = min_index_var
         else:
             min_index = min(min_index, min_index_var)
@@ -76,10 +78,10 @@ def trim_timestamps_burst_vars(burst_vars):
     # look for last non NaN. we just have to reverse the list
     max_non_nan_idx = None
     for var in burst_vars.keys():
-        var_mean_burst       = burst_vars[var]['var_mean'] # first non TIME product
-        var_mean_burst       = pd.Series(var_mean_burst) # create a pandas series to find easily last non nan index
+        var_mean_burst = burst_vars[var]['var_mean']  # first non TIME product
+        var_mean_burst = pd.Series(var_mean_burst)  # create a pandas series to find easily last non nan index
         max_last_non_nan_var = var_mean_burst.last_valid_index()
-        if max_non_nan_idx == None:
+        if max_non_nan_idx is None:
             max_non_nan_idx = max_last_non_nan_var
         else:
             max_non_nan_idx = max(max_non_nan_idx, max_last_non_nan_var)
@@ -92,11 +94,13 @@ def trim_timestamps_burst_vars(burst_vars):
 
     return burst_vars
 
+
 def get_time_val(netcdf_file_obj):
     """
     return the TIME numeric values from a NetCDF file
     """
     return netcdf_file_obj.variables['TIME'][:]
+
 
 def get_var_val_var_qc_exclusion(netcdf_file_obj, varname):
     """
@@ -106,22 +110,25 @@ def get_var_val_var_qc_exclusion(netcdf_file_obj, varname):
     Also exlude all TIME values outside of deployment range as defined in gatts
     """
     min_imos_qc_flag_val_exluded = 3
-    var_values            = netcdf_file_obj.variables[varname][:]
+    var_values = netcdf_file_obj.variables[varname][:]
     var_qc_flag_exclusion = netcdf_file_obj.variables['%s_quality_control' % varname][:] >= min_imos_qc_flag_val_exluded
 
     # we exclude as well ALL TIMES before date_deployment_start, and after
     # date_deployment_end
-    time                  = netcdf_file_obj.variables['TIME']
-    date_deployment_start = date2num(datetime.strptime(netcdf_file_obj.time_deployment_start, '%Y-%m-%dT%H:%M:%SZ'), time.units, time.calendar)
-    date_deployment_end   = date2num(datetime.strptime(netcdf_file_obj.time_deployment_end, '%Y-%m-%dT%H:%M:%SZ'), time.units, time.calendar)
+    time = netcdf_file_obj.variables['TIME']
+    date_deployment_start = date2num(datetime.strptime(netcdf_file_obj.time_deployment_start, '%Y-%m-%dT%H:%M:%SZ'),
+                                     time.units, time.calendar)
+    date_deployment_end = date2num(datetime.strptime(netcdf_file_obj.time_deployment_end, '%Y-%m-%dT%H:%M:%SZ'),
+                                   time.units, time.calendar)
 
     time_before = date_deployment_start >= time[:]
-    time_after  = date_deployment_end <= time[:]
+    time_after = date_deployment_end <= time[:]
 
     var_qc_flag_exclusion = [a or b for a, b in zip(time_before, var_qc_flag_exclusion)]
     var_qc_flag_exclusion = [a or b for a, b in zip(time_after, var_qc_flag_exclusion)]
 
     return var_values, var_qc_flag_exclusion
+
 
 def list_var_to_average(netcdf_file_obj):
     """
@@ -140,36 +147,38 @@ def list_var_to_average(netcdf_file_obj):
 
     return var_list
 
+
 def list_dimensionless_var(netcdf_file_obj):
-    var_list    = netcdf_file_obj.variables.keys()
+    var_list = netcdf_file_obj.variables.keys()
     dimless_var = []
     for varname in var_list:
         if len(netcdf_file_obj.variables[varname].dimensions) == 0:
             dimless_var.append(varname)
     return dimless_var
 
+
 def burst_average_data(time_values, var_values, var_qc_exclusion):
     """
     create burst average data for var_values. This is the core of the script
     """
     n_seconds_day = 24 * 3600
-    difft         = np.round(np.diff(time_values) * n_seconds_day) # this gives us a spike for each new burst
-    fill_value    = float('nan')
+    difft = np.round(np.diff(time_values) * n_seconds_day)  # this gives us a spike for each new burst
+    fill_value = float('nan')
 
     # look for start index of each burst, ie the index of each new spike of
     # difft variable
-    idx_spike = [0] # initialise first index
-    spikes    = np.where(difft > INSTRUMENT_SAMPLE_INTERVAL)[0] + 1
+    idx_spike = [0]  # initialise first index
+    spikes = np.where(difft > INSTRUMENT_SAMPLE_INTERVAL)[0] + 1
     idx_spike.extend(spikes)
     if idx_spike == [0]:
         raise Exception('No burst was found in time values - FV01 is probably already averaged')
 
     # initialise arrays
-    time_mean_burst   = []
-    var_mean_burst    = []
-    var_min_burst     = []
-    var_max_burst     = []
-    var_sd_burst      = []
+    time_mean_burst = []
+    var_mean_burst = []
+    var_min_burst = []
+    var_max_burst = []
+    var_sd_burst = []
     var_num_obs_burst = []
 
     for idx_spike_idx, idx_spike_val in enumerate(idx_spike[:-1]):
@@ -186,45 +195,50 @@ def burst_average_data(time_values, var_values, var_qc_exclusion):
 
         # condition in case no good qc data was found for one burst
         if valid_index_burst_range:
-            var_mean_burst   .append(np.mean(var_values[valid_index_burst_range]))
-            var_min_burst    .append(np.min(var_values[valid_index_burst_range]))
-            var_max_burst    .append(np.max(var_values[valid_index_burst_range]))
-            var_sd_burst     .append(np.std(var_values[valid_index_burst_range]))
+            var_mean_burst.append(np.mean(var_values[valid_index_burst_range]))
+            var_min_burst.append(np.min(var_values[valid_index_burst_range]))
+            var_max_burst.append(np.max(var_values[valid_index_burst_range]))
+            var_sd_burst.append(np.std(var_values[valid_index_burst_range]))
             var_num_obs_burst.append(len(valid_index_burst_range))
         else:
-            var_mean_burst   .append(fill_value)
-            var_min_burst    .append(fill_value)
-            var_max_burst    .append(fill_value)
-            var_sd_burst     .append(fill_value)
+            var_mean_burst.append(fill_value)
+            var_min_burst.append(fill_value)
+            var_max_burst.append(fill_value)
+            var_sd_burst.append(fill_value)
             var_num_obs_burst.append(0)
 
-    burst_var = {'time_mean':   time_mean_burst,
-                 'var_mean':    var_mean_burst,
-                 'var_min':     var_min_burst,
-                 'var_max':     var_max_burst,
-                 'var_sd':      var_sd_burst,
+    burst_var = {'time_mean': time_mean_burst,
+                 'var_mean': var_mean_burst,
+                 'var_min': var_min_burst,
+                 'var_max': var_max_burst,
+                 'var_sd': var_sd_burst,
                  'var_num_obs': var_num_obs_burst}
 
     return burst_var
+
 
 def generate_netcdf_burst_filename(input_netcdf_file_path, burst_vars):
     """
     generate the filename of a burst average netcdf for both CTD and WQM
     """
-    netcdf_file_obj   = Dataset(input_netcdf_file_path, 'r')
-    site_code         = netcdf_file_obj.site_code
+    netcdf_file_obj = Dataset(input_netcdf_file_path, 'r')
+    site_code = netcdf_file_obj.site_code
     input_netcdf_name = os.path.basename(input_netcdf_file_path)
-    pattern           = re.compile("^(IMOS_.*)_([0-9]{8}T[0-9]{6}Z)_(.*)_(FV0[0-9])_(.*)_END")
-    match_group       = pattern.match(input_netcdf_name)
+    pattern = re.compile("^(IMOS_.*)_([0-9]{8}T[0-9]{6}Z)_(.*)_(FV0[0-9])_(.*)_END")
+    match_group = pattern.match(input_netcdf_name)
 
     time_burst_vals = burst_vars.values()[0]['time_mean']
-    time_min        = num2date(time_burst_vals, netcdf_file_obj['TIME'].units, netcdf_file_obj['TIME'].calendar).min().strftime('%Y%m%dT%H%M%SZ')
-    time_max        = num2date(time_burst_vals, netcdf_file_obj['TIME'].units, netcdf_file_obj['TIME'].calendar).max().strftime('%Y%m%dT%H%M%SZ')
-    burst_filename  = "%s_%s_%s_FV02_%s-burst-averaged_END-%s_C-%s.nc" % (match_group.group(1), time_min, \
-                                                                          site_code, match_group.group(5), \
-                                                                          time_max, DATE_UTC_NOW.strftime("%Y%m%dT%H%M%SZ"))
+    time_min = num2date(time_burst_vals, netcdf_file_obj['TIME'].units,
+                        netcdf_file_obj['TIME'].calendar).min().strftime('%Y%m%dT%H%M%SZ')
+    time_max = num2date(time_burst_vals, netcdf_file_obj['TIME'].units,
+                        netcdf_file_obj['TIME'].calendar).max().strftime('%Y%m%dT%H%M%SZ')
+    burst_filename = "%s_%s_%s_FV02_%s-burst-averaged_END-%s_C-%s.nc" % (match_group.group(1), time_min,
+                                                                         site_code, match_group.group(5),
+                                                                         time_max,
+                                                                         DATE_UTC_NOW.strftime("%Y%m%dT%H%M%SZ"))
     netcdf_file_obj.close()
     return burst_filename
+
 
 def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
     """
@@ -232,20 +246,21 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
     see variable conf_file if editing of gatt and var att need to be done
     """
     input_file_rel_path = get_input_file_rel_path(input_netcdf_file_path)
-    input_netcdf_obj    = Dataset(input_netcdf_file_path, 'r')
+    input_netcdf_obj = Dataset(input_netcdf_file_path, 'r')
 
     global INSTRUMENT_SAMPLE_INTERVAL
     INSTRUMENT_SAMPLE_INTERVAL = getattr(input_netcdf_obj, 'instrument_sample_interval', 1)
 
-    burst_vars          = create_burst_average_var(input_netcdf_obj)
-    time_burst_vals     = burst_vars.values()[0]['time_mean']
-    tmp_netcdf_dir      = tempfile.mkdtemp()
+    burst_vars = create_burst_average_var(input_netcdf_obj)
+    time_burst_vals = burst_vars.values()[0]['time_mean']
+    tmp_netcdf_dir = tempfile.mkdtemp()
 
-    output_netcdf_file_path = os.path.join(tmp_netcdf_dir, generate_netcdf_burst_filename(input_netcdf_file_path, burst_vars))
-    output_netcdf_obj       = Dataset(output_netcdf_file_path, "w", format="NETCDF4")
+    output_netcdf_file_path = os.path.join(tmp_netcdf_dir,
+                                           generate_netcdf_burst_filename(input_netcdf_file_path, burst_vars))
+    output_netcdf_obj = Dataset(output_netcdf_file_path, "w", format="NETCDF4")
 
     # read gatts from input, add them to output. Some gatts will be overwritten
-    input_gatts     = input_netcdf_obj.__dict__.keys()
+    input_gatts = input_netcdf_obj.__dict__.keys()
     gatt_to_dispose = ['author', 'file_version_quality_control', 'quality_control_set',
                        'compliance_checker_version', 'compliance_checker_last_updated',
                        'quality_control_log']
@@ -255,12 +270,12 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
             setattr(output_netcdf_obj, gatt, getattr(input_netcdf_obj, gatt))
 
     if 'WQM' in output_netcdf_obj.instrument:
-        output_netcdf_obj.title = 'Burst-averaged biogeochemical measurements at %s' % (input_netcdf_obj.site_code)
+        output_netcdf_obj.title = 'Burst-averaged biogeochemical measurements at %s' % input_netcdf_obj.site_code
     elif 'CTD' in output_netcdf_obj.instrument:
-        output_netcdf_obj.title = 'Burst-averaged moored CTD measurements at %s' % (input_netcdf_obj.site_code)
+        output_netcdf_obj.title = 'Burst-averaged moored CTD measurements at %s' % input_netcdf_obj.site_code
 
     m = re.match('.*\.nc', input_file_rel_path)
-    output_netcdf_obj.input_file   = m.group()
+    output_netcdf_obj.input_file = m.group()
     output_netcdf_obj.date_created = DATE_UTC_NOW.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     depth_burst_mean_val = burst_vars['DEPTH']['var_mean']
@@ -286,17 +301,20 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
         var_dtype = input_netcdf_obj[var].dtype
         fillvalue = getattr(input_netcdf_obj[var], '_FillValue', None)
 
-        output_var_mean    = output_netcdf_obj.createVariable(var, var_dtype, ("TIME",), fill_value=fillvalue)
-        output_var_min     = output_netcdf_obj.createVariable('%s_burst_min' % var, var_dtype, ("TIME",), fill_value=fillvalue)
-        output_var_max     = output_netcdf_obj.createVariable('%s_burst_max' % var, var_dtype, ("TIME",), fill_value=fillvalue)
-        output_var_sd      = output_netcdf_obj.createVariable('%s_burst_sd' % var, var_dtype, ("TIME",), fill_value=fillvalue)
+        output_var_mean = output_netcdf_obj.createVariable(var, var_dtype, ("TIME",), fill_value=fillvalue)
+        output_var_min = output_netcdf_obj.createVariable('%s_burst_min' % var, var_dtype, ("TIME",),
+                                                          fill_value=fillvalue)
+        output_var_max = output_netcdf_obj.createVariable('%s_burst_max' % var, var_dtype, ("TIME",),
+                                                          fill_value=fillvalue)
+        output_var_sd = output_netcdf_obj.createVariable('%s_burst_sd' % var, var_dtype, ("TIME",),
+                                                         fill_value=fillvalue)
         output_var_num_obs = output_netcdf_obj.createVariable('%s_num_obs' % var, "i4", ("TIME",))
 
         # set up 'bonus' var att from original FV01 file into FV02
-        input_var_object   = input_netcdf_obj[var]
+        input_var_object = input_netcdf_obj[var]
         input_var_list_att = input_var_object.__dict__.keys()
-        var_att_disposable = ['name', 'long_name', \
-                              '_FillValue', 'ancillary_variables', \
+        var_att_disposable = ['name', 'long_name',
+                              '_FillValue', 'ancillary_variables',
                               'ChunkSize', 'coordinates']
         for var_att in [att for att in input_var_list_att if att not in var_att_disposable]:
             setattr(output_netcdf_obj[var], var_att, getattr(input_netcdf_obj[var], var_att))
@@ -309,9 +327,9 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
         if hasattr(output_var_sd, 'standard_name'):
             delattr(output_var_sd, 'standard_name')
 
-
         setattr(output_var_mean, 'coordinates', getattr(input_netcdf_obj[var], 'coordinates', ''))
-        setattr(output_var_mean, 'ancillary_variables', ('%s_num_obs %s_burst_sd %s_burst_min %s_burst_max' % (var, var, var, var)))
+        setattr(output_var_mean, 'ancillary_variables',
+                ('%s_num_obs %s_burst_sd %s_burst_min %s_burst_max' % (var, var, var, var)))
 
         setattr(output_var_mean, 'cell_methods', 'TIME: mean')
         setattr(output_var_min, 'cell_methods', 'TIME: minimum')
@@ -322,26 +340,27 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
         setattr(output_var_num_obs, 'long_name', 'Number of observations included in the averaging process')
         setattr(output_var_min, 'long_name', 'Minimum data value in burst, after rejection of flagged data')
         setattr(output_var_max, 'long_name', 'Maximum data value in burst, after rejection of flagged data')
-        setattr(output_var_mean, 'long_name', 'Mean of %s values in burst, after rejection of flagged data' % (getattr(input_netcdf_obj[var], 'standard_name',
-                                                                                                                       getattr(input_netcdf_obj[var], 'long_name', ''))))
+        setattr(output_var_mean, 'long_name', 'Mean of %s values in burst, after rejection of flagged data' % (
+            getattr(input_netcdf_obj[var], 'standard_name',
+                    getattr(input_netcdf_obj[var], 'long_name', ''))))
 
         output_var_num_obs.units = "1"
         var_units = getattr(input_netcdf_obj[var], 'units')
         if var_units:
             output_var_mean.units = var_units
-            output_var_min.units  = var_units
-            output_var_max.units  = var_units
-            output_var_sd.units   = var_units
+            output_var_min.units = var_units
+            output_var_max.units = var_units
+            output_var_sd.units = var_units
 
         var_stdname = getattr(input_netcdf_obj[var], 'standard_name', '')
         if var_stdname != '':
             output_var_num_obs.standard_name = "%s number_of_observations" % var_stdname
 
         # set up var values
-        output_var_mean[:]    = np.ma.masked_invalid(burst_vars[var]['var_mean'])
-        output_var_min[:]     = np.ma.masked_invalid(burst_vars[var]['var_min'])
-        output_var_max[:]     = np.ma.masked_invalid(burst_vars[var]['var_max'])
-        output_var_sd[:]      = np.ma.masked_invalid(burst_vars[var]['var_sd'])
+        output_var_mean[:] = np.ma.masked_invalid(burst_vars[var]['var_mean'])
+        output_var_min[:] = np.ma.masked_invalid(burst_vars[var]['var_min'])
+        output_var_max[:] = np.ma.masked_invalid(burst_vars[var]['var_max'])
+        output_var_sd[:] = np.ma.masked_invalid(burst_vars[var]['var_sd'])
         output_var_num_obs[:] = np.ma.masked_invalid(burst_vars[var]['var_num_obs'])
 
     # add gatts and variable attributes as stored in config files
@@ -354,12 +373,14 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
     for varname in varnames:
         for varatt in input_netcdf_obj[varname].__dict__.keys():
             output_netcdf_obj.variables[varname].setncattr(varatt, getattr(input_netcdf_obj[varname], varatt))
-    time_comment = '%s. Time stamp corresponds to the middle of the burst measurement.' % getattr(input_netcdf_obj['TIME'], 'comment', '')
+    time_comment = '%s. Time stamp corresponds to the middle of the burst measurement.' % getattr(
+        input_netcdf_obj['TIME'], 'comment', '')
     output_netcdf_obj.variables['TIME'].comment = time_comment.lstrip('. ')
 
-    time_burst_val_dateobj = num2date(time_burst_vals, input_netcdf_obj['TIME'].units, input_netcdf_obj['TIME'].calendar)
+    time_burst_val_dateobj = num2date(time_burst_vals, input_netcdf_obj['TIME'].units,
+                                      input_netcdf_obj['TIME'].calendar)
     output_netcdf_obj.time_coverage_start = time_burst_val_dateobj.min().strftime('%Y-%m-%dT%H:%M:%SZ')
-    output_netcdf_obj.time_coverage_end   = time_burst_val_dateobj.max().strftime('%Y-%m-%dT%H:%M:%SZ')
+    output_netcdf_obj.time_coverage_end = time_burst_val_dateobj.max().strftime('%Y-%m-%dT%H:%M:%SZ')
 
     # append original gatt to burst average gatt
     gatt = 'comment'
@@ -367,14 +388,20 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
         setattr(output_netcdf_obj, gatt, getattr(input_netcdf_obj, gatt))
 
     gatt = 'history'
-    setattr(output_netcdf_obj, gatt, ('%s. %s' % (getattr(input_netcdf_obj, gatt, ''), 'Created %s' % time.ctime(time.time()))).lstrip('. '))
+    setattr(output_netcdf_obj, gatt,
+            ('%s. %s' % (getattr(input_netcdf_obj, gatt, ''), 'Created %s' % time.ctime(time.time()))).lstrip('. '))
 
     gatt = 'abstract'
-    setattr(output_netcdf_obj, gatt, ('%s. %s' % (getattr(output_netcdf_obj, gatt, ''), \
-                                                 'Data from the bursts have been cleaned and averaged to create data products. This file is one such product.')).lstrip('. '))
+    setattr(output_netcdf_obj,
+            gatt,
+            ('%s. %s' % (getattr(output_netcdf_obj, gatt, ''),
+                         'Data from the bursts have been cleaned and averaged to create data products.'
+                         ' This file is one such product.')
+             ).lstrip('. ')
+            )
 
     # add burst keywords
-    gatt           = 'keywords'
+    gatt = 'keywords'
     keywords_burst = 'AVERAGED, BINNED'
     setattr(output_netcdf_obj, gatt, ('%s, %s' % (getattr(input_netcdf_obj, gatt, ''), keywords_burst)).lstrip(', '))
 
@@ -390,6 +417,7 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
     shutil.move(output_netcdf_file_path, output_dir)
     shutil.rmtree(tmp_netcdf_dir)
     return os.path.join(output_dir, os.path.basename(output_netcdf_file_path))
+
 
 def args():
     parser = argparse.ArgumentParser()
@@ -410,6 +438,6 @@ def args():
 
 
 if __name__ == "__main__":
-    vargs           = args()
+    vargs = args()
     burst_file_path = create_burst_average_netcdf(vargs.input_fv01_netcdf_path, vargs.output_dir)
     print burst_file_path
