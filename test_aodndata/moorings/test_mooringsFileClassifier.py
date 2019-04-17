@@ -294,6 +294,48 @@ class TestMooringFileClassifier(BaseTestCase):
         self.assertEqual(dest_dir, 'IMOS/ANMN/NRS/NRSMAI/plots')
         self.assertEqual(dest_filename, filename)
 
+    def test_acidification_mooring_delayed(self):
+        filename = 'IMOS_ANMN-AM_GST_20170912T060000Z_NRSMAI_FV01_NRSMAI-CO2-1709-delayed_END_20180419T230000Z_C-20180716T102404Z.nc'
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile,
+                       {'site_code': 'NRSMAI'},
+                       TEMP={},
+                       PSAL={},
+                       Press_ATM={},
+                       xCO2EQ_PPM={},
+                       xCO2ATM_PPM={},
+                       fCO2SW_UATM={},
+                       DOX1={},
+                       TPH={}
+                       )
+        dest_dir, dest_filename = os.path.split(MooringsFileClassifier.dest_path(testfile))
+        self.assertEqual(dest_dir, 'IMOS/ANMN/AM/NRSMAI/CO2/delayed')
+        self.assertEqual(dest_filename, filename)
+
+    def test_acidification_mooring_realtime(self):
+        filename = 'IMOS_ANMN-AM_GST_20180926T000000Z_NRSMAI_FV01_NRSMAI-CO2-1809-realtime.nc'
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile,
+                       {'site_code': 'NRSMAI'},
+                       TEMP={},
+                       PSAL={},
+                       Press_ATM={},
+                       xCO2EQ_PPM={},
+                       xCO2ATM_PPM={},
+                       fCO2SW_UATM={},
+                       DOX1={},
+                       TPH={}
+                       )
+        dest_dir, dest_filename = os.path.split(MooringsFileClassifier.dest_path(testfile))
+        self.assertEqual(dest_dir, 'IMOS/ANMN/AM/NRSMAI/CO2/real-time')
+        self.assertEqual(dest_filename, filename)
+
+    def test_acidification_mooring_invalid(self):
+        filename = 'IMOS_ANMN-AM_GST_20180926T000000Z_NRSMAI_FV01_NRSMAI-CO2-1809.nc'
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile, {'site_code': 'NRSMAI'}, xCO2EQ_PPM={})
+        self.assertRaises(InvalidFileNameError, MooringsFileClassifier.dest_path, testfile)
+
 
 if __name__ == '__main__':
     unittest.main()
