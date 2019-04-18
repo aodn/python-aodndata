@@ -4,6 +4,8 @@
 Burst Average Product creation from WQM and CTD FV01 files
 ./burst_average_product.py input_netcdf.nc /output_dir
 """
+
+
 import argparse
 import os
 import re
@@ -18,9 +20,9 @@ import numpy as np
 import pandas as pd
 from netCDF4 import Dataset, date2num, num2date
 
-from file_classifier import MooringFileClassifier
-from generate_netcdf_att import generate_netcdf_att
-from util import get_git_revision_script_url
+from ncwriter import DatasetTemplate
+from aodndata.moorings.classifiers import MooringsFileClassifier
+from aodndata.common.util import get_git_revision_script_url
 
 DATE_UTC_NOW = datetime.utcnow()
 
@@ -30,7 +32,8 @@ def get_input_file_rel_path(input_netcdf_file_path):
     find the relative path hierarchy of an input FV01 file. The value will be
     used in a gatt of the burst netcdf file
     """
-    return MooringFileClassifier.dest_path(input_netcdf_file_path)
+    return MooringsFileClassifier.dest_path(input_netcdf_file_path)
+
 
 def create_burst_average_var(netcdf_file_obj):
     """
@@ -363,9 +366,11 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
         output_var_sd[:] = np.ma.masked_invalid(burst_vars[var]['var_sd'])
         output_var_num_obs[:] = np.ma.masked_invalid(burst_vars[var]['var_num_obs'])
 
-    # add gatts and variable attributes as stored in config files
-    conf_file_generic = os.path.join(os.path.dirname(__file__), 'generate_nc_file_att')
-    generate_netcdf_att(output_netcdf_obj, conf_file_generic, conf_file_point_of_truth=True)
+    # add global attributes from template
+    template_json = os.path.join(os.path.dirname(__file__), 'burst_average_template.json')
+    template = DatasetTemplate.from_json(template_json)
+    for name, value in template.global_attributes.items():
+        setattr(output_netcdf_obj, name, value)
 
     # set up original varatts for the following dim, var
     varnames = dimensionless_var
