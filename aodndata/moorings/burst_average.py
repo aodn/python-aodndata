@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 from netCDF4 import Dataset, date2num, num2date
 
-from ncwriter import DatasetTemplate
+from ncwriter.imos_template import ImosTemplate
 from aodndata.moorings.classifiers import MooringsFileClassifier
 from aodndata.common.util import get_git_revision_script_url
 
@@ -258,28 +258,36 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
     time_burst_vals = burst_vars.values()[0]['time_mean']
     tmp_netcdf_dir = tempfile.mkdtemp()
 
-    output_netcdf_file_path = os.path.join(tmp_netcdf_dir,
-                                           generate_netcdf_burst_filename(input_netcdf_file_path, burst_vars))
-    output_netcdf_obj = Dataset(output_netcdf_file_path, "w", format="NETCDF4")
+    template_json = os.path.join(os.path.dirname(__file__), 'burst_average_template.json')
+    template = ImosTemplate.from_json(template_json)
+    template.outfile = os.path.join(tmp_netcdf_dir, generate_netcdf_burst_filename(input_netcdf_file_path, burst_vars))
+    # output_netcdf_obj = Dataset(output_netcdf_file_path, "w", format="NETCDF4")
 
     # read gatts from input, add them to output. Some gatts will be overwritten
-    input_gatts = input_netcdf_obj.__dict__.keys()
-    gatt_to_dispose = ['author', 'file_version_quality_control', 'quality_control_set',
+    gatt_to_dispose = ['author', 'author_email', 'file_version', 'file_version_quality_control', 'quality_control_set',
                        'compliance_checker_version', 'compliance_checker_last_updated',
                        'quality_control_log']
+    update_gatts = {k: v
+                    for k, v in input_netcdf_obj.__dict__.items()
+                    if k not in gatt_to_dispose
+                    }
+    template.global_attributes.update(update_gatts)
 
-    for gatt in input_gatts:
-        if gatt not in gatt_to_dispose:
-            setattr(output_netcdf_obj, gatt, getattr(input_netcdf_obj, gatt))
+    # create title attribute
+    product = ''
+    if 'WQM' in input_netcdf_obj.instrument:
+        product = 'biogeochemical'
+    elif 'CTD' in input_netcdf_obj.instrument:
+        product = 'moored CTD'
+    template.global_attributes['title'] = 'Burst-averaged {product} measurements at {site_code}'.format(
+        product=product, site_code=input_netcdf_obj.site_code
+    )
 
-    if 'WQM' in output_netcdf_obj.instrument:
-        output_netcdf_obj.title = 'Burst-averaged biogeochemical measurements at %s' % input_netcdf_obj.site_code
-    elif 'CTD' in output_netcdf_obj.instrument:
-        output_netcdf_obj.title = 'Burst-averaged moored CTD measurements at %s' % input_netcdf_obj.site_code
+    template.global_attributes['input_file'] = input_file_rel_path
+    template.add_date_created_attribute()
 
-    m = re.match('.*\.nc', input_file_rel_path)
-    output_netcdf_obj.input_file = m.group()
-    output_netcdf_obj.date_created = DATE_UTC_NOW.strftime("%Y-%m-%dT%H:%M:%SZ")
+    template.to_netcdf(template.outfile)
+    output_netcdf_obj = template.ncobj
 
     depth_burst_mean_val = burst_vars['DEPTH']['var_mean']
     if np.isnan(depth_burst_mean_val).all():
@@ -366,12 +374,6 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
         output_var_sd[:] = np.ma.masked_invalid(burst_vars[var]['var_sd'])
         output_var_num_obs[:] = np.ma.masked_invalid(burst_vars[var]['var_num_obs'])
 
-    # add global attributes from template
-    template_json = os.path.join(os.path.dirname(__file__), 'burst_average_template.json')
-    template = DatasetTemplate.from_json(template_json)
-    for name, value in template.global_attributes.items():
-        setattr(output_netcdf_obj, name, value)
-
     # set up original varatts for the following dim, var
     varnames = dimensionless_var
     varnames.append('TIME')
@@ -419,9 +421,9 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
     output_netcdf_obj.close()
     input_netcdf_obj.close()
 
-    shutil.move(output_netcdf_file_path, output_dir)
+    shutil.move(template.outfile, output_dir)
     shutil.rmtree(tmp_netcdf_dir)
-    return os.path.join(output_dir, os.path.basename(output_netcdf_file_path))
+    return os.path.join(output_dir, os.path.basename(template.outfile))
 
 
 def args():
