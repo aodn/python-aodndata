@@ -40,6 +40,7 @@ ENTRY_POINTS = {
         'dest_path_deakin_bathymetry = aodndata.deakin.deakin_bathymetry:dest_path_deakin_bathymetry',
         'dest_path_oa = aodndata.csiro.ocean_acidification:dest_path_oa',
         'dest_path_soop_xbt_nrt = aodndata.soop.soop_xbt_nrt:dest_path_soop_xbt_nrt',
+        'dest_path_srs_oc_ljco_aeronet = aodndata.srs.srs_oc_ljco_aeronet:dest_path_srs_oc_ljco_aeronet',
         'dest_path_srs_surface_waves = aodndata.srs.srs_surface_waves:dest_path_srs_surface_waves'
     ],
     'pipeline.module_versions': [
