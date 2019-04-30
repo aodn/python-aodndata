@@ -13,6 +13,8 @@ import shutil
 import sys
 import tempfile
 import time
+
+from collections import OrderedDict
 from datetime import datetime
 from math import isnan
 
@@ -23,8 +25,6 @@ from netCDF4 import Dataset, date2num, num2date
 from ncwriter.imos_template import ImosTemplate
 from aodndata.moorings.classifiers import MooringsFileClassifier
 from aodndata.common.util import get_git_revision_script_url
-
-DATE_UTC_NOW = datetime.utcnow()
 
 
 def get_input_file_rel_path(input_netcdf_file_path):
@@ -220,26 +220,28 @@ def burst_average_data(time_values, var_values, var_qc_exclusion):
     return burst_var
 
 
-def generate_netcdf_burst_filename(input_netcdf_file_path, burst_vars):
+def generate_netcdf_burst_filename(input_netcdf_file_path, template):
     """
-    generate the filename of a burst average netcdf for both CTD and WQM
+    Generate the filename of a burst average netcdf for both CTD and WQM. Template should already have
+    the time variable fully defined (calendar, units, data values).
     """
-    netcdf_file_obj = Dataset(input_netcdf_file_path, 'r')
-    site_code = netcdf_file_obj.site_code
     input_netcdf_name = os.path.basename(input_netcdf_file_path)
     pattern = re.compile("^(IMOS_.*)_([0-9]{8}T[0-9]{6}Z)_(.*)_(FV0[0-9])_(.*)_END")
     match_group = pattern.match(input_netcdf_name)
 
-    time_burst_vals = burst_vars.values()[0]['time_mean']
-    time_min = num2date(time_burst_vals, netcdf_file_obj['TIME'].units,
-                        netcdf_file_obj['TIME'].calendar).min().strftime('%Y%m%dT%H%M%SZ')
-    time_max = num2date(time_burst_vals, netcdf_file_obj['TIME'].units,
-                        netcdf_file_obj['TIME'].calendar).max().strftime('%Y%m%dT%H%M%SZ')
+    site_code = template.global_attributes['site_code']
+
+    time_range = template.get_data_range('TIME')
+    time = template.variables['TIME']
+    time_range = num2date(time_range, time.get('units'), time.get('calendar', 'gregorian'))
+    timestamp_format = '%Y%m%dT%H%M%SZ'
+    time_min = time_range[0].strftime(timestamp_format)
+    time_max = time_range[1].strftime(timestamp_format)
+    time_created = template.date_created.strftime(timestamp_format)
+
     burst_filename = "%s_%s_%s_FV02_%s-burst-averaged_END-%s_C-%s.nc" % (match_group.group(1), time_min,
                                                                          site_code, match_group.group(5),
-                                                                         time_max,
-                                                                         DATE_UTC_NOW.strftime("%Y%m%dT%H%M%SZ"))
-    netcdf_file_obj.close()
+                                                                         time_max, time_created)
     return burst_filename
 
 
@@ -260,8 +262,6 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
 
     template_json = os.path.join(os.path.dirname(__file__), 'burst_average_template.json')
     template = ImosTemplate.from_json(template_json)
-    template.outfile = os.path.join(tmp_netcdf_dir, generate_netcdf_burst_filename(input_netcdf_file_path, burst_vars))
-    # output_netcdf_obj = Dataset(output_netcdf_file_path, "w", format="NETCDF4")
 
     # read gatts from input, add them to output. Some gatts will be overwritten
     gatt_to_dispose = ['author', 'author_email', 'file_version', 'file_version_quality_control', 'quality_control_set',
@@ -286,139 +286,134 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
     template.global_attributes['input_file'] = input_file_rel_path
     template.add_date_created_attribute()
 
-    template.to_netcdf(template.outfile)
-    output_netcdf_obj = template.ncobj
-
-    depth_burst_mean_val = burst_vars['DEPTH']['var_mean']
-    if np.isnan(depth_burst_mean_val).all():
-        output_netcdf_obj.geospatial_vertical_min = np.double(input_netcdf_obj['NOMINAL_DEPTH'][:])
-        output_netcdf_obj.geospatial_vertical_max = np.double(input_netcdf_obj['NOMINAL_DEPTH'][:])
-    else:
-        output_netcdf_obj.geospatial_vertical_min = np.nanmin(depth_burst_mean_val)
-        output_netcdf_obj.geospatial_vertical_max = np.nanmax(depth_burst_mean_val)
-
-    # set up dimensions and variables
-    output_netcdf_obj.createDimension("TIME", len(time_burst_vals))
-    var_time = output_netcdf_obj.createVariable("TIME", input_netcdf_obj["TIME"].dtype,
-                                                ("TIME",))
+    # set up variables
 
     dimensionless_var = list_dimensionless_var(input_netcdf_obj)
     # No FillValue for dimensions as for IMOS conventions
     for var in dimensionless_var:
-        output_netcdf_obj.createVariable(var, input_netcdf_obj[var].dtype)
-        output_netcdf_obj[var][:] = input_netcdf_obj[var][:]
+        template.variables[var] = {
+            '_datatype': input_netcdf_obj[var].dtype,
+            '_data': input_netcdf_obj[var][:]
+        }
 
     for var in burst_vars.keys():
-        var_dtype = input_netcdf_obj[var].dtype
-        fillvalue = getattr(input_netcdf_obj[var], '_FillValue', None)
+        input_var_object = input_netcdf_obj[var]
+        var_dtype = input_var_object.dtype
+        fillvalue = getattr(input_var_object, '_FillValue', None)
 
-        output_var_mean = output_netcdf_obj.createVariable(var, var_dtype, ("TIME",), fill_value=fillvalue)
-        output_var_min = output_netcdf_obj.createVariable('%s_burst_min' % var, var_dtype, ("TIME",),
-                                                          fill_value=fillvalue)
-        output_var_max = output_netcdf_obj.createVariable('%s_burst_max' % var, var_dtype, ("TIME",),
-                                                          fill_value=fillvalue)
-        output_var_sd = output_netcdf_obj.createVariable('%s_burst_sd' % var, var_dtype, ("TIME",),
-                                                         fill_value=fillvalue)
-        output_var_num_obs = output_netcdf_obj.createVariable('%s_num_obs' % var, "i4", ("TIME",))
+        var_att_template = OrderedDict({'_dimensions': ['TIME'],
+                                        '_datatype': var_dtype,
+                                        '_FillValue': fillvalue})
+
+        for outvar in (var, var+'_burst_min', var+'_burst_max', var+'_burst_sd'):
+            template.variables[outvar] = var_att_template.copy()
+        template.variables[var+'_num_obs'] = OrderedDict({'_dimensions': ['TIME'],
+                                                          '_datatype': 'int16'
+                                                          })
+
+        output_var_mean = template.variables[var]
+        output_var_min = template.variables[var+'_burst_min']
+        output_var_max = template.variables[var+'_burst_max']
+        output_var_sd = template.variables[var+'_burst_sd']
+        output_var_num_obs = template.variables[var+'_num_obs']
 
         # set up 'bonus' var att from original FV01 file into FV02
-        input_var_object = input_netcdf_obj[var]
-        input_var_list_att = input_var_object.__dict__.keys()
         var_att_disposable = ['name', 'long_name',
                               '_FillValue', 'ancillary_variables',
                               'ChunkSize', 'coordinates']
-        for var_att in [att for att in input_var_list_att if att not in var_att_disposable]:
-            setattr(output_netcdf_obj[var], var_att, getattr(input_netcdf_obj[var], var_att))
-            if var_att != 'comment':
-                setattr(output_var_min, var_att, getattr(input_netcdf_obj[var], var_att))
-                setattr(output_var_max, var_att, getattr(input_netcdf_obj[var], var_att))
-                setattr(output_var_sd, var_att, getattr(input_netcdf_obj[var], var_att))
+        update_atts = input_var_object.__dict__.copy()
+        for att in var_att_disposable:
+            update_atts.pop(att, None)
+
+        output_var_mean.update(update_atts)
+        update_atts.pop('comment', None)
+        output_var_min.update(update_atts)
+        output_var_max.update(update_atts)
+        output_var_sd.update(update_atts)
 
         # make sur standard_deviation variable doesnt have a standard_name attr
-        if hasattr(output_var_sd, 'standard_name'):
-            delattr(output_var_sd, 'standard_name')
+        output_var_sd.pop('standard_name', None)
 
-        setattr(output_var_mean, 'coordinates', getattr(input_netcdf_obj[var], 'coordinates', ''))
-        setattr(output_var_mean, 'ancillary_variables',
-                ('%s_num_obs %s_burst_sd %s_burst_min %s_burst_max' % (var, var, var, var)))
+        output_var_mean.update([
+            ('coordinates', getattr(input_var_object, 'coordinates', '')),
+            ('ancillary_variables', ('{var}_num_obs {var}_burst_sd {var}_burst_min {var}_burst_max'.format(var=var)))
+        ])
 
-        setattr(output_var_mean, 'cell_methods', 'TIME: mean')
-        setattr(output_var_min, 'cell_methods', 'TIME: minimum')
-        setattr(output_var_max, 'cell_methods', 'TIME: maximum')
-        setattr(output_var_sd, 'cell_methods', 'TIME: standard_deviation')
+        output_var_mean['cell_methods'] = 'TIME: mean'
+        output_var_min['cell_methods'] = 'TIME: minimum'
+        output_var_max['cell_methods'] = 'TIME: maximum'
+        output_var_sd['cell_methods'] = 'TIME: standard_deviation'
 
-        setattr(output_var_sd, 'long_name', 'Standard deviation of values in burst, after rejection of flagged data')
-        setattr(output_var_num_obs, 'long_name', 'Number of observations included in the averaging process')
-        setattr(output_var_min, 'long_name', 'Minimum data value in burst, after rejection of flagged data')
-        setattr(output_var_max, 'long_name', 'Maximum data value in burst, after rejection of flagged data')
-        setattr(output_var_mean, 'long_name', 'Mean of %s values in burst, after rejection of flagged data' % (
-            getattr(input_netcdf_obj[var], 'standard_name',
-                    getattr(input_netcdf_obj[var], 'long_name', ''))))
+        output_var_sd['long_name'] = 'Standard deviation of values in burst, after rejection of flagged data'
+        output_var_num_obs['long_name'] = 'Number of observations included in the averaging process'
+        output_var_min['long_name'] = 'Minimum data value in burst, after rejection of flagged data'
+        output_var_max['long_name'] = 'Maximum data value in burst, after rejection of flagged data'
+        output_var_mean['long_name'] = 'Mean of %s values in burst, after rejection of flagged data' % (
+            getattr(input_var_object, 'standard_name', getattr(input_var_object, 'long_name', '')))
 
-        output_var_num_obs.units = "1"
-        var_units = getattr(input_netcdf_obj[var], 'units')
+        output_var_num_obs['units'] = "1"
+        var_units = getattr(input_var_object, 'units')
         if var_units:
-            output_var_mean.units = var_units
-            output_var_min.units = var_units
-            output_var_max.units = var_units
-            output_var_sd.units = var_units
+            output_var_mean['units'] = var_units
+            output_var_min['units'] = var_units
+            output_var_max['units'] = var_units
+            output_var_sd['units'] = var_units
 
-        var_stdname = getattr(input_netcdf_obj[var], 'standard_name', '')
+        var_stdname = getattr(input_var_object, 'standard_name', '')
         if var_stdname != '':
-            output_var_num_obs.standard_name = "%s number_of_observations" % var_stdname
+            output_var_num_obs['standard_name'] = "%s number_of_observations" % var_stdname
 
         # set up var values
-        output_var_mean[:] = np.ma.masked_invalid(burst_vars[var]['var_mean'])
-        output_var_min[:] = np.ma.masked_invalid(burst_vars[var]['var_min'])
-        output_var_max[:] = np.ma.masked_invalid(burst_vars[var]['var_max'])
-        output_var_sd[:] = np.ma.masked_invalid(burst_vars[var]['var_sd'])
-        output_var_num_obs[:] = np.ma.masked_invalid(burst_vars[var]['var_num_obs'])
+        output_var_mean['_data'] = np.ma.masked_invalid(burst_vars[var]['var_mean'])
+        output_var_min['_data'] = np.ma.masked_invalid(burst_vars[var]['var_min'])
+        output_var_max['_data'] = np.ma.masked_invalid(burst_vars[var]['var_max'])
+        output_var_sd['_data'] = np.ma.masked_invalid(burst_vars[var]['var_sd'])
+        output_var_num_obs['_data'] = np.ma.masked_invalid(burst_vars[var]['var_num_obs'])
 
     # set up original varatts for the following dim, var
     varnames = dimensionless_var
     varnames.append('TIME')
-    for varname in varnames:
-        for varatt in input_netcdf_obj[varname].__dict__.keys():
-            output_netcdf_obj.variables[varname].setncattr(varatt, getattr(input_netcdf_obj[varname], varatt))
+    for var in varnames:
+        template.variables[var].update(input_netcdf_obj[var].__dict__)
+
     time_comment = '%s. Time stamp corresponds to the middle of the burst measurement.' % getattr(
         input_netcdf_obj['TIME'], 'comment', '')
-    output_netcdf_obj.variables['TIME'].comment = time_comment.lstrip('. ')
-
-    time_burst_val_dateobj = num2date(time_burst_vals, input_netcdf_obj['TIME'].units,
-                                      input_netcdf_obj['TIME'].calendar)
-    output_netcdf_obj.time_coverage_start = time_burst_val_dateobj.min().strftime('%Y-%m-%dT%H:%M:%SZ')
-    output_netcdf_obj.time_coverage_end = time_burst_val_dateobj.max().strftime('%Y-%m-%dT%H:%M:%SZ')
+    template.variables['TIME']['comment'] = time_comment.lstrip('. ')
 
     # append original gatt to burst average gatt
-    gatt = 'comment'
-    if hasattr(input_netcdf_obj, gatt):
-        setattr(output_netcdf_obj, gatt, getattr(input_netcdf_obj, gatt))
+    if hasattr(input_netcdf_obj, 'comment'):
+        template.global_attributes['comment'] = input_netcdf_obj.comment
 
     gatt = 'history'
-    setattr(output_netcdf_obj, gatt,
-            ('%s. %s' % (getattr(input_netcdf_obj, gatt, ''), 'Created %s' % time.ctime(time.time()))).lstrip('. '))
+    template.global_attributes[gatt] = '{old}. Created {new}'.format(old=getattr(input_netcdf_obj, gatt, ''),
+                                                                     new=time.ctime(time.time())
+                                                                     ).lstrip('. ')
 
     gatt = 'abstract'
-    setattr(output_netcdf_obj,
-            gatt,
-            ('%s. %s' % (getattr(output_netcdf_obj, gatt, ''),
-                         'Data from the bursts have been cleaned and averaged to create data products.'
-                         ' This file is one such product.')
-             ).lstrip('. ')
-            )
+    template.global_attributes[gatt] = '{old}. {new}'.format(old=getattr(input_netcdf_obj, gatt, ''),
+                                                             new='Data from the bursts have been cleaned and averaged '
+                                                                 'to create this product.'
+                                                             ).lstrip('. ')
 
     # add burst keywords
     gatt = 'keywords'
     keywords_burst = 'AVERAGED, BINNED'
-    setattr(output_netcdf_obj, gatt, ('%s, %s' % (getattr(input_netcdf_obj, gatt, ''), keywords_burst)).lstrip(', '))
+    template.global_attributes[gatt] = '{old}, {new}'.format(old=getattr(input_netcdf_obj, gatt, ''),
+                                                             new=keywords_burst
+                                                             ).lstrip(', ')
 
     # add values to variables
-    output_netcdf_obj['TIME'][:] = np.ma.masked_invalid(time_burst_vals)
+    template.variables['TIME']['_data'] = np.ma.masked_invalid(time_burst_vals)
 
-    github_comment = 'Product created with %s' % get_git_revision_script_url(os.path.realpath(__file__))
-    output_netcdf_obj.lineage = ('%s. %s' % (getattr(output_netcdf_obj, 'lineage', ''), github_comment)).lstrip('. ')
+    github_comment = ' Product created with ' + get_git_revision_script_url(os.path.realpath(__file__))
+    template.global_attributes['lineage'] += github_comment
 
-    output_netcdf_obj.close()
+    try:
+        template.add_extent_attributes(lat_var=None, lon_var=None)
+    except ValueError:
+        template.add_extent_attributes(vert_var='NOMINAL_DEPTH', lat_var=None, lon_var=None)
+
+    template.to_netcdf(os.path.join(tmp_netcdf_dir, generate_netcdf_burst_filename(input_netcdf_file_path, template)))
     input_netcdf_obj.close()
 
     shutil.move(template.outfile, output_dir)
