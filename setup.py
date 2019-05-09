@@ -38,6 +38,7 @@ ENTRY_POINTS = {
         'dest_path_aodn_wave_dm = aodndata.aodn_wave_dm.aodn_wave_dm:dest_path_aodn_wave_dm',
         'dest_path_cars = aodndata.csiro.cars:dest_path_cars',
         'dest_path_deakin_bathymetry = aodndata.deakin.deakin_bathymetry:dest_path_deakin_bathymetry',
+        'dest_path_soop_rad_aodn = aodndata.curtin.soop_rad_aodn:dest_path_soop_rad_aodn',
         'dest_path_oa = aodndata.csiro.ocean_acidification:dest_path_oa',
         'dest_path_soop_xbt_nrt = aodndata.soop.soop_xbt_nrt:dest_path_soop_xbt_nrt',
         'dest_path_srs_oc_ljco_aeronet = aodndata.srs.srs_oc_ljco_aeronet:dest_path_srs_oc_ljco_aeronet',
