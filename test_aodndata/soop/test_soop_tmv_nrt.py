@@ -29,7 +29,10 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
-        self.assertEqual(f_log.publish_type, PipelineFilePublishType.NO_ACTION)
+        self.assertEqual(f_log.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/2018/',
+                                      os.path.basename(MOORING_LOG_10secs)),
+                         f_log.archive_path)
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
@@ -46,7 +49,10 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
-        self.assertEqual(f_log.publish_type, PipelineFilePublishType.NO_ACTION)
+        self.assertEqual(f_log.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/2018/',
+                                      os.path.basename(TRANSECT_LOG_10secs)),
+                         f_log.archive_path)
 
         f_nc = handler.file_collection[1]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
@@ -63,7 +69,10 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
-        self.assertEqual(f_log.publish_type, PipelineFilePublishType.NO_ACTION)
+        self.assertEqual(f_log.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/2013/',
+                                      os.path.basename(TRANSECT_LOG_1sec)),
+                         f_log.archive_path)
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
@@ -111,12 +120,14 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
         self.assertTrue(f_nc.is_stored)
 
     def test_push_good_zip(self):
-
         handler = self.run_handler(GOOD_ZIP,
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
-        self.assertEqual(f_log.publish_type, PipelineFilePublishType.NO_ACTION)
+        self.assertEqual(f_log.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(
+            'IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/2018/EPA_SOOP_TMV1_D2M_20181101090420.log',
+            f_log.archive_path)
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
@@ -143,7 +154,10 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
-        self.assertEqual(f_log.publish_type, PipelineFilePublishType.NO_ACTION)
+        self.assertEqual(f_log.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/2018/',
+                                      os.path.basename(DIFFERENT_TIME_FORMAT_LOG)),
+                         f_log.archive_path)
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
@@ -155,12 +169,14 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
         self.assertTrue(f_nc.is_stored)
 
     def test_push_good_zip_with_meta(self):
-
         handler = self.run_handler(GOOD_ZIP_WITH_META,
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
-        self.assertEqual(f_log.publish_type, PipelineFilePublishType.NO_ACTION)
+        self.assertEqual(f_log.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(
+            'IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/2019/EPA_SOOP_TMV1_D2M_20190302105320.log',
+            f_log.archive_path)
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
