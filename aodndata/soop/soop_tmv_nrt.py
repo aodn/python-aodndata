@@ -192,10 +192,10 @@ class SoopTmvNrtHandler(HandlerBase):
                     "SOOP NRT input logfile has incorrect naming '{name}'.".format(name=log_filename))
 
             # case to create netcdf files from log files
-            f_log.publish_type = PipelineFilePublishType.NO_ACTION
+            f_log.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
             if len(f_txt):
                 f_txt = f_txt[0]
-                f_txt.publish_type = PipelineFilePublishType.NO_ACTION
+                f_txt.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
                 netcdf_filepath = netcdf_writer(f_log.src_path, self.temp_dir, self.ship_callsign_ls[SHIP_CODE],
                                                 meta_path=f_txt.src_path)
             else:
@@ -218,9 +218,16 @@ class SoopTmvNrtHandler(HandlerBase):
                                                                      ship_name=self.ship_callsign_ls[SHIP_CODE]),
                                     'realtime')
 
-        with Dataset(filepath,  mode='r') as nc_obj:
-            time_period = nc_obj.time_period
-            product_type = nc_obj.product_type
-            year = datetime.strptime(nc_obj.time_coverage_start, '%Y-%m-%dT%H:%M:%SZ').strftime("%Y")
+        # archive files
+        if not filepath.endswith('.nc'):
+            match = re.search('\d{14}', os.path.basename(filepath))
+            date = datetime.strptime(match.group(), '%Y%m%d%H%M%S').date()
+            return os.path.join(soop_tmv_dir, str(date.year), os.path.basename(filepath))
 
-        return os.path.join(soop_tmv_dir, product_type, time_period, year, os.path.basename(filepath))
+        else:
+            with Dataset(filepath,  mode='r') as nc_obj:
+                time_period = nc_obj.time_period
+                product_type = nc_obj.product_type
+                year = datetime.strptime(nc_obj.time_coverage_start, '%Y-%m-%dT%H:%M:%SZ').strftime("%Y")
+
+            return os.path.join(soop_tmv_dir, product_type, time_period, year, os.path.basename(filepath))
