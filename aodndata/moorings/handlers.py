@@ -1,9 +1,12 @@
 import re
 
-from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType, PipelineFileCollection
+from netCDF4 import Dataset
+
+from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType, PipelineFileCollection, PipelineFile
 from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError
 
 from aodndata.moorings.classifiers import MooringsFileClassifier, AbosFileClassifier
+from aodndata.moorings.burst_average import create_burst_average_netcdf
 
 
 class MooringsHandler(HandlerBase):
@@ -27,6 +30,9 @@ class MooringsHandler(HandlerBase):
         """Check that every input file is valid according to the include/exclude regex patterns. Any non-matching
         file will be left with publish_type UNSET after the _resolve step.
 
+        If there are any netCDF files from burst-sampling instruments in the collection, create the burst-averaged
+        version of each and add them to the collection.
+
         :return: None
         """
         self.logger.info("Checking for invalid files and adjusting check/publish properties.")
@@ -38,6 +44,23 @@ class MooringsHandler(HandlerBase):
                     names=map(str, invalid_files.get_attribute_list('name'))
                 )
             )
+
+        # Burst-processing for FV01 files with burst-sampling global attributes
+        burst_files = (self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
+                                           .filter_by_attribute_regex('name', r'.*_FV01_')
+                       )
+        for f in burst_files:
+            with Dataset(f.src_path, mode='r') as D:
+                has_interval = hasattr(D, 'instrument_burst_interval')
+                has_duration = hasattr(D, 'instrument_burst_duration')
+            if not (has_interval and has_duration):
+                continue
+
+            self.logger.info("Burst-processing {f.name}".format(f=f))
+            product_path = create_burst_average_netcdf(f.src_path, self.products_dir)
+            product_file = PipelineFile(product_path, file_update_callback=self._file_update_callback)
+            product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+            self.file_collection.add(product_file)
 
     def postprocess(self):
         """Set error_cleanup_regexes so that if the same file was uploaded previously and failed, it can now be
