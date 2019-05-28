@@ -96,7 +96,7 @@ class FaimmsHandler(HandlerBase):
 
     @staticmethod
     def remove_md5_from_filename(filepath):
-        return re.sub('.[0-9a-z]*.nc$', '.nc', filepath)
+        return re.sub('\.[0-9a-z]*.nc$', '.nc', filepath)
 
     def dest_path(self, filepath):
         netcdf_file_obj = Dataset(filepath, mode='r')

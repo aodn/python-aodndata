@@ -56,7 +56,7 @@ class AnmnNrsAimsHandler(HandlerBase):
 
     @staticmethod
     def remove_md5_from_filename(filepath):
-        return re.sub('.[0-9a-z]*.nc$', '.nc', filepath)
+        return re.sub('\.[0-9a-z]*.nc$', '.nc', filepath)
 
     @staticmethod
     def add_site_code_to_filename(filepath, site_code):
