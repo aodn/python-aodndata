@@ -1,5 +1,4 @@
 from itertools import chain
-from pkg_resources import EntryPoint
 from setuptools import setup, find_packages
 
 from aodndata.version import __version__
@@ -56,8 +55,7 @@ INSTALL_REQUIRES = [
     'cc-plugin-imos>=1.3.0',
     'matplotlib==1.5.1',
     'ncwriter>=0.2.0',
-    'pandas==0.22.0',
-    'GitPython==2.0.6'
+    'pandas==0.22.0'
 ]
 
 TESTS_REQUIRE = [
