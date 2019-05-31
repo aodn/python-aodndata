@@ -11,20 +11,21 @@ env:
   global:
     - MPLBACKEND=agg
     - AODNFETCHER_URL="git+https://github.com/aodn/python-aodnfetcher.git@master"
-    - NCWRITER_URL="jenkins://imos-binary/ncwriter_prod?pattern=^.*\.whl$"
-    - CC_PLUGIN_IMOS_URL="jenkins://imos-binary/cc_plugin_imos_prod?pattern=^.*\.whl$"
 
 matrix:
   include:
-    - name: "aodncore_build"
-      env: AODNCORE_URL="jenkins://imos-binary/aodncore_build?pattern=^.*\.whl$"
-    - name: "aodncore_systest"
-      env: AODNCORE_URL="jenkins://imos-binary/aodncore_systest?pattern=^.*\.whl$"
-    - name: "aodncore_prod"
-      env: AODNCORE_URL="jenkins://imos-binary/aodncore_prod?pattern=^.*\.whl$"
+    - name: "build artefacts"
+      env: STAGE="build"
+    - name: "systest artefacts"
+      env: STAGE="systest"
+    - name: "prod artefacts"
+      env: STAGE="prod"
 
 before_install:
   - pip install ${AODNFETCHER_URL}
+  - export AODNCORE_URL="jenkins://imos-binary/aodncore_$STAGE?pattern=^.*\.whl$"
+  - export NCWRITER_URL="jenkins://imos-binary/ncwriter_$STAGE?pattern=^.*\.whl$"
+  - export CC_PLUGIN_IMOS_URL="jenkins://imos-binary/cc_plugin_imos_$STAGE?pattern=^.*\.whl$"
 
 install:
   - pip install $(aodnfetcher ${CC_PLUGIN_IMOS_URL} | python -c "import sys, json; print json.load(sys.stdin)['${CC_PLUGIN_IMOS_URL}']['local_file']")
