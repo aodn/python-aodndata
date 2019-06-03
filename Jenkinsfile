@@ -23,8 +23,8 @@ pipeline {
             stages {
                 stage('test') {
                     steps {
-                        sh 'pip install --user -r requirements.aodn.txt'
-                        sh 'pip install --user -e . .[testing]'
+                        sh 'scripts/install_dependencies.sh'
+                        sh 'pip install --user -e .[testing]'
                         sh 'python setup.py test'
                     }
                 }

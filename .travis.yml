@@ -10,7 +10,6 @@ addons:
 env:
   global:
     - MPLBACKEND=agg
-    - AODNFETCHER_URL="git+https://github.com/aodn/python-aodnfetcher.git@master"
 
 matrix:
   include:
@@ -21,17 +20,8 @@ matrix:
     - name: "prod artefacts"
       env: STAGE="prod"
 
-before_install:
-  - pip install ${AODNFETCHER_URL}
-  - export AODNCORE_URL="jenkins://imos-binary/aodncore_$STAGE?pattern=^.*\.whl$"
-  - export NCWRITER_URL="jenkins://imos-binary/ncwriter_$STAGE?pattern=^.*\.whl$"
-  - export CC_PLUGIN_IMOS_URL="jenkins://imos-binary/cc_plugin_imos_$STAGE?pattern=^.*\.whl$"
-
 install:
-  - pip install $(aodnfetcher ${CC_PLUGIN_IMOS_URL} | python -c "import sys, json; print json.load(sys.stdin)['${CC_PLUGIN_IMOS_URL}']['local_file']")
-  - pip install $(aodnfetcher ${AODNCORE_URL} | python -c "import sys, json; print json.load(sys.stdin)['${AODNCORE_URL}']['local_file']")
-  - pip install $(aodnfetcher ${NCWRITER_URL} | python -c "import sys, json; print json.load(sys.stdin)['${NCWRITER_URL}']['local_file']")
-  - pip install -r requirements.txt
+  - ./scripts/install_dependencies.sh
   - pip install coverage
   - pip install codecov
 
