@@ -1,10 +1,12 @@
 import os
 import re
-from datetime import datetime
 
 from aodncore.pipeline.exceptions import InvalidFileFormatError
 from aodncore.pipeline.handlerbase import HandlerBase
 from netCDF4 import Dataset
+
+from aodndata.aims.common import get_main_var_folder_name, get_product_version, get_site_code, get_year, \
+    remove_md5_from_filename
 
 
 class FaimmsHandler(HandlerBase):
@@ -13,45 +15,7 @@ class FaimmsHandler(HandlerBase):
         self.allowed_extensions = ['.nc', '.dir_manifest']
 
     @staticmethod
-    def get_main_faimms_var(filepath):
-        netcdf_file_obj = Dataset(filepath, mode='r')
-        variables = netcdf_file_obj.variables.keys()
-        netcdf_file_obj.close()
-
-        del variables[variables.index('TIME')]
-        del variables[variables.index('LATITUDE')]
-        del variables[variables.index('LONGITUDE')]
-
-        if 'NOMINAL_DEPTH' in variables:
-            del variables[variables.index('NOMINAL_DEPTH')]
-
-        qc_var = [s for s in variables if '_quality_control' in s]
-        if qc_var != []:
-            del variables[variables.index(qc_var[0])]
-
-        return variables[0]
-
-    def get_main_var_folder_name(self, filepath):
-        main_var = self.get_main_faimms_var(filepath)
-        netcdf_file_obj = Dataset(filepath, mode='r')
-        var_folder_name = netcdf_file_obj.variables[main_var].long_name.replace(' ', '_')
-        aims_channel_id = netcdf_file_obj.aims_channel_id
-
-        if hasattr(netcdf_file_obj.variables[main_var], 'sensor_depth'):
-            sensor_depth = netcdf_file_obj.variables[main_var].sensor_depth
-            retval = '%s@%sm_channel_%s' % (var_folder_name, str(sensor_depth), str(aims_channel_id))
-        else:
-            retval = '%s_channel_%s' % (var_folder_name, str(aims_channel_id))
-
-        netcdf_file_obj.close()
-        return retval
-
-    @staticmethod
     def get_faimms_site_name(filepath):
-        netcdf_file_obj = Dataset(filepath, mode='r')
-        site_code = netcdf_file_obj.site_code
-        netcdf_file_obj.close()
-
         site_codes = {'DAV': 'Davies_Reef',
                       'OI': 'Orpheus_Island',
                       'OTI': 'One_Tree_Island',
@@ -60,6 +24,7 @@ class FaimmsHandler(HandlerBase):
                       'LIZ': 'Lizard_Island',
                       'HI': 'Heron_Island'}
 
+        site_code = get_site_code(filepath)
         main_site_code = [site for site in site_codes.keys() if site in site_code]
 
         if len(main_site_code) != 0:
@@ -71,9 +36,8 @@ class FaimmsHandler(HandlerBase):
 
     @staticmethod
     def get_faimms_platform_type(filepath):
-        netcdf_file_obj = Dataset(filepath, mode='r')
-        site_code = netcdf_file_obj.site_code
-        netcdf_file_obj.close()
+        with Dataset(filepath, mode='r') as netcdf_file_obj:
+            site_code = netcdf_file_obj.site_code
 
         if 'SF' in site_code:
             site_code_number = re.findall(r'\d+', site_code)
@@ -94,25 +58,14 @@ class FaimmsHandler(HandlerBase):
 
         return os.path.join(site_name, platform_type)
 
-    @staticmethod
-    def remove_md5_from_filename(filepath):
-        return re.sub('.[0-9a-z]*.nc$', '.nc', filepath)
-
     def dest_path(self, filepath):
-        netcdf_file_obj = Dataset(filepath, mode='r')
-        file_version = netcdf_file_obj.file_version
-        main_var_folder = self.get_main_var_folder_name(filepath)
-
-        if file_version == "Level 0 - Raw data":
-            level_name = 'NO_QAQC'
-        elif file_version == 'Level 1 - Quality Controlled Data':
-            level_name = 'QAQC'
-
-        year = datetime.strptime(netcdf_file_obj.time_coverage_start, '%Y-%m-%dT%H:%M:%SZ').strftime("%Y")
-        netcdf_file_obj.close()
+        year = get_year(filepath)
+        main_var_folder = get_main_var_folder_name(filepath)
+        level_name = get_product_version(filepath)
 
         site_name_path = self.get_main_faimms_site_name_path(filepath)
-        filepath = self.remove_md5_from_filename(os.path.basename(filepath))
+        filepath = remove_md5_from_filename(os.path.basename(filepath))
+
         relative_netcdf_path = os.path.join('IMOS', 'FAIMMS', site_name_path, main_var_folder, year, level_name,
                                             filepath)
 
