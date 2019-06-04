@@ -1,5 +1,4 @@
 from itertools import chain
-from pkg_resources import EntryPoint
 from setuptools import setup, find_packages
 
 from aodndata.version import __version__
@@ -46,7 +45,8 @@ ENTRY_POINTS = {
     ],
     'pipeline.module_versions': [
         'aodndata = aodndata.version:__version__',
-        'cc-plugin-imos = cc_plugin_imos:__version__'
+        'cc-plugin-imos = cc_plugin_imos:__version__',
+        'ncwriter = ncwriter:__version__'
     ]
 }
 
@@ -54,7 +54,7 @@ INSTALL_REQUIRES = [
     'aodncore>=0.24.0',
     'cc-plugin-imos>=1.3.0',
     'matplotlib==1.5.1',
-    'ncwriter>=0.1.0',
+    'ncwriter>=0.2.0',
     'pandas==0.22.0'
 ]
 
