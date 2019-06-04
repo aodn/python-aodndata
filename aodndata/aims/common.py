@@ -5,20 +5,19 @@ from netCDF4 import Dataset
 
 
 def get_main_var(filepath):
-    netcdf_file_obj = Dataset(filepath, mode='r')
-    variables = netcdf_file_obj.variables.keys()
-    netcdf_file_obj.close()
+    with Dataset(filepath, mode='r') as netcdf_file_obj:
+        variables = netcdf_file_obj.variables.keys()
 
-    del variables[variables.index('TIME')]
-    del variables[variables.index('LATITUDE')]
-    del variables[variables.index('LONGITUDE')]
+    variables.remove('TIME')
+    variables.remove('LATITUDE')
+    variables.remove('LONGITUDE')
 
     if 'NOMINAL_DEPTH' in variables:
-        del variables[variables.index('NOMINAL_DEPTH')]
+        variables.remove('NOMINAL_DEPTH')
 
     qc_var = [s for s in variables if '_quality_control' in s]
     if qc_var != []:
-        del variables[variables.index(qc_var[0])]
+        variables.remove(qc_var[0])  # there is only ONE main variable per NetCDF
 
     return variables[0]
 
