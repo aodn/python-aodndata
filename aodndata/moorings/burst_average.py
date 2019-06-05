@@ -17,6 +17,7 @@ import time
 from collections import OrderedDict
 from datetime import datetime
 from math import isnan
+from pkg_resources import resource_filename
 
 import numpy as np
 import pandas as pd
@@ -25,6 +26,9 @@ from netCDF4 import Dataset, date2num, num2date
 from ncwriter.imos_template import ImosTemplate
 from aodndata.moorings.classifiers import MooringsFileClassifier
 from aodndata.version import __version__
+
+
+TEMPLATE_JSON = resource_filename('aodndata', 'templates/moorings_burst_average_template.json')
 
 
 def get_input_file_rel_path(input_netcdf_file_path):
@@ -260,8 +264,7 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
     time_burst_vals = burst_vars.values()[0]['time_mean']
     tmp_netcdf_dir = tempfile.mkdtemp()
 
-    template_json = os.path.join(os.path.dirname(__file__), 'burst_average_template.json')
-    template = ImosTemplate.from_json(template_json)
+    template = ImosTemplate.from_json(TEMPLATE_JSON)
 
     # read gatts from input, add them to output. Some gatts will be overwritten
     gatt_to_dispose = ['author', 'author_email', 'file_version', 'file_version_quality_control', 'quality_control_set',
