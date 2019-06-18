@@ -83,6 +83,7 @@
       "_datatype": "float64",
       "standard_name": "sea_water_turbidity",
       "long_name": "sea_water_turbidity",
+      "comment": "spiritCountToEngPP.m: turbidity in NTU derived from WetLabs ECO-FLNTU bio-optical sensor raw counts measurements using calibration_formula.",
       "units": "1",
       "_FillValue": 999999.0,
       "valid_min": 0.0,
@@ -92,7 +93,8 @@
     "CPHL": {
       "_dimensions": ["TIME"],
       "_datatype": "float64",
-      "long_name": "mass_concentration_of_inferred_chlorophyll_from_relative_fluorescence_units_in_sea_water_concentration_of_chlorophyll_in_sea_water",
+      "long_name": "mass_concentration_of_inferred_chlorophyll_from_relative_fluorescence_units_in_sea_water",
+      "comment": "spiritCountToEngPP.m: artificial chlorophyll data derived from WetLabs ECO-FLNTU bio-optical sensor raw counts measurements using calibration_formula. Originally expressed in ug/l, 1l = 0.001m3 was assumed.",
       "units": "mg m-3",
       "_FillValue": 999999.0,
       "valid_min": 0.0,
