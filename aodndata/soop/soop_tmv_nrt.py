@@ -210,7 +210,7 @@ class SoopTmvNrtHandler(HandlerBase):
 
         if SHIP_CODE not in self.ship_callsign_ls:
             raise RuntimeError(
-                "Missing vessel callsign {callsign} from vocabulary'.".format(callsign=SHIP_CODE))
+                "Missing vessel callsign {callsign} from vocabulary.".format(callsign=SHIP_CODE))
 
         self.soop_tmv_dir = os.path.join('IMOS', 'SOOP', 'SOOP-TMV',
                                          '{ship_code}_{ship_name}'.format(ship_code=SHIP_CODE,

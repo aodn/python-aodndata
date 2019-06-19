@@ -115,7 +115,9 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
         NetCDF lands to ERROR since it is a 10secs file. Only 1sec NetCDF are pushed to S3
         """
         netcdf_path = netcdf_writer(MOORING_LOG_10secs, self.temp_dir, 'Spirit-of-Tasmania-1')
-        self.run_handler_with_exception(InvalidFileContentError, netcdf_path)
+        self.run_handler_with_exception(InvalidFileContentError,
+                                        netcdf_path,
+                                        custom_params={'ship_callsign_ls': ship_callsign_ls})
 
     def test_push_10secs_no_meta_zip(self):
         """ Test to push a 10secs zip file not containing a metadata txt file
