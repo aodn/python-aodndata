@@ -15,6 +15,7 @@ GOOD_10SECS_ZIP = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20181101090420.log.
 GOOD_10SECS_ZIP_WITH_META = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20190302105320.zip')
 GOOD_1SEC_ZIP = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_DEV_20190222181410.log.1SecRaw.zip')
 DIFFERENT_TIME_FORMAT_LOG = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_M2S_20180805220350.log')
+MOORING_LOG_10SECS_WITH_COORD_GAP =os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_MEL_20141006052223.log')
 
 ship_callsign_ls = {'VLST': 'Spirit-of-Tasmania-1'}
 SOOP_TMV_NRT_DIR = 'IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/'
@@ -24,6 +25,26 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
     def setUp(self):
         self.handler_class = SoopTmvNrtHandler
         super(TestSoopTmvNrtHandler, self).setUp()
+
+    def test_push_mooring_10secs_with_coordinate_gap_log(self):
+        """ Test to push a 10secs mooring file log file missing coordinates at the start of the file. This is mainly to
+        test we return the correct value of get_measurement_frequency
+        NetCDF is NOT added to the collection
+        log file is ARCHIVE_ONLY
+        """
+        handler = self.run_handler(MOORING_LOG_10SECS_WITH_COORD_GAP,
+                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   custom_params={'ship_callsign_ls': ship_callsign_ls})
+
+        f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
+        self.assertEqual(f_log.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(os.path.join(SOOP_TMV_NRT_DIR, 'mooring', '10secs', '2014', 'logs',
+                                      os.path.basename(MOORING_LOG_10SECS_WITH_COORD_GAP)),
+                         f_log.archive_path)
+
+        # 10 secs NetCDF aren't added to the collection
+        f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
+        self.assertEqual(0, len(f_nc))
 
     def test_push_mooring_10secs_log(self):
         """ Test to push a 10secs mooring log file triggering the creation of a NetCDF
