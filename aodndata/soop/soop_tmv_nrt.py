@@ -28,7 +28,8 @@ NC_JSON_TEMPLATE_TRAJECTORY = resource_filename("aodndata", "templates/soop_tmv_
 
 def parse_log_file(log_path):
     df = pd.read_csv(log_path, header=None,
-                     engine='python')
+                     engine='python',
+                     error_bad_lines=False)
     df.columns = ["TIME", "status_flag", "product_code", "distance_from_port_km",
                   "LATITUDE", "LONGITUDE", "TEMP", "PSAL", "CPHL", "TURB"]
 
@@ -51,7 +52,14 @@ def parse_log_file(log_path):
 
 
 def get_measurement_frequency(df):
-    return (df.index[1] - df.index[0]) / np.timedelta64(1, 's')
+    """
+    SOOP TMV NRT log files can have some of their records missing latitude and longitude values, which are disregarded
+    in the panda df. This results in not necessarely having a time difference of 10 secs or 1 sec between each data
+    point. We take then the gradiant, and take the median of this value
+    :param df:
+    :return: the median time frequency of a panda dataframe
+    """
+    return df.index.to_series().diff().dt.total_seconds().median()
 
 
 def transform_count_to_real_val(df):
@@ -85,8 +93,9 @@ def transform_count_to_real_val(df):
 def netcdf_writer(log_path, output_dir, ship_name, meta_path=[]):
     if meta_path != []:
         with open(meta_path, 'r') as f:
-            meta_data = json.loads('\n'.join([row for row in f.readlines() if len(row.split('#')) == 1]))  # remove comments
-            for ii in range(len( meta_data['calibration'])):
+            meta_data = json.loads(
+                '\n'.join([row for row in f.readlines() if len(row.split('#')) == 1]))  # remove comments
+            for ii in range(len(meta_data['calibration'])):
                 if meta_data['calibration'][ii]['item'] == 'EFLO':
                     calibration_flo_a0 = float(meta_data['calibration'][ii]['a0'])
                     calibration_flo_a1 = float(meta_data['calibration'][ii]['a1'])
@@ -278,7 +287,7 @@ class SoopTmvNrtHandler(HandlerBase):
                     f_log.archive_path = os.path.join(pre_path, 'logs', f_log.name)
 
     def dest_path(self, filepath):
-        with Dataset(filepath,  mode='r') as nc_obj:
+        with Dataset(filepath, mode='r') as nc_obj:
             measurement_frequency = nc_obj.measurement_frequency
             product_type = nc_obj.product_type
             year = datetime.strptime(nc_obj.time_coverage_start, '%Y-%m-%dT%H:%M:%SZ').strftime("%Y")
