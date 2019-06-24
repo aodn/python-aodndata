@@ -28,7 +28,8 @@ NC_JSON_TEMPLATE_TRAJECTORY = resource_filename("aodndata", "templates/soop_tmv_
 
 def parse_log_file(log_path):
     df = pd.read_csv(log_path, header=None,
-                     engine='python')
+                     engine='python',
+                     error_bad_lines=False)
     df.columns = ["TIME", "status_flag", "product_code", "distance_from_port_km",
                   "LATITUDE", "LONGITUDE", "TEMP", "PSAL", "CPHL", "TURB"]
 

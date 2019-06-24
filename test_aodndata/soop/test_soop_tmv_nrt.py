@@ -15,7 +15,8 @@ GOOD_10SECS_ZIP = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20181101090420.log.
 GOOD_10SECS_ZIP_WITH_META = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_D2M_20190302105320.zip')
 GOOD_1SEC_ZIP = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_DEV_20190222181410.log.1SecRaw.zip')
 DIFFERENT_TIME_FORMAT_LOG = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_M2S_20180805220350.log')
-MOORING_LOG_10SECS_WITH_COORD_GAP =os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_MEL_20141006052223.log')
+MOORING_LOG_10SECS_WITH_COORD_GAP = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_MEL_20141006052223.log')
+TOO_MANY_FIELDS_1SEC_ZIP = os.path.join(TEST_ROOT, 'EPA_SOOP_TMV1_M2D_20131124083240.log.1SecRaw.log.zip')
 
 ship_callsign_ls = {'VLST': 'Spirit-of-Tasmania-1'}
 SOOP_TMV_NRT_DIR = 'IMOS/SOOP/SOOP-TMV/VLST_Spirit-of-Tasmania-1/realtime/'
@@ -127,6 +128,33 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
             os.path.join(SOOP_TMV_NRT_DIR, 'transect/1sec/2013/'
                          'IMOS_SOOP-TMV_TSUB_20131006T082254Z_VLST_FV00_transect-D2M_END-20131006T190430Z.nc'),
             f_nc.dest_path)
+
+        self.assertTrue(f_nc.is_checked)
+        self.assertTrue(f_nc.is_stored)
+
+    def test_push_transect_1sec_too_many_fields_zip(self):
+        """ Test to push a 1sec transect zip file which has some wrong data lines (11 fields rather than 10). The bad
+        data lines are just dis-regarded, and a NetCDF is still generated
+        NetCDF is HARVEST_UPLOAD
+        log file is UPLOAD_ONLY
+        """
+        handler = self.run_handler(TOO_MANY_FIELDS_1SEC_ZIP,
+                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   custom_params={'ship_callsign_ls': ship_callsign_ls})
+
+        f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
+        self.assertEqual(f_log.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
+        self.assertEqual(os.path.join(SOOP_TMV_NRT_DIR, 'transect', '1sec', '2013', 'logs',
+                                      os.path.basename(TOO_MANY_FIELDS_1SEC_ZIP.replace('.zip', ''))),
+                         f_log.dest_path)
+
+        f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(
+            os.path.join(SOOP_TMV_NRT_DIR, 'transect/1sec/2013/',
+                         'IMOS_SOOP-TMV_TSUB_20131124T083416Z_VLST_FV00_transect-M2D_END-20131124T130724Z.nc'),
+            f_nc.dest_path)
+        self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
 
         self.assertTrue(f_nc.is_checked)
         self.assertTrue(f_nc.is_stored)
