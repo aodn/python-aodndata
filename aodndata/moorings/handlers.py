@@ -53,7 +53,8 @@ class MooringsHandler(HandlerBase):
             with Dataset(f.src_path, mode='r') as D:
                 has_interval = hasattr(D, 'instrument_burst_interval')
                 has_duration = hasattr(D, 'instrument_burst_duration')
-            if not (has_interval and has_duration):
+                is_adcp = ('DIST_ALONG_BEAMS' in D.dimensions or 'HEIGHT_ABOVE_SENSOR' in D.dimensions)
+            if not (has_interval and has_duration) or is_adcp:
                 continue
 
             self.logger.info("Burst-processing {f.name}".format(f=f))
