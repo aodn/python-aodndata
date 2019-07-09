@@ -4,7 +4,7 @@ import re
 from aodncore.pipeline.exceptions import InvalidFileNameError
 from aodncore.util.misc import get_pattern_subgroups_from_string
 
-PREFIX_PATH = 'IMOS/SRS/Surface-Waves/Wave-Wind-Altimetry-DM00'
+PREFIX_PATH = 'IMOS/SRS/Surface-Waves/Wave-Wind-Altimetry-DM'
 VALID_SATS = ["CRYOSAT-2",
               "ENVISAT",
               "ERS-1",
@@ -29,8 +29,8 @@ def dest_path_srs_surface_waves(filepath):
                                 (?P<latitude>[0-9]{{3}})
                                 (?P<latitude_dir>(S|N))-
                                 (?P<longitude>[0-9]{{3}})E-
-                                DM00\.nc$
-                                """.format(platforms), re.VERBOSE)
+                                DM(?P<version_number>[0-9]{{2}})
+                                \.nc$""".format(platforms), re.VERBOSE)
 
     file_basename = os.path.basename(filepath)
     if FILE_PATTERN.match(file_basename):
@@ -38,6 +38,7 @@ def dest_path_srs_surface_waves(filepath):
         lat = int(fields['latitude'])
         lon = int(fields['longitude'])
         lat_dir = fields['latitude_dir']
+        version_number = fields['version_number']
 
         def round_down_div(val, divisor=20):
             """ return div rounded value of a value"""
@@ -60,4 +61,6 @@ def dest_path_srs_surface_waves(filepath):
             "file name: \"{filename}\" not matching regex to deduce dest_path".format(
                 filename=os.path.basename(filepath)))
 
-    return os.path.join(PREFIX_PATH, fields['platform_code'], coord_dirname, file_basename)
+    return os.path.join("{prefix}{version_number}".format(prefix=PREFIX_PATH,
+                                                          version_number=version_number),
+                        fields['platform_code'], coord_dirname, file_basename)
