@@ -25,6 +25,16 @@ SOOP_NRT_LOG_PATTERN = re.compile(r"""
 NC_JSON_TEMPLATE_MOORING = resource_filename("aodndata", "templates/soop_tmv_nrt_nc_template_mooring.json")
 NC_JSON_TEMPLATE_TRAJECTORY = resource_filename("aodndata", "templates/soop_tmv_nrt_nc_template_trajectory.json")
 
+CHLU_PARAMS = {
+    'blank': 40,
+    'scale': 0.0123
+}
+
+TURB_PARAMS = {
+    'blank': 50,
+    'scale': 0.006
+}
+
 
 def parse_log_file(log_path):
     df = pd.read_csv(log_path, header=None,
@@ -71,14 +81,10 @@ def transform_count_to_real_val(df):
     measurement_frequency = get_measurement_frequency(df)
     if measurement_frequency == 1:
         # transform FLU count data to CPHL
-        chluBlank = 55
-        chluScale = 0.0123
-        df['CPHL'] = (df['CPHL'].values - chluBlank) * chluScale
+        df['CPHL'] = (df['CPHL'].values - CHLU_PARAMS['blank']) * CHLU_PARAMS['scale']
 
         # transform TURB count data to TURB
-        turbBlank = 50
-        turbScale = 0.006
-        df['TURB'] = (df['TURB'].values - turbBlank) * turbScale
+        df['TURB'] = (df['TURB'].values - TURB_PARAMS['blank']) * TURB_PARAMS['scale']
     elif measurement_frequency == 10:
         # Nothing to transform
         pass
@@ -191,6 +197,13 @@ def netcdf_writer(log_path, output_dir, ship_name, meta_path=[]):
             date_created=pd.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"))
     })
 
+    if measurement_frequency == 1:
+        template.variables['CPHL']['calibration_blank'] = CHLU_PARAMS['blank']
+        template.variables['CPHL']['calibration_scale'] = CHLU_PARAMS['scale']
+
+        template.variables['TURB']['calibration_blank'] = TURB_PARAMS['blank']
+        template.variables['TURB']['calibration_scale'] = TURB_PARAMS['scale']
+
     nc_filename = 'IMOS_SOOP-TMV_TSUB_{time_start}_{vessel_code}_FV0{product_number}_{product_type}-{product_code}_END-{time_end}.nc'.format(
         time_start=df.index.strftime('%Y%m%dT%H%M%SZ')[0],
         time_end=df.index.strftime('%Y%m%dT%H%M%SZ')[-1],
@@ -231,10 +244,10 @@ class SoopTmvNrtHandler(HandlerBase):
         f_nc = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
 
         """
-        * 10secs zip files (*.log + *.txt [calibration]) -> *.zip is pushed to ARCHIVE_DIR 
-                                                            (netcdf still needs to be generated to deduce path). 
-                                                            *.log, *.txt and *.nc NOT added to the collection        
-        * 1sec zip files (*.log only) -> *.log & *.nc pushed to S3. *.zip not added to the collection 
+        * 10secs zip files (*.log + *.txt [calibration]) -> *.zip is pushed to ARCHIVE_DIR
+                                                            (netcdf still needs to be generated to deduce path).
+                                                            *.log, *.txt and *.nc NOT added to the collection
+        * 1sec zip files (*.log only) -> *.log & *.nc pushed to S3. *.zip not added to the collection
         """
 
         if len(f_nc):
