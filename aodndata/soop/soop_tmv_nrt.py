@@ -198,11 +198,13 @@ def netcdf_writer(log_path, output_dir, ship_name, meta_path=[]):
     })
 
     if measurement_frequency == 1:
-        template.variables['CPHL']['calibration_blank'] = CHLU_PARAMS['blank']
-        template.variables['CPHL']['calibration_scale'] = CHLU_PARAMS['scale']
+        template.variables['CPHL'].update({'calibration_blank': CHLU_PARAMS['blank'],
+                                           'calibration_scale': CHLU_PARAMS['scale']
+                                           })
 
-        template.variables['TURB']['calibration_blank'] = TURB_PARAMS['blank']
-        template.variables['TURB']['calibration_scale'] = TURB_PARAMS['scale']
+        template.variables['TURB'].update({'calibration_blank': TURB_PARAMS['blank'],
+                                           'calibration_scale': TURB_PARAMS['scale']
+                                           })
 
     nc_filename = 'IMOS_SOOP-TMV_TSUB_{time_start}_{vessel_code}_FV0{product_number}_{product_type}-{product_code}_END-{time_end}.nc'.format(
         time_start=df.index.strftime('%Y%m%dT%H%M%SZ')[0],
