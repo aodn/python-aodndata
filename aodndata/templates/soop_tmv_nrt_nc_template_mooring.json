@@ -88,6 +88,7 @@
       "_FillValue": 999999.0,
       "valid_min": 0.0,
       "valid_max": 1000.0,
+      "calibration_formula": "value_engineering_units = (counts - calibration_blank) x calibration_scale",
       "coordinates": "TIME LATITUDE LONGITUDE NOMINAL_DEPTH"
     },
     "CPHL": {
@@ -99,6 +100,7 @@
       "_FillValue": 999999.0,
       "valid_min": 0.0,
       "valid_max": 3.0,
+      "calibration_formula": "value_engineering_units = (counts - calibration_blank) x calibration_scale",
       "coordinates": "TIME LATITUDE LONGITUDE NOMINAL_DEPTH"
     }
   },
