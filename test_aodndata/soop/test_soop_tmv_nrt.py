@@ -3,6 +3,7 @@ import os
 from aodncore.pipeline import FileType, PipelineFilePublishType, PipelineFileCheckType
 from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError
 from aodncore.testlib import HandlerTestCase
+from netCDF4 import Dataset
 
 from aodndata.soop.soop_tmv_nrt import netcdf_writer, SoopTmvNrtHandler
 
@@ -107,6 +108,10 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
                          'IMOS_SOOP-TMV_TSUB_20131006T082254Z_VLST_FV00_transect-D2M_END-20131006T190430Z.nc'),
             f_nc.dest_path)
         self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+
+        with Dataset(os.path.join(handler._upload_store_runner.broker.prefix, f_nc.dest_path)) as nc_obj:
+            self.assertTrue(hasattr(nc_obj['CPHL'], 'calibration_blank'))
+            self.assertTrue(hasattr(nc_obj['CPHL'], 'scale'))
 
         self.assertTrue(f_nc.is_checked)
         self.assertTrue(f_nc.is_stored)
