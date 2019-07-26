@@ -9,7 +9,7 @@ HERE=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 echo "##### Creating/updating virtual environment #####"
 virtualenv ${VIRTUALENV_DIR}
 source ${VIRTUALENV_DIR}/bin/activate
-${HERE}/install_dependencies.sh
+${HERE}/install_dependencies.sh -n
 
 cat<<EOF
 Virtual environment successfully created at: ${VIRTUALENV_DIR}
