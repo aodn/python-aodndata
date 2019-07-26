@@ -5,6 +5,7 @@ ARG BUILDER_UID=9999
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
+    git \
     libfreetype6-dev \
     libpng-dev \
     libudunits2-dev \
