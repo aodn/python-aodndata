@@ -25,11 +25,11 @@ class AnfogHandler(HandlerBase):
     - FV00 and rawfiles.zip : archived
     - RT files deleted from S3
 
-  ####  A record of all glider deployment is kept in a .csv file (HarvestListing.csv).
-  ####  The deployment status is updated upon recovery and reception of delayed mode data.
-     Text files *_status.txt trigger update of harvest_listing table in database
-     and deletion of files when a deployment is renamed
+    A record of glider deployments is kept in a .csv file (HarvestListing.csv).
+    Status text files trigger update of harvest_listing table in database and action follow depending on the status
     """
+    VALID_STATUS = ['in_progress', 'delayed-mode', 'renamed',
+                    'RECOVERED', 'ABORTED', 'POTENTIALLY-LOST', 'LOST', 'clear-files']
 
     def __init__(self, *args, **kwargs):
         super(AnfogHandler, self).__init__(*args, **kwargs)
@@ -45,19 +45,46 @@ class AnfogHandler(HandlerBase):
         Processes ZIP, single NetCDF and single TXT files
         Set destination path based on info in NetCDF files
         Update ANFOG deployment status record table stored in anforg_rt schema
-        Valid status are : 'in-progress', 'completed', 'delayed-mode', 'renamed'
-        Status are either set by pipeline case : 'in_progress'
-        or read from status text file : 'completed', 'renamed', 'delayed-mode'
 
-        These status text files are manually pushed in incoming by POs, NOT by facility. File requirements:
+        Status are set by processing a status text file except for status 'in-progress' set by the pipeline.
+
+        These status text files are either pushed to incoming by POs manually(delayed-mode, renamed), or by facility.
+        Difference in letter case reflect the origin of the status file:
+        => lower case status files manually pushed in incoming by POs, or set by pipeline
+        => uppercase status files uploded by facility
+        Status are converted to lowercase and written to the HarvestLising file.
+
+        File requirements:
         1- File name like : PL-Mission_status.txt (PL platform: SG seaglider or SL slocum_glider)
-                           For ex: SL-Yamba20180609_completed.txt
-                           Note that the message cannot contain undercores otherwise the process fails
-                           (in function get_destination)
-        2- File must be size > 0 but it's content is not relevant.
+                           For ex:
+                           SL-Portland20190218_renamed.txt
+                           SL-Portland20190218_RECOVERED.txt
 
-        Status renamed used when error in deployment name (either error in date or deployement name):
-            in this case it triggers clearing of files from S3.
+        Note that the message cannot contain undercores otherwise the process fails (see function get_destination)
+
+        2- File must be size > 0 but its content is not relevant.
+
+        Valid status are : 'in-progress' : set by pipeline upon reception of first NRT file of a new NRT deployment.
+                                           No further action
+                           'delayed-mode' : set py pipeline upon reception of new DM dataset. Triggers
+                                           deletion of relevant NRT files from S3
+                           'renamed' : uploaded by PO when error in deployment name
+                                       (either error in date or deployement name). This status triggers clearing of
+                                       relevant NRT files from S3.
+                           'RECOVERED' : uploaded by facility within 12-24h of glider recovery. No further action.
+                                         No further action
+                           'ABORTED' : uploaded by facility after aborting mission and within 12-24h of glider recovery.
+                                       No further action
+                           'POTENTIALLY-LOST' : uploaded by facility when glider becomes irresponsive for extended
+                                                period. No further action
+                           'LOST' : uploaded by facility when glider is definitely lost at sea. No further action.
+                                   Note however that NRT file of lost glider should ultimately be deleted by PO
+                                   within a couple of week after reception of the lost status message using the
+                                   'cleanup' status message
+                           'cleanup-files' : uploaded by PO. Triggers deletion of relevant NRT files from S3. Used for
+                                           cleaning S3 REATLIME folder from deployments that will not be processed in
+                                           delayed-mode, for example: mission aborted with no valid data, or lost glider
+
         """
         input_file_basename = os.path.basename(self.input_file)
         if self.input_file.endswith('.txt'):
@@ -66,17 +93,20 @@ class AnfogHandler(HandlerBase):
             txt[0].publish_type = PipelineFilePublishType.NO_ACTION
             message = input_file_basename.split('_')[1].strip('.txt')
 
-            if message not in ['completed', 'renamed', 'delayed-mode']:
+            if message not in AnfogHandler.VALID_STATUS:
                 raise InvalidInputFileError("Invalid status message {m}."
-                                            "Message can be either 'delayed-mode','completed' or 'renamed'."
+                                            "Message can be either 'delayed-mode', 'renamed', 'RECOVERED'"
+                                            "'POTENTIALLY_LOST', 'LOST', 'ABORTED' or 'clear-files'"
                                             .format(m=message))
 
             self.upload_destination = AnfogFileClassifier.get_destination(self.input_file)
 
-            if message == 'renamed':
-                self.delete_previous_version('RT', 'renamed')
+            if message in ['renamed', 'clear-files']:
+                self.delete_previous_version('RT', message)
 
-            self.set_deployment_status(self.input_file, message)
+            if message != 'clear-files':
+                # the "clear-file"  message is not harvested as it is not relevant to deployment status
+                self.set_deployment_status(self.input_file, message)
 
         elif (self.file_type is FileType.ZIP) or re.match(AnfogFileClassifier.DM_REGEX, input_file_basename):
             mode = self.get_data_mode()
@@ -163,7 +193,8 @@ class AnfogHandler(HandlerBase):
 
     def set_deployment_status(self, input_file, message):
         """
-        Update the harvest_listing table of the anfog_rt_schema using the Harvestmission.csv file
+        Write message to Harvestmission.csv file. ingested in RT pieline
+        Update the anfog_rt.harvest_listing table after ingestion of csv file by RT pipeline
         Note that to be consistent with the available message in the production DB,
         dashes need to be replaced by underscore, for ex delayed-mode =>delayed_mode
         :return:  Harvestmission.csv updated with deployment specific status
@@ -175,7 +206,7 @@ class AnfogHandler(HandlerBase):
         listing_path = os.path.join(self.products_dir, AnfogFileClassifier.MISSION_LISTING)
         with open(listing_path, 'w') as f:
             f.write('deployment_name, platform_type, status' + os.linesep)
-            row = "%s,%s,%s" % (deployment, platform, message.replace('-', '_'))
+            row = "%s,%s,%s" % (deployment, platform, message.replace('-', '_').lower())
             f.write(row)
 
         product = PipelineFile(listing_path)
@@ -188,7 +219,7 @@ class AnfogHandler(HandlerBase):
         """
            In RT mode: 2 cases 1) update of deployment in progress :select previous version of a file that needs to be
                        deleted (.nc)  other files are automatically overwritten
-                       2) deletion of files when deployment name changed (status "renamed")
+                               2) cleaning RT folder :status "renamed","clear-files"
 
            In DM mode either - new DM (deployment_status = delayed_mode): delete RT deployment files
                             or
@@ -205,7 +236,7 @@ class AnfogHandler(HandlerBase):
         elif mode == 'DM' and deployment_status == 'update':
             destination = self.upload_destination
             delete_file_regex = AnfogFileClassifier.ANFOG_DM_REGEX
-        elif mode == 'RT' and deployment_status == 'renamed':
+        elif mode == 'RT' and deployment_status in ['renamed', 'clear-files']:
             destination = self.upload_destination
             delete_file_regex = '%s|%s|%s' % (AnfogFileClassifier.ANFOG_RT_REGEX,
                                               AnfogFileClassifier.RT_PNG_REGEX,
@@ -234,7 +265,7 @@ class AnfogHandler(HandlerBase):
             if re.match(delete_file_regex, previous_file.name):
                 self.file_collection.add(previous_file)
 
-                if deployment_status != 'renamed' and re.match(previous_file.name,
+                if deployment_status not in ['renamed', 'clear-files'] and re.match(previous_file.name,
                                                                os.path.basename(self.primary_nc.src_path)):
                     # removing file as it will be overwritten. Note that test is invalid in 'renamed' status
                     #  cause primary_nc not set(irrelevant)
@@ -292,6 +323,7 @@ class AnfogHandler(HandlerBase):
         # construct collection of files to upload
         upload_to_s3 = self.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.UPLOAD_TO_S3_REGEX)
         upload_to_s3.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
+
 
     def dest_path(self, filepath):
         dest_path = os.path.join(self.upload_destination, os.path.basename(filepath))
