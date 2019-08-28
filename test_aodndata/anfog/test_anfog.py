@@ -15,19 +15,27 @@ TEST_ROOT = os.path.join(os.path.dirname(__file__))
 TEST_MISSION_LIST = os.path.join(TEST_ROOT, 'HarvestmissionList.csv')
 GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_ANFOG_BCEOPSTUV_20180503T080042Z_SL210_FV01_timeseries_END-20180505T054942Z.nc')
 DSTG = os.path.join(TEST_ROOT, 'DSTO_MD_CEPSTUV_20130706T122916Z_SL090_FV01_timeseries_END-20130715T040955Z.nc')
+
 ZIP_ADAPTER = os.path.join(TEST_ROOT, 'AdapterNWS20120415.zip')
 GOOD_ZIP_DM = os.path.join(TEST_ROOT,
                            'IMOS_ANFOG_BCEOPSTUV_20180503T080042Z_SL210_FV01_timeseries_END-20180505T054942Z.zip')
 GOOD_ZIP_RT = os.path.join(TEST_ROOT, 'TwoRocks20180503a.zip')
+
 PREV_NC_RT = os.path.join(TEST_ROOT,
                           'IMOS_ANFOG_BCEOSTUV_20180503T075848Z_SL210_FV00_timeseries_END-20180504T000000Z.nc')
 PREV_PNG_TRANSECT = os.path.join(TEST_ROOT, 'unit210_b700_tser_20180503T000000-20180504T000000.png')
 PREV_PNG_MISSION = os.path.join(TEST_ROOT, 'unit210_b700_tser_mission.png')
-MISSION_STATUS = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_renamed.txt')
-MISSION_STATUS_COMPLETED = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_completed.txt')
-MISSION_STATUS_DM = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_delayed_mode.txt')
+
+MISSION_STATUS_RENAMED = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_renamed.txt')
+MISSION_STATUS_CLR = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_clear-files.txt')
+
+MISSION_STATUS_RECOVERED = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_RECOVERED.txt')
+MISSION_STATUS_DM = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_delayed-mode.txt')
+MISSION_STATUS_LOST = os.path.join(TEST_ROOT, 'SL-TwoRocks20180503a_LOST.txt')
+
 BAD_RT_ZIP = os.path.join(TEST_ROOT, 'RT_NONETCDF.zip')
 SLOCUM_RU_MISSION = os.path.join(TEST_ROOT, 'Challenger20180812.zip')
+
 
 class TestAnfogHandler(HandlerTestCase):
     """It is recommended to inherit from the HandlerTestCase class (which is itself a subclass of the standard
@@ -268,16 +276,24 @@ class TestAnfogHandler(HandlerTestCase):
         for png in pngs:
             self.assertTrue(png.is_deleted)
 
-    def test_handling_status_completed(self):
+    def test_handling_status_recovered(self):
         # test processing of product file
-        handler = self.run_handler(MISSION_STATUS_COMPLETED)
+        handler = self.run_handler(MISSION_STATUS_RECOVERED)
 
         csv = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)
         self.assertEqual(csv[0].publish_type, PipelineFilePublishType.HARVEST_ONLY)
         self.assertTrue(csv[0].is_harvested)
 
-    def test_renamed_deployment(self):
-        # test eletion of RT files when deployment renamed
+    def test_handling_status_lost(self):
+        # test processing of product file
+        handler = self.run_handler(MISSION_STATUS_RECOVERED)
+
+        csv = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)
+        self.assertEqual(csv[0].publish_type, PipelineFilePublishType.HARVEST_ONLY)
+        self.assertTrue(csv[0].is_harvested)
+
+    def test_renamed_rt_deployment(self):
+        # test deletion of RT files when deployment renamed or when cleaning files on S3
         preexisting_files = PipelineFileCollection()
 
         existing_file1 = PipelineFile(PREV_NC_RT, dest_path=os.path.join(
@@ -297,7 +313,7 @@ class TestAnfogHandler(HandlerTestCase):
         broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         broker.upload(preexisting_files)
 
-        handler = self.run_handler(MISSION_STATUS)
+        handler = self.run_handler(MISSION_STATUS_RENAMED)
 
         # Process should resuls in : input file unhandled , preexisting file should be deleted, cvs file harvested
         csv = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)
@@ -312,6 +328,48 @@ class TestAnfogHandler(HandlerTestCase):
         for png in pngs:
             self.assertEqual(png.publish_type, PipelineFilePublishType.DELETE_ONLY)
             self.assertTrue(png.is_deleted)
+
+    def test_clear_rt_deployment(self):
+
+        # TEST 'clear-files' status. process and results identical to status 'renamed'
+        preexisting_files = PipelineFileCollection()
+
+        existing_file1 = PipelineFile(PREV_NC_RT, dest_path=os.path.join(
+            'IMOS/ANFOG/REALTIME/slocum_glider/TwoRocks20180503a/', os.path.basename(PREV_NC_RT)))
+
+        existing_file2 = PipelineFile(PREV_PNG_TRANSECT, dest_path=os.path.join(
+            'IMOS/ANFOG/REALTIME/slocum_glider/TwoRocks20180503a/', os.path.basename(PREV_PNG_TRANSECT)))
+
+        preexisting_files.update([existing_file1, existing_file2])
+
+        # set the files to UPLOAD_ONLY
+        preexisting_files.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
+
+        # upload the 'preexisting_files' collection to the unit test's temporary upload location
+        broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
+        broker.upload(preexisting_files)
+
+
+        handler = self.run_handler(MISSION_STATUS_CLR)
+
+        # Process should resuls in : input file unhandled , preexisting file should be deleted
+
+
+        nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
+        self.assertEqual(nc[0].publish_type, PipelineFilePublishType.DELETE_UNHARVEST)
+        self.assertTrue(nc[0].is_deleted)
+
+        png = handler.file_collection.filter_by_attribute_id('file_type', FileType.PNG)
+        self.assertEqual(png[0].publish_type, PipelineFilePublishType.DELETE_ONLY)
+        self.assertTrue(png[0].is_deleted)
+
+    def test_handling_status_lost(self):
+        # test processing of product file.
+        handler = self.run_handler(MISSION_STATUS_LOST)
+
+        csv = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)
+        self.assertEqual(csv[0].publish_type, PipelineFilePublishType.HARVEST_ONLY)
+        self.assertTrue(csv[0].is_harvested)
 
     def test_bad_rt_status_file(self):
         # test invalid message

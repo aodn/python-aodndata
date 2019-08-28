@@ -15,6 +15,8 @@ class AnfogFileClassifier(FileClassifier):
     RT_PNG_REGEX = '.*.png$'
     ANFOG_DM_REGEX = \
         '^IMOS_ANFOG.*_[0-9]{8}T[0-9]{6}Z.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
+    ANFOG_NC_REGEX = \
+        '^IMOS_ANFOG_([^R]+)_.*[0-9]{8}T[0-9]{6}Z.*_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     DSTG_REGEX = '^DSTO_.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     DSTG_BASE = 'Department_of_Defence/DSTG'
     ADAPTER_REGEX = '^IMOS_UWA_.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
@@ -53,6 +55,7 @@ class AnfogFileClassifier(FileClassifier):
                DSTG : no attribute deployment_code, extract deployment code from title instead
            RT :exctract deployment code from title
         """
+
         name = os.path.basename(src_path)
         if re.match(cls.DSTG_REGEX, name) or re.match(cls.ANFOG_RT_REGEX, name):
             title = cls._get_nc_att(src_path, 'title')
@@ -61,7 +64,7 @@ class AnfogFileClassifier(FileClassifier):
                 raise InvalidFileContentError(
                     "Missing deployment code in {file} ".format(file=name))
 
-        elif re.match(cls.ANFOG_DM_REGEX, name) or re.match(cls.ADAPTER_REGEX, name):
+        elif re.match(cls.ANFOG_NC_REGEX, name) or re.match(cls.ADAPTER_REGEX, name):
             deployment_code = cls._get_nc_att(src_path, 'deployment_code')
         elif name.endswith('.txt'):
             # extract deployment code from filename like SL-Yamba20180609_completed.txt
