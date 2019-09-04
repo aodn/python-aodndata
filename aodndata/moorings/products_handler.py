@@ -4,6 +4,7 @@ from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, PropertyIsLike, 
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType, PipelineFileCollection, PipelineFile
 from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidFileContentError, InvalidFileNameError
+from aodncore.pipeline.files import RemotePipelineFileCollection
 from aodncore.util.wfs import ogc_filter_to_string
 
 from aodndata.moorings.classifiers import MooringsFileClassifier
@@ -61,6 +62,9 @@ class MooringsProductsHandler(HandlerBase):
             raise InvalidFileContentError(
                 "manifest file '{self.input_file}' missing information (site_code, variables)".format(self=self)
             )
+        self.logger.info(
+            "Creating products for site {self.product_site_code}, variables {self.product_variables}".format(self=self)
+        )
 
         # Find out what relevant input files are available on S3 for this site.
         filter_list = [PropertyIsEqualTo(propertyname='site_code', literal=self.product_site_code),
@@ -74,10 +78,13 @@ class MooringsProductsHandler(HandlerBase):
         # Note I need to access _wfs_broker to be able to use query_urls_for_layer() with a filter,
         # as the corresponding StateQuery method doesn't accept additional kwargs.
         # TODO: replace ._wfs_broker.query_urls_for_layer() with .query_wfs_urls_for_layer() once aodncore has been updated
-        files = self.state_query._wfs_broker.query_urls_for_layer(self.FILE_INDEX_LAYER, ogc_filter=filter)
+        input_files = self.state_query._wfs_broker.query_urls_for_layer(self.FILE_INDEX_LAYER, ogc_filter=filter)
+        self.logger.info("Downloading {n} input files".format(n=len(input_files)))
 
-        # TODO: Download input files to local cache.
-        # Use new RemotePipelineFileCollection feature
+        # Download input files to local cache.
+        input_file_collection = RemotePipelineFileCollection(input_files)
+        input_file_collection.download(self._upload_store_runner.broker, self.temp_dir)
+        # TODO: Replace temp_dir above with cache_dir?
 
         # TODO: Run compliance checks and remove non-compliant files from the input list (log them).
 
