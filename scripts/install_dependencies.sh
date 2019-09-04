@@ -20,3 +20,4 @@ pip install $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNCORE_URL} \
 pip install $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNTOOLS_URL} \
     | python -c "import json, sys; print json.load(sys.stdin)['${AODNTOOLS_URL}']['local_file']")
 pip install -r requirements.txt
+pip install -e ".[testing]"

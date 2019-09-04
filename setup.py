@@ -62,6 +62,10 @@ TESTS_REQUIRE = [
     'httpretty==0.9.6'
 ]
 
+EXTRAS_REQUIRE = {
+    'testing': TESTS_REQUIRE
+}
+
 # validate entry points
 for item in chain(ENTRY_POINTS['pipeline.handlers'], ENTRY_POINTS['pipeline.path_functions']):
     if item.count('=') != 1:
@@ -81,6 +85,7 @@ setup(
     description='AODN pipeline library',
     zip_safe=False,
     install_requires=INSTALL_REQUIRES,
+    extras_require=EXTRAS_REQUIRE,
     tests_require=TESTS_REQUIRE,
     test_suite='test_aodndata',
     entry_points=ENTRY_POINTS,
