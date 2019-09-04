@@ -15,7 +15,6 @@ class TestMooringsProductsHandler(HandlerTestCase):
     def setUp(self):
         self.handler_class = MooringsProductsHandler
         super(TestMooringsProductsHandler, self).setUp()
-        self._config.__dict__['pipeline_config']['global']['wfs_url'] = 'http://geoserver-rc.aodn.org.au/geoserver/wfs'
 
     def test_good_manifest(self):
         self.run_handler(GOOD_MANIFEST)

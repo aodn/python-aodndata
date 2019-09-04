@@ -1,6 +1,6 @@
 import json
 
-from owslib.fes import PropertyIsEqualTo, PropertyIsLike, PropertyIsNotEqualTo, And
+from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, PropertyIsLike, PropertyIsNotEqualTo, And
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType, PipelineFileCollection, PipelineFile
 from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidFileContentError, InvalidFileNameError
@@ -62,17 +62,19 @@ class MooringsProductsHandler(HandlerBase):
                 "manifest file '{self.input_file}' missing information (site_code, variables)".format(self=self)
             )
 
-        # TODO: Find out what relevant input files are available on S3 for this site.
-        # geoserver query to moorings_all_map layer (or new product-specific layer)
-        filter_list = []
-        filter_list.append(PropertyIsEqualTo(propertyname='site_code', literal=self.product_site_code))
-        filter_list.append(PropertyIsEqualTo(propertyname='file_version', literal='1'))
-        filter_list.append(PropertyIsNotEqualTo(propertyname='data_category', literal='Biogeochem_timeseries'))
-        filter_list.append(PropertyIsNotEqualTo(propertyname='data_category', literal='CTD_timeseries'))
+        # Find out what relevant input files are available on S3 for this site.
+        filter_list = [PropertyIsEqualTo(propertyname='site_code', literal=self.product_site_code),
+                       PropertyIsEqualTo(propertyname='file_version', literal='1'),
+                       PropertyIsEqualTo(propertyname='realtime', literal='false'),
+                       PropertyIsNotEqualTo(propertyname='data_category', literal='Biogeochem_profiles'),
+                       PropertyIsNotEqualTo(propertyname='data_category', literal='CTD_profiles')
+                       ]
         filter = ogc_filter_to_string(And(filter_list))
-        files = self.state_query.wfs.query_urls_for_layer(self.FILE_INDEX_LAYER, ogc_filter=filter)
-        for f in files:
-            print(f)
+
+        # Note I need to access _wfs_broker to be able to use query_urls_for_layer() with a filter,
+        # as the corresponding StateQuery method doesn't accept additional kwargs.
+        # TODO: replace ._wfs_broker.query_urls_for_layer() with .query_wfs_urls_for_layer() once aodncore has been updated
+        files = self.state_query._wfs_broker.query_urls_for_layer(self.FILE_INDEX_LAYER, ogc_filter=filter)
 
         # TODO: Download input files to local cache.
         # Use new RemotePipelineFileCollection feature
