@@ -1,0 +1,4 @@
+{
+    "site_code": "NRSROT",
+    "variables": ["TEMP", "PSAL", "DOX1", "DOX2", "CPHL"]
+}
