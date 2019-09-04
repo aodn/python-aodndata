@@ -46,7 +46,7 @@ ENTRY_POINTS = {
     'pipeline.module_versions': [
         'aodndata = aodndata.version:__version__',
         'cc-plugin-imos = cc_plugin_imos:__version__',
-        'ncwriter = ncwriter:__version__'
+        'aodntools = aodntools:__version__'
     ]
 }
 
@@ -54,13 +54,17 @@ INSTALL_REQUIRES = [
     'aodncore>=0.24.0',
     'cc-plugin-imos>=1.3.0',
     'matplotlib==1.5.1',
-    'ncwriter>=0.2.0',
+    'aodntools>=0.2.2',
     'pandas==0.22.0'
 ]
 
 TESTS_REQUIRE = [
     'httpretty==0.9.6'
 ]
+
+EXTRAS_REQUIRE = {
+    'testing': TESTS_REQUIRE
+}
 
 # validate entry points
 for item in chain(ENTRY_POINTS['pipeline.handlers'], ENTRY_POINTS['pipeline.path_functions']):
@@ -81,6 +85,7 @@ setup(
     description='AODN pipeline library',
     zip_safe=False,
     install_requires=INSTALL_REQUIRES,
+    extras_require=EXTRAS_REQUIRE,
     tests_require=TESTS_REQUIRE,
     test_suite='test_aodndata',
     entry_points=ENTRY_POINTS,

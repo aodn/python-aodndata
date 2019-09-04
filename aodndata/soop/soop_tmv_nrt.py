@@ -8,7 +8,7 @@ import pandas as pd
 from aodncore.pipeline import FileType, HandlerBase, PipelineFilePublishType, PipelineFile
 from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError
 from aodncore.util.misc import get_pattern_subgroups_from_string
-from ncwriter import DatasetTemplate
+from aodntools.ncwriter import DatasetTemplate
 from netCDF4 import date2num, Dataset
 from pkg_resources import resource_filename
 

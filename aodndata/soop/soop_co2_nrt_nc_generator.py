@@ -35,7 +35,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from aodncore.pipeline.exceptions import InvalidFileContentError
-from ncwriter import DatasetTemplate
+from aodntools.ncwriter import DatasetTemplate
 from netCDF4 import stringtochar
 from pkg_resources import resource_filename
 
