@@ -23,7 +23,7 @@ import numpy as np
 import pandas as pd
 from netCDF4 import Dataset, date2num, num2date
 
-from ncwriter.imos_template import ImosTemplate
+from aodntools.ncwriter import ImosTemplate
 from aodndata.moorings.classifiers import MooringsFileClassifier
 from aodndata.version import __version__
 
