@@ -78,7 +78,10 @@ class MooringsProductsHandler(HandlerBase):
         # Note I need to access _wfs_broker to be able to use query_urls_for_layer() with a filter,
         # as the corresponding StateQuery method doesn't accept additional kwargs.
         # TODO: replace ._wfs_broker.query_urls_for_layer() with .query_wfs_urls_for_layer() once aodncore has been updated
-        input_files = self.state_query._wfs_broker.query_urls_for_layer(self.FILE_INDEX_LAYER, ogc_filter=filter)
+        input_files = self.state_query._wfs_broker.query_urls_for_layer(self.FILE_INDEX_LAYER,
+                                                                        ogc_filter=filter,
+                                                                        url_property_name='url'
+                                                                        )
         self.logger.info("Downloading {n} input files".format(n=len(input_files)))
 
         # Download input files to local cache.
