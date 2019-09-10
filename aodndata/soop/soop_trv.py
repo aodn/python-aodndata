@@ -31,9 +31,8 @@ class SoopTrvHandler(HandlerBase):
             self.file_collection.add(file_to_delete)
 
     def get_main_soop_trv_var(self, filepath):
-        netcdf_file_obj = Dataset(filepath, mode='r')
-        nc_variables = netcdf_file_obj.variables.keys()
-        netcdf_file_obj.close()
+        with Dataset(filepath, mode='r') as netcdf_file_obj:
+            nc_variables = list(netcdf_file_obj.variables)
 
         main_var = [var for var in nc_variables if var in self.var_dict.keys()]
 

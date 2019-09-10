@@ -7,6 +7,7 @@ from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileConten
 
 from aodndata.moorings.classifiers import MooringsFileClassifier, AbosFileClassifier
 from aodndata.moorings.burst_average import create_burst_average_netcdf
+from six.moves import map
 
 
 class MooringsHandler(HandlerBase):
@@ -41,7 +42,7 @@ class MooringsHandler(HandlerBase):
         if invalid_files:
             raise InvalidFileNameError(
                 "File name(s) don't match the pattern expected for this upload location: {names}".format(
-                    names=map(str, invalid_files.get_attribute_list('name'))
+                    names=invalid_files.get_attribute_list('name')
                 )
             )
 

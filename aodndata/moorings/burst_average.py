@@ -4,7 +4,7 @@
 Burst Average Product creation from WQM and CTD FV01 files
 ./burst_average_product.py input_netcdf.nc /output_dir
 """
-
+from __future__ import print_function
 
 import argparse
 import os
@@ -26,6 +26,8 @@ from netCDF4 import Dataset, date2num, num2date
 from aodntools.ncwriter import ImosTemplate
 from aodndata.moorings.classifiers import MooringsFileClassifier
 from aodndata.version import __version__
+from six.moves import range
+from six.moves import zip
 
 
 TEMPLATE_JSON = resource_filename('aodndata', 'templates/moorings_burst_average_template.json')
@@ -141,7 +143,7 @@ def list_var_to_average(netcdf_file_obj):
     """
     return a list of variable to create a burst average for
     """
-    var_list = netcdf_file_obj.variables.keys()
+    var_list = list(netcdf_file_obj.variables)
     var_list = [x for x in var_list if not x.endswith('_quality_control')]
 
     var_to_remove = []
@@ -156,7 +158,7 @@ def list_var_to_average(netcdf_file_obj):
 
 
 def list_dimensionless_var(netcdf_file_obj):
-    var_list = netcdf_file_obj.variables.keys()
+    var_list = list(netcdf_file_obj.variables)
     dimless_var = []
     for varname in var_list:
         if len(netcdf_file_obj.variables[varname].dimensions) == 0:
@@ -189,7 +191,7 @@ def burst_average_data(time_values, var_values, var_qc_exclusion):
     var_num_obs_burst = []
 
     for idx_spike_idx, idx_spike_val in enumerate(idx_spike[:-1]):
-        index_burst_range = range(idx_spike_val, idx_spike[idx_spike_idx + 1])
+        index_burst_range = list(range(idx_spike_val, idx_spike[idx_spike_idx + 1]))
 
         # burst average of TIME variable. All the range of the burst is used
         time_mean_burst.append((time_values[index_burst_range[0]] + time_values[index_burst_range[-1]]) / 2)
@@ -261,7 +263,7 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
     INSTRUMENT_SAMPLE_INTERVAL = getattr(input_netcdf_obj, 'instrument_sample_interval', 1)
 
     burst_vars = create_burst_average_var(input_netcdf_obj)
-    time_burst_vals = burst_vars.values()[0]['time_mean']
+    time_burst_vals = list(burst_vars.values())[0]['time_mean']
     tmp_netcdf_dir = tempfile.mkdtemp()
 
     template = ImosTemplate.from_json(TEMPLATE_JSON)
@@ -434,11 +436,11 @@ def args():
 
     if not os.path.exists(vargs.input_fv01_netcdf_path):
         msg = '%s not a valid path' % vargs.input_netcdf_file_path
-        print >> sys.stderr, msg
+        print(msg, file=sys.stderr)
         sys.exit(1)
     elif not os.path.exists(vargs.output_dir):
         msg = '%s not a valid path' % vargs.output_dir
-        print >> sys.stderr, msg
+        print(msg, file=sys.stderr)
         sys.exit(1)
 
     return vargs
@@ -447,4 +449,4 @@ def args():
 if __name__ == "__main__":
     vargs = args()
     burst_file_path = create_burst_average_netcdf(vargs.input_fv01_netcdf_path, vargs.output_dir)
-    print burst_file_path
+    print(burst_file_path)

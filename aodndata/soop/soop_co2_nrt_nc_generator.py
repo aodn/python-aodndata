@@ -38,6 +38,7 @@ from aodncore.pipeline.exceptions import InvalidFileContentError
 from aodntools.ncwriter import DatasetTemplate
 from netCDF4 import stringtochar
 from pkg_resources import resource_filename
+from six.moves import range
 
 VALID_PROJECT = ['IMOS', 'FutureReefMap', 'SOOP-CO2_RT']
 INPUT_RT_PARAMETERS = {'Type', 'PcDate', 'PcTime', 'GpsShipLatitude',
@@ -246,7 +247,7 @@ def read_realtime_file(self):
     data_array = np.asarray(data)
 
     # array into dataframe
-    dataf = pd.DataFrame(data_array, columns=input_rt_parameter.keys())
+    dataf = pd.DataFrame(data_array, columns=list(input_rt_parameter))
     # check parameters
     dataf = check_parameters(dataf, platform_code_short,
                              input_rt_parameter, self.src_path)
@@ -291,7 +292,7 @@ def check_parameters(dataf, vessel_code, input_param, src_file):
         # var TYPE conversion to string outside this function
         for param in rt_input_parameters:
             if param not in set(['Type', 'PcDate', 'PcTime']):
-                dataf[param] = dataf[param].apply(pd.to_numeric, errors=coerce)
+                dataf[param] = dataf[param].apply(pd.to_numeric, errors='coerce')
 
     if all(np.isnan(dataf['GpsShipLatitude'])) or all(np.isnan(dataf['GpsShipLongitude'])):
         raise InvalidFileContentError(
@@ -304,4 +305,4 @@ if __name__ == '__main__':
     # call main function to generate to process RT files"
     netcdf_file_path = process_co2_rt()
 
-    print netcdf_file_path
+    print(netcdf_file_path)

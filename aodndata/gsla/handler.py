@@ -147,7 +147,7 @@ class GslaHandler(HandlerBase):
             raise RuntimeError('More than 1 previous version of {filename} was found on storage.'.
                                format(filename=os.path.basename(filepath)))
         elif len(res) == 1:
-            return res.keys()[0]
+            return list(res)[0]
         else:
             return False
 

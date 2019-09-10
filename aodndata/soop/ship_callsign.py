@@ -14,7 +14,11 @@ author : Besnard, Laurent
 """
 
 from aodncore.vocab.platform_code_vocab import platform_altlabels_per_preflabel
-from functools32 import lru_cache
+
+try:
+    from functools import lru_cache
+except ImportError:
+    from functools32 import lru_cache
 
 
 @lru_cache(maxsize=32)
@@ -27,10 +31,10 @@ def ship_callsign_list():
     platform_codes = platform_altlabels_per_preflabel('Vessel')
     platform_codes = {key: item.replace(' ', '-') for key, item in platform_codes.items()}
 
-    if 'FHZI' in platform_codes.keys():
+    if 'FHZI' in platform_codes:
         platform_codes['FHZI'] = 'Astrolabe'
 
-    if 'FASB' in platform_codes.keys():
+    if 'FASB' in platform_codes:
         platform_codes['FASB'] = 'Astrolabe'
 
     return platform_codes
@@ -42,7 +46,4 @@ def ship_callsign(callsign):
     returns none if the vessel name does not exist
     """
     callsigns = ship_callsign_list()
-    if callsign in callsigns.keys():
-        return callsigns[callsign]
-    else:
-        return None
+    return callsigns.get(callsign, None)

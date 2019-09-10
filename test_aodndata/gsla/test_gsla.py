@@ -7,9 +7,8 @@ from datetime import datetime
 from aodncore.pipeline import PipelineFilePublishType, FileType, PipelineFile, PipelineFileCollection
 from aodncore.pipeline.exceptions import InvalidFileFormatError, InvalidFileNameError, AttributeValidationError
 from aodncore.pipeline.storage import get_storage_broker
-from aodncore.testlib import HandlerTestCase
+from aodncore.testlib import HandlerTestCase, mock
 from aodncore.util.misc import get_pattern_subgroups_from_string
-from mock import patch
 
 from aodndata.gsla.handler import GslaHandler, GSLA_PREFIX_PATH, GSLA_REGEX, get_creation_date
 
@@ -70,7 +69,7 @@ class TestGslaHandler(HandlerTestCase):
     def test_bad_file(self):
         self.run_handler_with_exception(InvalidFileNameError, BAD_PATH)
 
-    @patch('aodndata.gsla.handler.GSLA_PREFIX_PATH', 'BAD/STORAGE')
+    @mock.patch('aodndata.gsla.handler.GSLA_PREFIX_PATH', 'BAD/STORAGE')
     def test_bad_prefix(self):
         """ test case to add allowed_dest_path_regexes to json"""
         self.run_handler_with_exception(AttributeValidationError,
@@ -162,7 +161,7 @@ class TestGslaHandler(HandlerTestCase):
         nc_gz_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)[0]
         self.assertEqual(nc_gz_file.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
 
-    @patch('aodndata.gsla.handler.GSLA_PREFIX_PATH', 'BAD/PREFIX')
+    @mock.patch('aodndata.gsla.handler.GSLA_PREFIX_PATH', 'BAD/PREFIX')
     def test_setup_upload_location_push_newer_file_bad_prefix(self):
         """
         Test case: Check creation date of incoming *.nc.gz is newer that one already on storage

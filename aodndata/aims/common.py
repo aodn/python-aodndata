@@ -6,7 +6,7 @@ from netCDF4 import Dataset
 
 def get_main_var(filepath):
     with Dataset(filepath, mode='r') as netcdf_file_obj:
-        variables = netcdf_file_obj.variables.keys()
+        variables = list(netcdf_file_obj.variables)
 
     variables.remove('TIME')
     variables.remove('LATITUDE')
