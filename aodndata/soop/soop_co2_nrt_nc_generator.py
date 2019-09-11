@@ -291,7 +291,7 @@ def check_parameters(dataf, vessel_code, input_param, src_file):
         # var TYPE conversion to string outside this function
         for param in rt_input_parameters:
             if param not in set(['Type', 'PcDate', 'PcTime']):
-                dataf[param] = dataf[param].apply(pd.to_numeric, errors=coerce)
+                dataf[param] = dataf[param].apply(pd.to_numeric)
 
     if all(np.isnan(dataf['GpsShipLatitude'])) or all(np.isnan(dataf['GpsShipLongitude'])):
         raise InvalidFileContentError(
