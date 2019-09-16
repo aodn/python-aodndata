@@ -123,4 +123,4 @@ class TestSoopCo2Handler(HandlerTestCase):
 
 
 if __name__ == '__main__':
-            unittest.main()
+    unittest.main()
