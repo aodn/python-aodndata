@@ -4,37 +4,61 @@ import re
 from aodncore.pipeline.exceptions import InvalidFileNameError
 from aodncore.util.misc import get_pattern_subgroups_from_string
 
-PREFIX_PATH = 'IMOS/SRS/Surface-Waves/Wave-Wind-Altimetry-DM00'
-VALID_SATS = ["CRYOSAT-2",
-              "ENVISAT",
-              "ERS-1",
-              "ERS-2",
-              "GEOSAT",
-              "GFO",
-              "HY-2",
-              "JASON-1",
-              "JASON-2",
-              "JASON-3",
-              "SARAL",
-              "SENTINEL-3A",
-              "TOPEX"]
+ALTI_PREFIX_PATH = 'IMOS/SRS/Surface-Waves/Wave-Wind-Altimetry-DM00'
+ALTI_VALID_SATS = ["CRYOSAT-2",
+                   "ENVISAT",
+                   "ERS-1",
+                   "ERS-2",
+                   "GEOSAT",
+                   "GFO",
+                   "HY-2",
+                   "JASON-1",
+                   "JASON-2",
+                   "JASON-3",
+                   "SARAL",
+                   "SENTINEL-3A",
+                   "TOPEX"
+                   ]
+ALTI_FILE_PATTERN = re.compile(r"""
+                            IMOS_SRS-Surface-Waves_MW_
+                            (?P<platform_code>{})_FV02_
+                            (?P<latitude>[0-9]{{3}})
+                            (?P<latitude_dir>(S|N))-
+                            (?P<longitude>[0-9]{{3}})E-
+                            DM00\.nc$
+                            """.format('|'.join(ALTI_VALID_SATS)), re.VERBOSE)
+
+SCAT_PREFIX_PATH = 'IMOS/SRS/Surface-Waves/Wind-Scatterometry-DM00'
+SCAT_VALID_SATS = ["ERS-1",
+                   "ERS-2",
+                   "QUIKSCAT",
+                   "METOP-A",
+                   "OCEANSAT-2",
+                   "METOP-B",
+                   "RAPIDSCAT"
+                   ]
+SCAT_FILE_PATTERN = re.compile(r"""
+                            IMOS_SRS-Surface-Waves_M_Wind-
+                            (?P<platform_code>{})_FV02_
+                            (?P<latitude>[0-9]{{3}})
+                            (?P<latitude_dir>(S|N))-
+                            (?P<longitude>[0-9]{{3}})E-
+                            DM00\.nc$
+                            """.format('|'.join(SCAT_VALID_SATS)), re.VERBOSE)
 
 
-def dest_path_srs_surface_waves(filepath):
-    platforms = '|'.join(VALID_SATS)
+def dest_path_srs_surface_waves_altimetry(filepath):
+    return dest_path_srs_surface_waves(filepath, ALTI_FILE_PATTERN, ALTI_PREFIX_PATH)
 
-    FILE_PATTERN = re.compile(r"""
-                                IMOS_SRS-Surface-Waves_MW_
-                                (?P<platform_code>{})_FV02_
-                                (?P<latitude>[0-9]{{3}})
-                                (?P<latitude_dir>(S|N))-
-                                (?P<longitude>[0-9]{{3}})E-
-                                DM00\.nc$
-                                """.format(platforms), re.VERBOSE)
 
+def dest_path_srs_surface_waves_scatterometry(filepath):
+    return dest_path_srs_surface_waves(filepath, SCAT_FILE_PATTERN, SCAT_PREFIX_PATH)
+
+
+def dest_path_srs_surface_waves(filepath, file_pattern, prefix_path):
     file_basename = os.path.basename(filepath)
-    if FILE_PATTERN.match(file_basename):
-        fields = get_pattern_subgroups_from_string(file_basename, FILE_PATTERN)
+    if file_pattern.match(file_basename):
+        fields = get_pattern_subgroups_from_string(file_basename, file_pattern)
         lat = int(fields['latitude'])
         lon = int(fields['longitude'])
         lat_dir = fields['latitude_dir']
@@ -60,4 +84,4 @@ def dest_path_srs_surface_waves(filepath):
             "file name: \"{filename}\" not matching regex to deduce dest_path".format(
                 filename=os.path.basename(filepath)))
 
-    return os.path.join(PREFIX_PATH, fields['platform_code'], coord_dirname, file_basename)
+    return os.path.join(prefix_path, fields['platform_code'], coord_dirname, file_basename)
