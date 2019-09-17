@@ -73,13 +73,13 @@ class MooringsProductsHandler(HandlerBase):
                        PropertyIsNotEqualTo(propertyname='data_category', literal='Biogeochem_profiles'),
                        PropertyIsNotEqualTo(propertyname='data_category', literal='CTD_profiles')
                        ]
-        filter = ogc_filter_to_string(And(filter_list))
+        ogc_filter = ogc_filter_to_string(And(filter_list))
 
         # Note I need to access _wfs_broker to be able to use query_urls_for_layer() with a filter,
         # as the corresponding StateQuery method doesn't accept additional kwargs.
         # TODO: replace ._wfs_broker.query_urls_for_layer() with .query_wfs_urls_for_layer() once aodncore has been updated
         input_files = self.state_query._wfs_broker.query_urls_for_layer(self.FILE_INDEX_LAYER,
-                                                                        ogc_filter=filter,
+                                                                        ogc_filter=ogc_filter,
                                                                         url_property_name='url'
                                                                         )
         self.logger.info("Downloading {n} input files".format(n=len(input_files)))
