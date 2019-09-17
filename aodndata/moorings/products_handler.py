@@ -7,6 +7,8 @@ from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidFile
 from aodncore.pipeline.files import RemotePipelineFileCollection
 from aodncore.util.wfs import ogc_filter_to_string
 
+from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
+
 from aodndata.moorings.classifiers import MooringsFileClassifier
 
 
@@ -77,6 +79,7 @@ class MooringsProductsHandler(HandlerBase):
 
         # Note I need to access _wfs_broker to be able to use query_urls_for_layer() with a filter,
         # as the corresponding StateQuery method doesn't accept additional kwargs.
+        # TODO: find out why this calls getCapabilities twice (and takes 40s even when response mocked with httpretty)
         # TODO: replace ._wfs_broker.query_urls_for_layer() with .query_wfs_urls_for_layer() once aodncore has been updated
         input_files = self.state_query._wfs_broker.query_urls_for_layer(self.FILE_INDEX_LAYER,
                                                                         ogc_filter=ogc_filter,
@@ -88,11 +91,15 @@ class MooringsProductsHandler(HandlerBase):
         input_file_collection = RemotePipelineFileCollection(input_files)
         input_file_collection.download(self._upload_store_runner.broker, self.temp_dir)
         # TODO: Replace temp_dir above with cache_dir?
+        input_list = input_file_collection.get_attribute_list('local_path')
 
         # TODO: Run compliance checks and remove non-compliant files from the input list (log them).
 
         # TODO: For each variable, generate product and add to file_collection.
-        # Call product code from aodntools package
+        for var in self.product_variables[:1]:
+            self.logger.info("Generating aggregated timeseries product for {var}".format(var=var))
+            product_file = main_aggregator(input_list, var, self.product_site_code, base_path=self.products_dir)
+            self.file_collection.add(product_file)
 
     dest_path = MooringsProductClassifier.dest_path
 
