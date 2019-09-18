@@ -14,7 +14,7 @@ from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
 from aodndata.moorings.products_handler import MooringsProductsHandler
 
 TEST_ROOT = os.path.dirname(__file__)
-GOOD_MANIFEST = os.path.join(TEST_ROOT, 'product_manifest.json')
+GOOD_MANIFEST = os.path.join(TEST_ROOT, 'test_product.json_manifest')
 
 GETCAPABILITIES_FILE = os.path.join(TEST_ROOT, 'getCapabilities.xml')
 GETFEATURE_FILE = os.path.join(TEST_ROOT, 'getFeature.json')

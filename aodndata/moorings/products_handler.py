@@ -39,24 +39,16 @@ class MooringsProductsHandler(HandlerBase):
 
     def __init__(self, *args, **kwargs):
         super(MooringsProductsHandler, self).__init__(*args, **kwargs)
-        if self.allowed_extensions is None:
-            self.allowed_extensions = ['.json']
+        self.allowed_extensions = ['.json_manifest']
         self.product_site_code = None
         self.product_variables = None
 
     def preprocess(self):
         """Collect available input files and create the products, adding them to the collection to be published."""
 
-        # Don't want to publish the manifest file, so remove it from the collection
-        self.file_collection.pop()
-
         # Read the manifest file and extract key parameters for product
         with open(self.input_file) as f:
-            try:
-                manifest = json.load(f)
-            except ValueError as e:
-                raise InvalidFileContentError("invalid JSON file '{self.input_file}' ({e})".format(self=self, e=e))
-
+            manifest = json.load(f)
         try:
             self.product_site_code = manifest['site_code']
             self.product_variables = manifest['variables']
