@@ -88,9 +88,15 @@ class MooringsProductsHandler(HandlerBase):
         # TODO: Run compliance checks and remove non-compliant files from the input list (log them).
 
         # TODO: For each variable, generate product and add to file_collection.
-        for var in self.product_variables[:1]:
+        for var in self.product_variables:
             self.logger.info("Generating aggregated timeseries product for {var}".format(var=var))
-            product_file = main_aggregator(input_list, var, self.product_site_code, base_path=self.products_dir)
+            product_url, errors = main_aggregator(input_list, var, self.product_site_code, base_path=self.products_dir)
+            if errors:
+                self.logger.warn(
+                    "Files were excluded from the aggregation: {error_files}".format(error_files=list(errors))
+                )
+            product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
+            product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(product_file)
 
     dest_path = MooringsProductClassifier.dest_path
