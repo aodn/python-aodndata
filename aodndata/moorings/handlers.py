@@ -7,7 +7,6 @@ from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileConten
 
 from aodndata.moorings.classifiers import MooringsFileClassifier, AbosFileClassifier
 from aodndata.moorings.burst_average import create_burst_average_netcdf
-from six.moves import map
 
 
 class MooringsHandler(HandlerBase):
