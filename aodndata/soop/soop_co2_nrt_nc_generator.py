@@ -27,9 +27,7 @@
 # SBE45Flow         TsgShipFlow             Tsg_flow_raw
 #    -             LabMainSwFlow            LabMain_sw_flow_raw
 """
-import collections
 import os
-import re
 from datetime import datetime
 
 import numpy as np
@@ -170,13 +168,10 @@ def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code,
 
     # create fixed length strings padded with space
     # create variable of type string, then convert to array of char
-    type_tmp = []
     string_10_dim = template.dimensions['string_10']
-    for id in range(len(dataf['Type'])):
-        type_tmp.append(dataf['Type'][id].ljust(string_10_dim))
 
     # convert to array of char
-    type_tmp = stringtochar(np.array(type_tmp))
+    type_tmp = stringtochar(np.array(dataf['Type'], 'S{dimelen}'.format(dimelen=string_10_dim)))
     template.variables['TYPE']['_data'] = type_tmp
 
     template.variables['TEQ_raw']['_data'] = dataf['EquTemp'].values
@@ -215,59 +210,20 @@ def read_realtime_file(self):
     Returns  : dataframe
                vessel_code_short
     """
-    data = []
-
     # check that vessel specific prefix is valid
     platform_code_short = self.name[0:2]
     assert platform_code_short in VESSEL, "File name '%s' has unknown vessel_code" % self.name
     platform_code = VESSEL[platform_code_short]
 
-    with open(self.src_path, 'r') as rt_file:
-        header_txt_file = rt_file.readline()
-        header_txt_file = (re.split(r'\t+', header_txt_file.rstrip('\r\n')))
+    dataf = pd.read_csv(self.src_path, sep='\t', error_bad_lines=False)
+    dataf.drop(dataf.loc[dataf['Type'] == 'FILTER'].index, inplace=True)  # incorrect number of delimiter
+    dataf.reset_index(inplace=True)
+    input_rt_parameter = list(dataf)
 
-        # create  an ordered dictionary of paramter name:indices
-        headers = [(header_col, header_txt_file.index(header_col))
-                   for header_col in header_txt_file]
-        input_rt_parameter = collections.OrderedDict(headers)
-
-        for line in rt_file:
-            tmp_line = re.split(r'\t+', line.rstrip('\r\n'))
-            if len(tmp_line) == len(input_rt_parameter):
-                data.append(tmp_line)
-            elif len(tmp_line) > 5 and len(tmp_line) < len(input_rt_parameter):
-                line_filled_w_nans = fill_missing_with_nan(line.rstrip('\r\n'))
-                line_filled_w_nans = re.split(r'\t+', line_filled_w_nans)
-                data.append(line_filled_w_nans)
-            else:
-                continue
-
-    # Convert list into array
-    data_array = np.asarray(data)
-
-    # array into dataframe
-    dataf = pd.DataFrame(data_array, columns=input_rt_parameter.keys())
-    # check parameters
     dataf = check_parameters(dataf, platform_code_short,
                              input_rt_parameter, self.src_path)
 
     return dataf, platform_code
-
-
-def fill_missing_with_nan(line):
-    """
-    Solve issue with timesteps containing missing fields (case in Aurora files)
-    Loop through occurences of matched pattern (here consisting of 2 consecutive tabs)
-    and insert NaN between consecutive tabs. Since re.search looks for first location of pattern)
-    insert, function iterate until expression does not produce a match
-    """
-    while re.search(r'\t\t', line) is not None:
-        m = re.search(r'\t\t', line)
-        re.sub(r'\t\t', line[:m.start() + 1] +
-               'NaN' + line[m.end() - 1:], line)
-        line = line[:m.start() + 1] + 'NaN' + line[m.end() - 1:]
-
-    return line
 
 
 def check_parameters(dataf, vessel_code, input_param, src_file):
@@ -291,7 +247,7 @@ def check_parameters(dataf, vessel_code, input_param, src_file):
         # var TYPE conversion to string outside this function
         for param in rt_input_parameters:
             if param not in set(['Type', 'PcDate', 'PcTime']):
-                dataf[param] = dataf[param].apply(pd.to_numeric, errors=coerce)
+                dataf[param] = dataf[param].apply(pd.to_numeric)
 
     if all(np.isnan(dataf['GpsShipLatitude'])) or all(np.isnan(dataf['GpsShipLongitude'])):
         raise InvalidFileContentError(
@@ -304,4 +260,4 @@ if __name__ == '__main__':
     # call main function to generate to process RT files"
     netcdf_file_path = process_co2_rt()
 
-    print netcdf_file_path
+    print(netcdf_file_path)

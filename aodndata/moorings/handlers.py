@@ -41,7 +41,7 @@ class MooringsHandler(HandlerBase):
         if invalid_files:
             raise InvalidFileNameError(
                 "File name(s) don't match the pattern expected for this upload location: {names}".format(
-                    names=map(str, invalid_files.get_attribute_list('name'))
+                    names=invalid_files.get_attribute_list('name')
                 )
             )
 

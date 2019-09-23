@@ -12,7 +12,8 @@ from aodntools.ncwriter import DatasetTemplate
 from netCDF4 import date2num, Dataset
 from pkg_resources import resource_filename
 
-from ship_callsign import ship_callsign_list
+from .ship_callsign import ship_callsign_list
+from six.moves import range
 
 SHIP_CODE = 'VLST'
 SOOP_NRT_LOG_PATTERN = re.compile(r"""
@@ -46,7 +47,7 @@ def parse_log_file(log_path):
     try:
         date_format = '%Y/%m/%d %H:%M:%S'
         df['TIME'] = pd.to_datetime(df['TIME'], format=date_format)
-    except ValueError, e:
+    except ValueError:
         date_format = '%d/%m/%Y %H:%M:%S'
         df['TIME'] = pd.to_datetime(df['TIME'], format=date_format)
 
@@ -241,9 +242,9 @@ class SoopTmvNrtHandler(HandlerBase):
                                                                           ship_name=self.ship_callsign_ls[SHIP_CODE]),
                                          'realtime')
 
-        f_txt = self.file_collection.filter_by_attribute_value('extension', '.txt')
-        f_log = self.file_collection.filter_by_attribute_value('extension', '.log')
-        f_nc = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
+        txt_files = self.file_collection.filter_by_attribute_value('extension', '.txt')
+        log_files = self.file_collection.filter_by_attribute_value('extension', '.log')
+        nc_files = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
 
         """
         * 10secs zip files (*.log + *.txt [calibration]) -> *.zip is pushed to ARCHIVE_DIR
@@ -252,13 +253,13 @@ class SoopTmvNrtHandler(HandlerBase):
         * 1sec zip files (*.log only) -> *.log & *.nc pushed to S3. *.zip not added to the collection
         """
 
-        if len(f_nc):
+        if len(nc_files):
             # case where we re-push an existing NetCDF file
-            f_nc = f_nc[0]
+            f_nc = nc_files[0]
             f_nc.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
 
-        elif len(f_log):
-            f_log = f_log[0]
+        elif len(log_files):
+            f_log = log_files[0]
             log_filename = os.path.basename(f_log.src_path)
 
             if SOOP_NRT_LOG_PATTERN.match(log_filename) is None:
@@ -266,8 +267,9 @@ class SoopTmvNrtHandler(HandlerBase):
                     "SOOP TMV NRT input logfile has incorrect naming '{name}'.".format(name=log_filename))
 
             # case to create NetCDF file from log file
-            if len(f_txt):
-                f_txt = f_txt[0]
+            f_txt = None
+            if len(txt_files):
+                f_txt = txt_files[0]
                 netcdf_filepath = netcdf_writer(f_log.src_path, self.temp_dir, self.ship_callsign_ls[SHIP_CODE],
                                                 meta_path=f_txt.src_path)
             else:
@@ -295,7 +297,8 @@ class SoopTmvNrtHandler(HandlerBase):
                     self.input_file_object.archive_path = os.path.join(pre_path, 'logs', self.input_file_object.name)
                     self.file_collection.add(self.input_file_object)
                     f_log.publish_type = PipelineFilePublishType.NO_ACTION
-                    f_txt.publish_type = PipelineFilePublishType.NO_ACTION
+                    if f_txt:
+                        f_txt.publish_type = PipelineFilePublishType.NO_ACTION
                 else:
                     # case when a 10secs log file (and not a zip) is pushed to incoming
                     f_log.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
