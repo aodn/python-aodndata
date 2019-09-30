@@ -94,9 +94,10 @@ class MooringsProductsHandler(HandlerBase):
             # TODO: Need to filter input_list to the files relevant for this var (use results of WFS query?)
             product_url, errors = main_aggregator(input_list, var, self.product_site_code, base_path=self.products_dir)
             if errors:
-                self.logger.warn(
-                    "Files were excluded from the aggregation: {error_files}".format(error_files=list(errors))
-                )
+                self.logger.warning("{n} files were excluded from the aggregation.".format(n=len(errors)))
+                for f, e in errors.items():
+                    self.logger.warning("{f}: {e}".format(f=f, e=e))
+
             product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
             product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(product_file)
