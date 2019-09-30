@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 
 from aodncore.pipeline.exceptions import InvalidFileNameError
 from aodncore.util.misc import get_pattern_subgroups_from_string
@@ -46,6 +47,16 @@ SCAT_FILE_PATTERN = re.compile(r"""
                             DM00\.nc$
                             """.format('|'.join(SCAT_VALID_SATS)), re.VERBOSE)
 
+SAR_PREFIX_PATH = 'IMOS/SRS/Surface-Waves/SAR'
+
+SAR_FILE_PATTERN = re.compile(r"""
+                              IMOS_SRS-Surface-Waves_W_
+                              (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)_
+                              (?P<platform_code>Sentinel-1A|Sentinel-1B)_FV00_
+                              (?P<wavenum>K1|K2)_END-
+                              (?P<nc_time_cov_end>[0-9]{8}T[0-9]{6}Z)\.nc$                              
+                              """, re.VERBOSE)
+
 
 def dest_path_srs_surface_waves_altimetry(filepath):
     return dest_path_srs_surface_waves(filepath, ALTI_FILE_PATTERN, ALTI_PREFIX_PATH)
@@ -85,3 +96,17 @@ def dest_path_srs_surface_waves(filepath, file_pattern, prefix_path):
                 filename=os.path.basename(filepath)))
 
     return os.path.join(prefix_path, fields['platform_code'], coord_dirname, file_basename)
+
+
+def dest_path_srs_surface_waves_sar(filepath, file_pattern=SAR_FILE_PATTERN, prefix_path=SAR_PREFIX_PATH):
+    file_basename = os.path.basename(filepath)
+    if file_pattern.match(file_basename):
+        fields = get_pattern_subgroups_from_string(file_basename, file_pattern)
+        sat = fields['platform_code']
+
+    nc_time_cov_start = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%dT%H%M%SZ')
+
+    path = os.path.join(prefix_path, sat.upper(),
+                        '%d' % nc_time_cov_start.year, '%02d' % nc_time_cov_start.month,
+                        file_basename)
+    return path
