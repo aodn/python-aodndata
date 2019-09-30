@@ -87,9 +87,11 @@ class MooringsProductsHandler(HandlerBase):
 
         # TODO: Run compliance checks and remove non-compliant files from the input list (log them).
 
-        # TODO: For each variable, generate product and add to file_collection.
+        # For each variable, generate product and add to file_collection.
         for var in self.product_variables:
             self.logger.info("Generating aggregated timeseries product for {var}".format(var=var))
+
+            # TODO: Need to filter input_list to the files relevant for this var (use results of WFS query?)
             product_url, errors = main_aggregator(input_list, var, self.product_site_code, base_path=self.products_dir)
             if errors:
                 self.logger.warn(
