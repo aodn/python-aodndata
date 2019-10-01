@@ -58,15 +58,19 @@ SAR_FILE_PATTERN = re.compile(r"""
                               """, re.VERBOSE)
 
 
-def dest_path_srs_surface_waves_altimetry(filepath):
-    return dest_path_srs_surface_waves(filepath, ALTI_FILE_PATTERN, ALTI_PREFIX_PATH)
+def dest_path_srs_surface_waves(filepath):
+    file_basename = os.path.basename(filepath)
+    if ALTI_FILE_PATTERN.match(file_basename):
+        return dest_path_alt_scat_common(filepath, ALTI_FILE_PATTERN, ALTI_PREFIX_PATH)
+    elif SCAT_FILE_PATTERN.match(file_basename):
+        return dest_path_alt_scat_common(filepath, SCAT_FILE_PATTERN, SCAT_PREFIX_PATH)
+    else:
+        raise InvalidFileNameError(
+            "file name: \"{filename}\" not matching regex to deduce dest_path".format(
+                filename=os.path.basename(filepath)))
 
 
-def dest_path_srs_surface_waves_scatterometry(filepath):
-    return dest_path_srs_surface_waves(filepath, SCAT_FILE_PATTERN, SCAT_PREFIX_PATH)
-
-
-def dest_path_srs_surface_waves(filepath, file_pattern, prefix_path):
+def dest_path_alt_scat_common(filepath, file_pattern, prefix_path):
     file_basename = os.path.basename(filepath)
     if file_pattern.match(file_basename):
         fields = get_pattern_subgroups_from_string(file_basename, file_pattern)
