@@ -4,7 +4,7 @@ from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, PropertyIsLike, 
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType, PipelineFileCollection, PipelineFile
 from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidFileContentError, InvalidFileNameError
-from aodncore.pipeline.files import RemotePipelineFileCollection
+from aodncore.pipeline.files import RemotePipelineFileCollection, RemotePipelineFile
 from aodncore.util.wfs import ogc_filter_to_string
 
 from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
@@ -72,18 +72,20 @@ class MooringsProductsHandler(HandlerBase):
         # Note I need to access _wfs_broker to be able to use query_urls_for_layer() with a filter,
         # as the corresponding StateQuery method doesn't accept additional kwargs.
         # TODO: find out why this calls getCapabilities twice (and takes 40s even when response mocked with httpretty)
-        # TODO: replace ._wfs_broker.query_urls_for_layer() with .query_wfs_urls_for_layer() once aodncore has been updated
-        input_files = self.state_query._wfs_broker.query_urls_for_layer(self.FILE_INDEX_LAYER,
-                                                                        ogc_filter=ogc_filter,
-                                                                        url_property_name='url'
-                                                                        )
-        self.logger.info("Downloading {n} input files".format(n=len(input_files)))
+        # TODO: replace ._wfs_broker.getfeature_dict() with .getfeature_dict() once aodncore has been updated
+        wfs_response = self.state_query._wfs_broker.getfeature_dict(typename=[self.FILE_INDEX_LAYER],
+                                                                    filter=ogc_filter,
+                                                                    propertyname=['url', 'variables']
+                                                                    )
+        input_file_variables = {f['properties']['url']: f['properties']['variables'].split(', ')
+                                for f in wfs_response['features']
+                                }
+        input_file_collection = RemotePipelineFileCollection(input_file_variables.keys())
 
         # Download input files to local cache.
-        input_file_collection = RemotePipelineFileCollection(input_files)
+        self.logger.info("Downloading {n} input files".format(n=len(input_file_collection)))
         input_file_collection.download(self._upload_store_runner.broker, self.temp_dir)
         # TODO: Replace temp_dir above with cache_dir?
-        input_list = input_file_collection.get_attribute_list('local_path')
 
         # TODO: Run compliance checks and remove non-compliant files from the input list (log them).
 
@@ -91,7 +93,11 @@ class MooringsProductsHandler(HandlerBase):
         for var in self.product_variables:
             self.logger.info("Generating aggregated timeseries product for {var}".format(var=var))
 
-            # TODO: Need to filter input_list to the files relevant for this var (use results of WFS query?)
+            # Filter input_list to the files relevant for this var
+            input_list = [f.local_path for f in input_file_collection
+                          if var in input_file_variables[f.dest_path]
+                          ]
+
             product_url, errors = main_aggregator(input_list, var, self.product_site_code, base_path=self.products_dir)
             if errors:
                 self.logger.warning("{n} files were excluded from the aggregation.".format(n=len(errors)))
