@@ -53,13 +53,8 @@ class TestMooringsProductsHandler(HandlerTestCase):
         upload_broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         upload_broker.upload(INPUT_FILE_COLLECTION)
 
-        self.run_handler(GOOD_MANIFEST)
-
-    def test_make_product(self):
-        input_list = INPUT_FILE_COLLECTION.get_attribute_list('local_path')
-        print("Input files:\n{input_list}".format(input_list=input_list))
-        product_file = main_aggregator(files_to_agg=input_list, var_to_agg='TEMP', site_code='NRSROT',
-                                       base_path=TEST_ROOT)
+        handler = self.run_handler(GOOD_MANIFEST)
+        self.assertEqual(len(handler.excluded_files), 1)
 
 
 if __name__ == '__main__':

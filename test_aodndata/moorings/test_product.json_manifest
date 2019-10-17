@@ -1,4 +1,4 @@
 {
     "site_code": "NRSROT",
-    "variables": ["TEMP", "PSAL"]
+    "variables": ["TEMP", "PSAL", "CHLF"]
 }

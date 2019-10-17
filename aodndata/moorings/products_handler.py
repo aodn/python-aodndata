@@ -1,3 +1,4 @@
+from collections import defaultdict
 import json
 
 from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, PropertyIsLike, PropertyIsNotEqualTo, And
@@ -90,23 +91,29 @@ class MooringsProductsHandler(HandlerBase):
         # TODO: Run compliance checks and remove non-compliant files from the input list (log them).
 
         # For each variable, generate product and add to file_collection.
+        self.excluded_files = defaultdict(set)
         for var in self.product_variables:
-            self.logger.info("Generating aggregated timeseries product for {var}".format(var=var))
-
             # Filter input_list to the files relevant for this var
             input_list = [f.local_path for f in input_file_collection
                           if var in input_file_variables[f.dest_path]
                           ]
+            self.logger.info("Aggregating {var} ({n} files)".format(var=var, n=len(input_list)))
 
             product_url, errors = main_aggregator(input_list, var, self.product_site_code, base_path=self.products_dir)
             if errors:
                 self.logger.warning("{n} files were excluded from the aggregation.".format(n=len(errors)))
                 for f, e in errors.items():
-                    self.logger.warning("{f}: {e}".format(f=f, e=e))
+                    self.excluded_files[f].update(e)
 
             product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
             product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(product_file)
+
+        # TODO: Include the list of excluded files as another table in the notification email (instead of the log)
+        if self.excluded_files:
+            self.logger.warning("Files exluded from aggregations:")
+            for f, e in self.excluded_files.items():
+                self.logger.warning("'{f}': {e}".format(f=f, e=list(e)))
 
     dest_path = MooringsProductClassifier.dest_path
 
