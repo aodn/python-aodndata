@@ -97,6 +97,8 @@ class MooringsProductsHandler(HandlerBase):
             input_list = [f.local_path for f in input_file_collection
                           if var in input_file_variables[f.dest_path]
                           ]
+            if not input_list:
+                raise InvalidFileContentError("No files to aggregate for {var}".format(var=var))
             self.logger.info("Aggregating {var} ({n} files)".format(var=var, n=len(input_list)))
 
             product_url, errors = main_aggregator(input_list, var, self.product_site_code, base_path=self.products_dir)
