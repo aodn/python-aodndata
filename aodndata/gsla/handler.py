@@ -142,7 +142,7 @@ class GslaHandler(HandlerBase):
         destination = self.dest_path(filepath)
         destination_no_creation_date = re.sub('_C-[0-9]{8}T[0-9]{6}Z.*$', '', destination)
 
-        res = self.state_query.query_storage(destination_no_creation_date)
+        res = self.state_query.query_storage(destination_no_creation_date).keys()
         if len(res) > 1:
             raise RuntimeError('More than 1 previous version of {filename} was found on storage.'.
                                format(filename=os.path.basename(filepath)))

@@ -251,7 +251,7 @@ class AnfogHandler(HandlerBase):
 
         # publish_type set according to file type: netcdf unharvest_delete,
         # everything else (png, txt, kml..) DELETE_ONLY
-        previous_file_list = self.state_query.query_storage(destination)
+        previous_file_list = self.state_query.query_storage(destination).keys()
         self.logger.info("Mode '{mode}' and Status '{status}'".format(mode=mode, status=deployment_status))
 
         for filename in previous_file_list:
