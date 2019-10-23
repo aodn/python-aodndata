@@ -28,8 +28,7 @@ pipeline {
                 }
                 stage('test') {
                     steps {
-                        sh 'scripts/install_dependencies.sh'
-                        sh 'pip install --user -e .[testing]'
+                        sh 'scripts/install_dependencies.sh --user'
                         sh 'python setup.py test'
                     }
                 }
