@@ -16,7 +16,10 @@ def mock_platform_altlabels_per_preflabel(category_name='Vessel'):
             '9V2768': 'RTM-Wakmatha',
             'FASB': 'Astrolabe',
             'FHZI': 'Astrolabe',
-            '3FLZ': 'Tropical-Islander'}
+            '3FLZ': 'Tropical-Islander',
+            'VROJ8': 'Highland-Chief',
+            'VROB': 'Highland-Chief'
+            }
 
 
 class TestShipCallSign(BaseTestCase):
@@ -29,6 +32,13 @@ class TestShipCallSign(BaseTestCase):
            side_effect=mock_platform_altlabels_per_preflabel)
     def test_unknown_ship_name(self, mock_ship):
         self.assertEqual(ship_callsign('unknown'), None)
+
+    @mock.patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+                side_effect=mock_platform_altlabels_per_preflabel)
+    def test_ship_old_new_same_callsign(self, mock_ship):
+        """ test when a new vessel has a different callsign but same name """
+        self.assertEqual(ship_callsign('VROJ8'), 'Highland-Chief')
+        self.assertEqual(ship_callsign('VROB'), 'Highland-Chief')
 
 
 if __name__ == '__main__':
