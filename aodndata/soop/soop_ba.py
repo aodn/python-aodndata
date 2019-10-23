@@ -112,7 +112,7 @@ class SoopBaHandler(HandlerBase):
         destination = dest_path_soop_ba(nc)
         nc.dest_path = os.path.join(destination, nc.name)
 
-        results = self.state_query.query_storage(destination)
+        results = self.state_query.query_storage(destination).keys()
         files_to_delete = self.get_previous_version(results, destination, nc.name)
         if files_to_delete:
             self.file_collection.update(files_to_delete)

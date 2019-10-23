@@ -103,7 +103,7 @@ class AcornHandler(HandlerBase):
         # if we need to overwrite this object or not
         destination_s3 = self.dest_path(nc_file.name)
 
-        storage_query_res = self.state_query.query_storage(destination_s3)
+        storage_query_res = self.state_query.query_storage(destination_s3).keys()
 
         # creation date of the new file in the pipeline
         if destination_s3 in storage_query_res:
