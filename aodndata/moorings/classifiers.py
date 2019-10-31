@@ -1,6 +1,7 @@
 import os
 import re
 
+from datetime import datetime as dt
 from datetime import timedelta
 from netCDF4 import Dataset
 
@@ -149,6 +150,28 @@ class AbosFileClassifier(MooringsFileClassifier):
 
     FACILITY = 'ABOS'
     SAZ_IMAGES_ZIP_PATTERN = re.compile(r"images_SAZ47-\d{2}-(?P<year>\d{4})\.zip$")
+   
+   #old pipeline stuff
+    WAVE_VAR = {'VAVH', 'HMAX', 'HAV'}
+    MET_VAR = {'UWND', 'VWND', 'WDIR', 'WSPD', 'ATMP', 'AIRT', 'RELH', 'RAIN', 'RAIN_AMOUNT'}
+    FLUX_VAR = {'H_RAIN', 'HEAT_NET', 'MASS_NET'}
+
+    @classmethod
+    def _get_old_data_category(cls, input_file):
+        """Determine the category a file belongs to."""
+
+        var_names = set(cls._get_variable_names(input_file))
+        if var_names.intersection(cls.WAVE_VAR):
+            return 'Surface_waves'
+
+        if var_names.intersection(cls.FLUX_VAR):
+            return 'Surface_fluxes'
+
+        if var_names.intersection(cls.MET_VAR):
+            return 'Surface_properties'
+
+        raise InvalidFileContentError("Could not determine data category for {input_file}".format(input_file=input_file))
+
 
     @classmethod
     def _get_data_category(cls, input_file):
@@ -275,12 +298,20 @@ class AbosFileClassifier(MooringsFileClassifier):
             return cls._make_path(dir_list)
 
         fac, subfac = cls._get_facility(input_file)
-
+        is_asfs_and_rt = subfac == 'ASFS' and cls._is_realtime(input_file)
         if subfac == 'DA':
             dir_list.append(subfac)
             dir_list.append(cls._get_nc_att(input_file, 'platform_code'))
             dir_list.append(cls._get_data_category(input_file))
             dir_list.append(cls._get_product_level(input_file))
+        elif is_asfs_and_rt: # rt files with old names not migrated yet
+            cat = cls._get_old_data_category(input_file)
+            start_time = dt.strptime(cls._get_nc_att(
+                                     input_file,
+                                     'time_coverage_start'),
+                                     '%Y-%m-%dT%H:%M:%SZ')
+            rt_folder_name = '{}'.format(start_time.year) + '_daily'
+            dir_list += ['ASFS', 'SOFS', cat, 'Real-time', rt_folder_name]
         elif subfac in ('SOTS', 'ASFS'):
             dir_list.append('SOTS')
             dir_list.append(cls._get_deployment_year(input_file))
