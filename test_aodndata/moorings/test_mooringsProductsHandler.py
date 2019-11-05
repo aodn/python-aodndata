@@ -1,15 +1,11 @@
 import httpretty
 import json
 import os
-import re
 import unittest
 
 from aodncore.pipeline import PipelineFileCollection, PipelineFile, PipelineFilePublishType
-from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidFileContentError, InvalidFileNameError
 from aodncore.pipeline.storage import get_storage_broker
-from aodncore.testlib import HandlerTestCase, make_zip
-
-from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
+from aodncore.testlib import HandlerTestCase
 
 from aodndata.moorings.products_handler import MooringsProductsHandler
 

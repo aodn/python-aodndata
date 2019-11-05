@@ -56,7 +56,7 @@ INSTALL_REQUIRES = [
     'aodncore>=0.31.0',
     'cc-plugin-imos>=1.3.0',
     'matplotlib==1.5.1',
-    'aodntools>=0.4.3',
+    'aodntools>=0.4.4',
     'pandas==0.24.2'
 ]
 
