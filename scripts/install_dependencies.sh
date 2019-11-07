@@ -4,9 +4,9 @@ set -ex
 
 STAGE=${STAGE:-prod}
 
-PIPARGS=""
+PIPARGS="-c constraints.txt"
 if [ "$1" == "--user" ]; then
-  PIPARGS="--user"
+  PIPARGS="${PIPARGS} --user"
 fi
 
 AODNFETCHER_URL="git+https://github.com/aodn/python-aodnfetcher.git@master"
@@ -20,12 +20,12 @@ echo "##### Installing dependencies into virtual environment #####"
 pip install ${PIPARGS} ${AODNFETCHER_URL}
 pip install ${PIPARGS} $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${CC_PLUGIN_IMOS_URL} \
     | python -c "import json, sys; print(json.load(sys.stdin)['${CC_PLUGIN_IMOS_URL}']['local_file'])")
-pip install ${PIPARGS} -c constraints.txt $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNTOOLS_URL} \
+pip install ${PIPARGS} $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNTOOLS_URL} \
     | python -c "import json, sys; print(json.load(sys.stdin)['${AODNTOOLS_URL}']['local_file'])")
-pip install ${PIPARGS} -c constraints.txt $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${CC_PLUGIN_IMOS_URL} \
+pip install ${PIPARGS} $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${CC_PLUGIN_IMOS_URL} \
     | python -c "import json, sys; print(json.load(sys.stdin)['${CC_PLUGIN_IMOS_URL}']['local_file'])")
-pip install ${PIPARGS} -c constraints.txt $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNCORE_URL} \
+pip install ${PIPARGS} $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNCORE_URL} \
     | python -c "import json, sys; print(json.load(sys.stdin)['${AODNCORE_URL}']['local_file'])")
 
-pip install ${PIPARGS} -c constraints.txt -r requirements.txt
-pip install ${PIPARGS} -c constraints.txt ".[testing]"
+pip install ${PIPARGS} -r requirements.txt
+pip install ${PIPARGS} ".[testing]"
