@@ -58,16 +58,27 @@ class TestSrsSurfaceWavesHandler(unittest.TestCase):
         good_nc_1b = os.path.join(TEST_ROOT,
                                      'IMOS_SRS-Surface-Waves_W_20190928T120118Z_Sentinel-1B_FV00_K2_END-20190929T105745Z.nc')
         self.assertEqual(dest_path_srs_surface_waves_sar(good_nc_1b),
-                         'IMOS/SRS/Surface-Waves/SAR/SENTINEL-1B/2019/09/{basename}'.format(
-            basename=os.path.basename(good_nc_1b)
+                        'IMOS/SRS/Surface-Waves/SAR/REALTIME/SENTINEL-1B/2019/09/{basename}'.format(
+           basename=os.path.basename(good_nc_1b)
         ))
 
         good_nc_1a = os.path.join(TEST_ROOT,
                                      'IMOS_SRS-Surface-Waves_W_20190928T151039Z_Sentinel-1A_FV00_K2_END-20190929T150836Z.nc')
         self.assertEqual(dest_path_srs_surface_waves_sar(good_nc_1a),
-                         'IMOS/SRS/Surface-Waves/SAR/SENTINEL-1A/2019/09/{basename}'.format(
+                         'IMOS/SRS/Surface-Waves/SAR/REALTIME/SENTINEL-1A/2019/09/{basename}'.format(
             basename=os.path.basename(good_nc_1a)
         ))
+
+        good_nc_1a_qc = os.path.join(TEST_ROOT,
+                                     'IMOS_SRS-Surface-Waves_W_20180426T063629Z_Sentinel-1A_FV01_DM00_K2_END-20180426T224953Z.nc')
+        self.assertEqual(dest_path_srs_surface_waves_sar(good_nc_1a_qc),
+                         'IMOS/SRS/Surface-Waves/SAR/DELAYED/SENTINEL-1A/2018/04/{basename}'.format(
+            basename=os.path.basename(good_nc_1a_qc)
+        ))
+
+        bad = os.path.join(TEST_ROOT, 'BAD.nc')
+        with self.assertRaises(InvalidFileNameError):
+            dest_path_srs_surface_waves_sar(bad)
 
 
 if __name__ == '__main__':
