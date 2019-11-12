@@ -306,11 +306,8 @@ class AbosFileClassifier(MooringsFileClassifier):
             dir_list.append(cls._get_product_level(input_file))
         elif is_asfs_and_rt: # rt files with old names not migrated yet
             cat = cls._get_old_data_category(input_file)
-            start_time = dt.strptime(cls._get_nc_att(
-                                     input_file,
-                                     'time_coverage_start'),
-                                     '%Y-%m-%dT%H:%M:%SZ')
-            rt_folder_name = '{}'.format(start_time.year) + '_daily'
+            start_time = cls._get_nc_att(input_file,'time_coverage_start',time_format=True)
+            rt_folder_name = '{}_daily'.format(start_time.year)
             dir_list += ['ASFS', 'SOFS', cat, 'Real-time', rt_folder_name]
         elif subfac in ('SOTS', 'ASFS'):
             dir_list.append('SOTS')

@@ -278,8 +278,7 @@ class TestAbosFileClassifier(BaseTestCase):
         testfile = os.path.join(self.tempdir, filename)
         make_test_file(testfile, {'data_mode': 'D',
                                   'time_coverage_start': '2015-01-01T00:00:00Z',
-                                  'time_coverage_end': '2015-01-01T23:30:00Z'},
-
+                                  'time_coverage_end': '2015-01-01T23:30:00Z'}
                        )
         dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2015')
