@@ -205,22 +205,80 @@ class TestAbosFileClassifier(BaseTestCase):
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2014')
         self.assertEqual(dest_filename, filename)
 
+    def test_sofs_waves_rt(self):
+        filename = 'IMOS_ABOS-SOTS_W_20190318_SOFS_FV00_SOFS-8-2019-MRU-Surface-wave-height-realtime.nc'
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile,
+                       {'time_coverage_start': "2019-03-18T00:00:00Z",
+                        'time_coverage_end': "2019-10-31T00:00:00Z"}
+                       )
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
+        self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2019/real-time')
+        self.assertEqual(dest_filename, filename)
+
+    def test_sofs_oldnames_waves_rt(self):
+        filename = 'IMOS_ABOS-ASFS_W_20150202T000000Z_SOFS_FV01_TriAXYS.nc'
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile,
+                       {'time_coverage_start': '2015-01-01T00:00:00Z',
+                        'time_coverage_end': '2015-01-01T23:30:00Z'},
+                       HAV={},
+                       HMAX={},
+                       HSIG={},
+                       TSIG={},
+                       VDIR={}
+                       )
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
+        self.assertEqual(dest_dir, 'IMOS/ABOS/ASFS/SOFS/Surface_waves/Real-time/2015_daily')
+        self.assertEqual(dest_filename, filename)
+
+    @unittest.skip("not implemented yet - no files so far")
     def test_sofs_surface_properties_rt(self):
+        assert(False)
+
+    def test_sofs_oldnames_surface_properties_rt(self):
         filename = 'IMOS_ABOS-ASFS_CMST_20150101T000000Z_SOFS_FV01_C-20160203T002503Z.nc'
         testfile = os.path.join(self.tempdir, filename)
         make_test_file(testfile, {'time_coverage_start': '2015-01-01T00:00:00Z',
                                   'time_coverage_end': '2015-01-01T23:30:00Z'},
+                       TEMP={},
+                       PSAL={},
+                       AIRT={},
+                       RAIN_AMOUNT={},
+                       RELH={},
+                       WSPD={}
                        )
         dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
-        self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2015/real-time')
+        self.assertEqual(dest_dir, 'IMOS/ABOS/ASFS/SOFS/Surface_properties/Real-time/2015_daily')
         self.assertEqual(dest_filename, filename)
+
+    @unittest.skip("not implemented yet - no files so far")
+    def test_sofs_surface_fluxes_rt(self):
+        assert(False)
+
+    def test_sofs_oldnames_surface_fluxes_rt(self):
+        filename = 'IMOS_ABOS-ASFS_FMT_20150101T000000Z_SOFS_FV02.nc'
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile,
+                       {'time_coverage_start': '2015-01-01T00:00:00Z',
+                        'time_coverage_end': '2015-01-01T23:30:00Z'},
+                       TEMP={},
+                       PSAL={},
+                       AIRT={},
+                       HEAT_NET={},
+                       MASS_NET={}
+                       )
+        dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
+        self.assertEqual(dest_dir, 'IMOS/ABOS/ASFS/SOFS/Surface_fluxes/Real-time/2015_daily')
+        self.assertEqual(dest_filename, filename)
+
 
     def test_sofs_one_day_delayed(self):
         filename = 'IMOS_ABOS-ASFS_CMST_20150101T000000Z_SOFS_FV02_C-20171002T000000Z.nc'
         testfile = os.path.join(self.tempdir, filename)
         make_test_file(testfile, {'data_mode': 'D',
                                   'time_coverage_start': '2015-01-01T00:00:00Z',
-                                  'time_coverage_end': '2015-01-01T23:30:00Z'},
+                                  'time_coverage_end': '2015-01-01T23:30:00Z'}
                        )
         dest_dir, dest_filename = os.path.split(AbosFileClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, 'IMOS/ABOS/SOTS/2015')
