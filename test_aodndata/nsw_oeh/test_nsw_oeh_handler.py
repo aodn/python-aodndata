@@ -3,6 +3,7 @@ import unittest
 import zipfile
 
 from aodncore.pipeline import PipelineFilePublishType, FileType
+from aodncore.pipeline.exceptions import InvalidFileContentError
 from aodncore.testlib import HandlerTestCase
 
 from aodndata.nsw_oeh.handler import NswOehHandler, NSWOEHSurveyProcesor, is_date, check_crs, get_name_fields, \
@@ -242,17 +243,42 @@ class TestNswOehHandler(HandlerTestCase):
         with self.assertRaises(ValueError):
             pz.get_dest_path()
 
-    def test_handler_success(self):
+    def test_good_mb(self):
         handler = self.run_handler(GOOD_MB_ZIP)
 
-        zip_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.ZIP)[0]
-        self.assertEqual(zip_file.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
-        self.assertEqual(zip_file.dest_path, 'NSW-OEH/Multi-beam/2015/20151029_PortHackingBateBay/NSWOEH_20151029_PortHackingBateBay_MB.zip')
+        dest_path_base = 'NSW-OEH/Multi-beam/2015/20151029_PortHackingBateBay/'
 
-        prj_file = handler.file_collection.filter_by_attribute_value('extension', '.prj')[0]
-        self.assertEqual(prj_file.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
-        self.assertEqual(prj_file.dest_path,
-                         'NSW-OEH/Multi-beam/2015/20151029_PortHackingBateBay/NSWOEH_20151029_PortHackingBateBay_MB_SHP.prj')
+        with zipfile.ZipFile(GOOD_MB_ZIP) as zf:
+            expected_files = {os.path.basename(p) for p in zf.namelist() if not p.endswith('/')}
+        expected_dest_paths = {dest_path_base + p for p in expected_files}
+        self.assertSetEqual(expected_dest_paths, set(handler.file_collection.get_attribute_list('dest_path')))
+
+        for f in handler.file_collection:
+            self.assertTrue(f.is_harvested)
+            self.assertTrue(f.is_stored)
+            self.assertEqual(f.dest_path, dest_path_base + os.path.basename(f.local_path))
+
+    def test_bad_mb(self):
+        self.run_handler_with_exception(InvalidFileContentError, BAD_MB_ZIP)
+
+    def test_good_stax(self):
+        handler = self.run_handler(GOOD_STAX_ZIP)
+
+        dest_path_base = 'NSW-OEH/Single-beam/2011/20111125_KingscliffBeach/'
+
+        with zipfile.ZipFile(GOOD_STAX_ZIP) as zf:
+            expected_files = {os.path.basename(p) for p in zf.namelist() if '_STAX_SHP.' in p}
+        expected_files.add(os.path.basename(GOOD_STAX_ZIP))
+        expected_dest_paths = {dest_path_base + p for p in expected_files}
+        self.assertSetEqual(expected_dest_paths, set(handler.file_collection.get_attribute_list('dest_path')))
+
+        for f in handler.file_collection:
+            self.assertTrue(f.is_harvested)
+            self.assertTrue(f.is_stored)
+            self.assertEqual(f.dest_path, dest_path_base + os.path.basename(f.local_path))
+
+    def test_bad_stax(self):
+        self.run_handler_with_exception(InvalidFileContentError, BAD_STAX_ZIP)
 
 
 if __name__ == '__main__':
