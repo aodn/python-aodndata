@@ -419,16 +419,14 @@ class NswOehHandler(HandlerBase):
         super(NswOehHandler, self).__init__(*args, **kwargs)
 
         self.allowed_extensions = ['.zip']
-        self.campaign_folder_path = None
+        self.survey_path = None
 
     def preprocess(self):
         self.file_collection.add(self.input_file_object)
-        file_collection = self.file_collection.filter_by_attribute_id('file_type', FileType.ZIP)
-        file_collection = file_collection[0]
-        file_collection.publish_type = PipelineFilePublishType.HARVEST_UPLOAD  # default
+        self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
 
-        pz = NSWOEHSurveyProcesor(file_collection._src_path)
-        self.campaign_folder_path = pz.get_dest_path()
+        pz = NSWOEHSurveyProcesor(self.input_file)
+        self.survey_path = pz.get_dest_path()
 
     def dest_path(self, filepath):
-        return os.path.join(self.campaign_folder_path, os.path.basename(filepath))
+        return os.path.join(self.survey_path, os.path.basename(filepath))
