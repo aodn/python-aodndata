@@ -2,7 +2,6 @@ from __future__ import print_function
 
 import os
 import re
-import shutil
 import zipfile
 from collections import OrderedDict
 from datetime import datetime
@@ -420,6 +419,12 @@ class NswOehHandler(HandlerBase):
             self.file_collection.filter_by_attribute_regex('name', SHAPEFILE_PATTERN).set_publish_types(
                 PipelineFilePublishType.HARVEST_UPLOAD)  # publish files matching pattern
 
+        # others
+        if pz.survey_methods == 'MB' or re.compile(SHAPEFILE_PATTERN).match(os.path.basename(self.input_file)):
+            self.file_collection.set_publish_types(PipelineFilePublishType.HARVEST_UPLOAD)  # reset all publish types
+
+            self.file_collection.filter_by_attribute_id('file_type', FileType.ZIP). \
+                set_publish_types(PipelineFilePublishType.NO_ACTION)  # publish zip file
 
         self.survey_path = pz.get_dest_path()
 
