@@ -8,6 +8,7 @@ from collections import OrderedDict
 from datetime import datetime
 
 import fiona
+from aodncore.pipeline.exceptions import InvalidFileContentError
 from aodncore.pipeline import HandlerBase, FileType, PipelineFilePublishType
 from fiona.errors import FionaValueError
 
@@ -426,6 +427,20 @@ class NswOehHandler(HandlerBase):
         self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
 
         pz = NSWOEHSurveyProcesor(self.input_file)
+        report = pz.check_all()
+
+        if len(report) > 0:
+            raise_string = ''
+            for heading, messages in report.items():
+                raise_string += "\n{heading}:\n{messages}\n".format(
+                    heading=heading,
+                    messages="\n".join(["{0}. {1}".format(i+1, messages) for i, messages in enumerate(messages)]))
+
+            raise InvalidFileContentError(
+                "Could not determine data category for '{name}'\n{raise_string}".format(
+                    name=os.path.basename(self.input_file),
+                    raise_string=raise_string))
+
         self.survey_path = pz.get_dest_path()
 
     def dest_path(self, filepath):
