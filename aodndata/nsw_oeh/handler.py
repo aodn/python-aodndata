@@ -19,7 +19,7 @@ SHAPEFILE_EXTENSIONS = ('CPG', 'cpg', 'dbf', 'prj', 'sbn', 'sbx', 'shp', 'shp.xm
 SHAPEFILE_ATTRIBUTES = {'MB': {'SDate', 'Location', 'Area', 'XYZ_File', 'XYA_File', 'MAX_RES', 'Comment'},
                         'STAX': {'SDate', 'Location', 'Source_xyz', 'AREA', 'est_no'}
                         }
-SHAPEFILE_PATTERN = re.compile('.*_SHP.(' + '|'.join(SHAPEFILE_EXTENSIONS) + ')')
+SHAPEFILE_PATTERN = '.*_SHP.(' + '|'.join(SHAPEFILE_EXTENSIONS) + ')' #re.compile('.*_SHP.(' + '|'.join(SHAPEFILE_EXTENSIONS) + ')')
 ALL_EXTENSIONS = ('zip', 'xyz', 'xya', 'tif', 'tiff', 'sd', 'kmz', 'pdf') + SHAPEFILE_EXTENSIONS
 SOFTWARE_CODES = ('FLD', 'FMG', 'ARC', 'GTX', 'GSP', 'HYP', 'QIM')
 SOFTWARE_PATTERN = '(' + '|'.join(SOFTWARE_CODES) + ')(\d{3})$'
@@ -384,37 +384,6 @@ class NSWOEHSurveyProcesor:
             )
         return os.path.join('NSW-OEH', methods_name, survey_year, self.survey_name)
 
-    def extract(self, tmp_dir):
-        """
-        Extract files from the zip file into tmp_dir in preparation for publishing. Directory
-        structure within the zip file is ignored. For a multi-beam survey, all files are
-        extracted. For "basic packaged" files (single-beam or lidar/lads), only the coverage
-        shapefile is extracted, and the zip file itself is copied into tmp_dir.
-        :param tmp_dir: Full path of temporary directory to extract into
-        :return: Names of files to be published (within tmp_dir)
-        :rtype: list
-        """
-        publish_files = []
-        with zipfile.ZipFile(self.zip_file) as zf:
-            for zip_name in self.zip_contents:
-                file_name = os.path.basename(zip_name)
-
-                if self.survey_methods == 'MB' or SHAPEFILE_PATTERN.match(file_name):
-                    ext_path = zf.extract(zip_name, tmp_dir)
-
-                    # Move file directly into base of tmp_dir, out of any directories in the zip file
-                    if zip_name != file_name:
-                        shutil.move(ext_path, tmp_dir)
-
-                    publish_files.append(file_name)
-
-        if self.survey_methods in BASIC_PACKAGED_METHODS:
-            shutil.copy(self.zip_file, tmp_dir)
-            publish_files.append(os.path.basename(self.zip_file))
-
-        return publish_files
-
-
 class NswOehHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(NswOehHandler, self).__init__(*args, **kwargs)
@@ -440,6 +409,17 @@ class NswOehHandler(HandlerBase):
                 "Could not determine data category for '{name}'\n{raise_string}".format(
                     name=os.path.basename(self.input_file),
                     raise_string=raise_string))
+
+        # stax files
+        if pz.survey_methods in BASIC_PACKAGED_METHODS:
+            self.file_collection.set_publish_types(PipelineFilePublishType.NO_ACTION)  # reset all publish types
+
+            self.file_collection.filter_by_attribute_id('file_type', FileType.ZIP).\
+                set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)  # publish zip file
+
+            self.file_collection.filter_by_attribute_regex('name', SHAPEFILE_PATTERN).set_publish_types(
+                PipelineFilePublishType.HARVEST_UPLOAD)  # publish files matching pattern
+
 
         self.survey_path = pz.get_dest_path()
 

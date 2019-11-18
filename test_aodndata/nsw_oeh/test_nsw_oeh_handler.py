@@ -269,13 +269,21 @@ class TestNswOehHandler(HandlerTestCase):
         with zipfile.ZipFile(GOOD_STAX_ZIP) as zf:
             expected_files = {os.path.basename(p) for p in zf.namelist() if '_STAX_SHP.' in p}
         expected_files.add(os.path.basename(GOOD_STAX_ZIP))
-        expected_dest_paths = {dest_path_base + p for p in expected_files}
-        self.assertSetEqual(expected_dest_paths, set(handler.file_collection.get_attribute_list('dest_path')))
+        expected_dest_paths = {os.path.join(dest_path_base, p) for p in expected_files}
+        result_dest_paths = {f for f in handler.file_collection.get_attribute_list('dest_path') if f}
 
-        for f in handler.file_collection:
+        self.assertSetEqual(expected_dest_paths, result_dest_paths)
+        self.assertEqual(1, len(handler.file_collection.filter_by_attribute_id('publish_type',
+                                                                               PipelineFilePublishType.UPLOAD_ONLY).
+                                _PipelineFileCollection__s.item_list))
+
+        file_collection_harvest_upload = handler.file_collection.filter_by_attribute_id('publish_type',
+                                                                                        PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(8, len(file_collection_harvest_upload._PipelineFileCollection__s.item_list))
+        for f in file_collection_harvest_upload:
             self.assertTrue(f.is_harvested)
             self.assertTrue(f.is_stored)
-            self.assertEqual(f.dest_path, dest_path_base + os.path.basename(f.local_path))
+            self.assertEqual(f.dest_path, os.path.join(dest_path_base, os.path.basename(f.src_path)))
 
     def test_bad_stax(self):
         self.run_handler_with_exception(InvalidFileContentError, BAD_STAX_ZIP)
