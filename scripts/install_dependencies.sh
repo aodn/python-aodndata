@@ -4,7 +4,7 @@ set -ex
 
 STAGE=${STAGE:-production}
 
-PIPARGS="-c constraints.txt"
+PIPARGS=""
 if [ "$1" == "--user" ]; then
   PIPARGS="${PIPARGS} --user"
 fi

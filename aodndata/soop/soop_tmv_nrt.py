@@ -13,7 +13,6 @@ from netCDF4 import date2num, Dataset
 from pkg_resources import resource_filename
 
 from .ship_callsign import ship_callsign_list
-from six.moves import range
 
 SHIP_CODE = 'VLST'
 SOOP_NRT_LOG_PATTERN = re.compile(r"""

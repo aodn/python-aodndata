@@ -11,7 +11,6 @@ import numpy as np
 from netCDF4 import Dataset, num2date
 
 from test_aodndata.moorings.test_burst_average import INPUT_FILE as TEST_FILE
-from six.moves import range
 
 stats = defaultdict(list)
 
