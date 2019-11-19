@@ -18,7 +18,7 @@ SHAPEFILE_EXTENSIONS = ('CPG', 'cpg', 'dbf', 'prj', 'sbn', 'sbx', 'shp', 'shp.xm
 SHAPEFILE_ATTRIBUTES = {'MB': {'SDate', 'Location', 'Area', 'XYZ_File', 'XYA_File', 'MAX_RES', 'Comment'},
                         'STAX': {'SDate', 'Location', 'Source_xyz', 'AREA', 'est_no'}
                         }
-SHAPEFILE_PATTERN = '.*_SHP.(' + '|'.join(SHAPEFILE_EXTENSIONS) + ')' #re.compile('.*_SHP.(' + '|'.join(SHAPEFILE_EXTENSIONS) + ')')
+SHAPEFILE_PATTERN = re.compile(r'.*_SHP.(' + '|'.join(SHAPEFILE_EXTENSIONS) + ')')
 ALL_EXTENSIONS = ('zip', 'xyz', 'xya', 'tif', 'tiff', 'sd', 'kmz', 'pdf') + SHAPEFILE_EXTENSIONS
 SOFTWARE_CODES = ('FLD', 'FMG', 'ARC', 'GTX', 'GSP', 'HYP', 'QIM')
 SOFTWARE_PATTERN = '(' + '|'.join(SOFTWARE_CODES) + ')(\d{3})$'
@@ -383,6 +383,7 @@ class NSWOEHSurveyProcesor:
             )
         return os.path.join('NSW-OEH', methods_name, survey_year, self.survey_name)
 
+
 class NswOehHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(NswOehHandler, self).__init__(*args, **kwargs)
@@ -391,9 +392,6 @@ class NswOehHandler(HandlerBase):
         self.survey_path = None
 
     def preprocess(self):
-        self.file_collection.add(self.input_file_object)
-        self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-
         pz = NSWOEHSurveyProcesor(self.input_file)
         report = pz.check_all()
 
@@ -405,26 +403,20 @@ class NswOehHandler(HandlerBase):
                     messages="\n".join(["{0}. {1}".format(i+1, messages) for i, messages in enumerate(messages)]))
 
             raise InvalidFileContentError(
-                "Could not determine data category for '{name}'\n{raise_string}".format(
+                "Zip file '{name}' failed content checks:\n{raise_string}".format(
                     name=os.path.basename(self.input_file),
                     raise_string=raise_string))
 
-        # stax files
+        # STAX & LIDAR surveys - publish zip file and shapefile only
         if pz.survey_methods in BASIC_PACKAGED_METHODS:
-            self.file_collection.set_publish_types(PipelineFilePublishType.NO_ACTION)  # reset all publish types
+            for f in self.file_collection:
+                if not SHAPEFILE_PATTERN.match(f.name):
+                    f.publish_type = PipelineFilePublishType.NO_ACTION
 
-            self.file_collection.filter_by_attribute_id('file_type', FileType.ZIP).\
-                set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)  # publish zip file
+            self.file_collection.add(self.input_file_object)
+            self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
 
-            self.file_collection.filter_by_attribute_regex('name', SHAPEFILE_PATTERN).set_publish_types(
-                PipelineFilePublishType.HARVEST_UPLOAD)  # publish files matching pattern
-
-        # others
-        if pz.survey_methods == 'MB' or re.compile(SHAPEFILE_PATTERN).match(os.path.basename(self.input_file)):
-            self.file_collection.set_publish_types(PipelineFilePublishType.HARVEST_UPLOAD)  # reset all publish types
-
-            self.file_collection.filter_by_attribute_id('file_type', FileType.ZIP). \
-                set_publish_types(PipelineFilePublishType.NO_ACTION)  # publish zip file
+        # For multi-beam (MB) surveys the default (publish all zipfile contents) is correct
 
         self.survey_path = pz.get_dest_path()
 
