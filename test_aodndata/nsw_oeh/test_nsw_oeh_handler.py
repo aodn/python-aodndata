@@ -247,22 +247,23 @@ class TestNswOehHandler(HandlerTestCase):
 
         dest_path_base = 'NSW-OEH/Multi-beam/2015/20151029_PortHackingBateBay/'
 
+        # check that all the zip file contents (and no other files) have been marked for publication
         with zipfile.ZipFile(GOOD_MB_ZIP) as zf:
             expected_files = {os.path.basename(p) for p in zf.namelist() if not p.endswith('/')}
         expected_dest_paths = {os.path.join(dest_path_base, p) for p in expected_files}
-        result_dest_paths = {f for f in handler.file_collection.get_attribute_list('dest_path') if f}
-        self.assertSetEqual(expected_dest_paths, result_dest_paths)
-
         file_collection_harvest_upload = handler.file_collection.filter_by_attribute_id('publish_type',
                                                                                         PipelineFilePublishType.HARVEST_UPLOAD)
-        self.assertEqual(10, len(file_collection_harvest_upload._PipelineFileCollection__s.item_list))
+        self.assertSetEqual(expected_dest_paths, set(file_collection_harvest_upload.get_attribute_list('dest_path')))
+
+        # check that they have been published correctly
         for f in file_collection_harvest_upload:
             self.assertTrue(f.is_harvested)
             self.assertTrue(f.is_stored)
-            self.assertEqual(f.dest_path, dest_path_base + os.path.basename(f.src_path))
+            self.assertEqual(f.dest_path, os.path.join(dest_path_base, os.path.basename(f.src_path)))
 
-        self.assertTrue(PipelineFilePublishType.NO_ACTION, handler.file_collection.filter_by_attribute_id('publish_type',
-                                                                                        PipelineFilePublishType.NO_ACTION))
+        # check that the zip file itself has *not* been harvested or stored
+        self.assertFalse(handler.input_file_object.is_harvested)
+        self.assertFalse(handler.input_file_object.is_stored)
 
     def test_bad_mb(self):
         self.run_handler_with_exception(InvalidFileContentError, BAD_MB_ZIP)
@@ -272,24 +273,26 @@ class TestNswOehHandler(HandlerTestCase):
 
         dest_path_base = 'NSW-OEH/Single-beam/2011/20111125_KingscliffBeach/'
 
+        # check that the shapefile and the zip file itself (and no other files) have been marked for publication
         with zipfile.ZipFile(GOOD_STAX_ZIP) as zf:
             expected_files = {os.path.basename(p) for p in zf.namelist() if '_STAX_SHP.' in p}
         expected_files.add(os.path.basename(GOOD_STAX_ZIP))
         expected_dest_paths = {os.path.join(dest_path_base, p) for p in expected_files}
-        result_dest_paths = {f for f in handler.file_collection.get_attribute_list('dest_path') if f}
-
-        self.assertSetEqual(expected_dest_paths, result_dest_paths)
-        self.assertEqual(1, len(handler.file_collection.filter_by_attribute_id('publish_type',
-                                                                               PipelineFilePublishType.UPLOAD_ONLY).
-                                _PipelineFileCollection__s.item_list))
-
         file_collection_harvest_upload = handler.file_collection.filter_by_attribute_id('publish_type',
                                                                                         PipelineFilePublishType.HARVEST_UPLOAD)
-        self.assertEqual(8, len(file_collection_harvest_upload._PipelineFileCollection__s.item_list))
+        self.assertSetEqual(expected_dest_paths, set(file_collection_harvest_upload.get_attribute_list('dest_path')))
+
+        # check that they have been published correctly
         for f in file_collection_harvest_upload:
             self.assertTrue(f.is_harvested)
             self.assertTrue(f.is_stored)
             self.assertEqual(f.dest_path, os.path.join(dest_path_base, os.path.basename(f.src_path)))
+
+        # Check that all other files inside the zip have not been harvested or stored
+        for f in handler.file_collection.filter_by_attribute_id_not('publish_type',
+                                                                    PipelineFilePublishType.HARVEST_UPLOAD):
+            self.assertFalse(f.is_harvested)
+            self.assertFalse(f.is_stored)
 
     def test_bad_stax(self):
         self.run_handler_with_exception(InvalidFileContentError, BAD_STAX_ZIP)
