@@ -18,8 +18,6 @@ matrix:
       env: STAGE="build"
     - name: "systest artefacts"
       env: STAGE="systest"
-    - name: "prod artefacts"
-      env: STAGE="prod"
 
 install:
   - ./scripts/install_dependencies.sh
