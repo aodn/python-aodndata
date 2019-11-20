@@ -94,14 +94,18 @@ class MooringsProductsHandler(HandlerBase):
         self.excluded_files = defaultdict(set)
         for var in self.product_variables:
             # Filter input_list to the files relevant for this var
-            input_list = [f.local_path for f in input_file_collection
-                          if var in input_file_variables[f.dest_path]
+            input_list = [f for f, f_vars in input_file_variables.items()
+                          if var in f_vars
                           ]
             if not input_list:
                 raise InvalidFileContentError("No files to aggregate for {var}".format(var=var))
             self.logger.info("Aggregating {var} ({n} files)".format(var=var, n=len(input_list)))
 
-            product_url, errors = main_aggregator(input_list, var, self.product_site_code, base_path=self.products_dir)
+            product_url, errors = main_aggregator(input_list, var, self.product_site_code, input_dir=self.temp_dir,
+                                                  output_dir=self.products_dir,
+                                                  download_url_prefix="https://s3-ap-southeast-2.amazonaws.com/imos-data/",
+                                                  opendap_url_prefix="http://thredds.aodn.org.au/thredds/dodsC/"
+                                                  )
             if errors:
                 self.logger.warning("{n} files were excluded from the aggregation.".format(n=len(errors)))
                 for f, e in errors.items():

@@ -52,7 +52,8 @@ SAR_PREFIX_PATH = 'IMOS/SRS/Surface-Waves/SAR'
 SAR_FILE_PATTERN = re.compile(r"""
                               IMOS_SRS-Surface-Waves_W_
                               (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)_
-                              (?P<platform_code>Sentinel-1A|Sentinel-1B)_FV00_
+                              (?P<platform_code>Sentinel-1A|Sentinel-1B)_
+                              (?P<qc_level>FV00|FV01_DM00)_
                               (?P<wavenum>K1|K2)_END-
                               (?P<nc_time_cov_end>[0-9]{8}T[0-9]{6}Z)\.nc$                              
                               """, re.VERBOSE)
@@ -107,10 +108,20 @@ def dest_path_srs_surface_waves_sar(filepath, file_pattern=SAR_FILE_PATTERN, pre
     if file_pattern.match(file_basename):
         fields = get_pattern_subgroups_from_string(file_basename, file_pattern)
         sat = fields['platform_code']
+        qc_level = fields['qc_level']
+    else:
+        raise InvalidFileNameError(
+            "file name: \"{filename}\" not matching regex to deduce dest_path".format(
+                filename=os.path.basename(filepath)))
+
+    if "FV00" in qc_level:
+        qc_level_str = "REALTIME"
+    elif "FV01" in qc_level:
+         qc_level_str = "DELAYED"
 
     nc_time_cov_start = datetime.strptime(fields['nc_time_cov_start'], '%Y%m%dT%H%M%SZ')
 
-    path = os.path.join(prefix_path, sat.upper(),
+    path = os.path.join(prefix_path,qc_level_str, sat.upper(),
                         '%d' % nc_time_cov_start.year, '%02d' % nc_time_cov_start.month,
                         file_basename)
     return path
