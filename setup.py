@@ -18,6 +18,7 @@ ENTRY_POINTS = {
         'GslaHandler = aodndata.gsla.handler:GslaHandler',
         'MooringsHandler = aodndata.moorings.handlers:MooringsHandler',
         'MooringsProductsHandler = aodndata.moorings.products_handler:MooringsProductsHandler',
+        'NswOehHandler = aodndata.nsw_oeh.handler:NswOehHandler',
         'SoopAsfSstHandler = aodndata.soop.soop_asf_sst:SoopAsfSstHandler',
         'SoopBaHandler = aodndata.soop.soop_ba:SoopBaHandler',
         'SoopTrvHandler = aodndata.soop.soop_trv:SoopTrvHandler',
@@ -57,7 +58,8 @@ INSTALL_REQUIRES = [
     'cc-plugin-imos>=1.3.0',
     'matplotlib==1.5.1',
     'aodntools>=0.4.4',
-    'pandas==0.24.2'
+    'pandas==0.24.2',
+    'fiona>=1.8.8'
 ]
 
 TESTS_REQUIRE = [
