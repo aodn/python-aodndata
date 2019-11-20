@@ -2,6 +2,8 @@ import os
 import unittest
 import zipfile
 
+import six
+
 from aodncore.pipeline import PipelineFilePublishType
 from aodncore.pipeline.exceptions import InvalidFileContentError
 from aodncore.testlib import HandlerTestCase
@@ -140,7 +142,7 @@ class TestNswOehHandler(HandlerTestCase):
 
     def test_check_name_all_bad(self):
         pz = self.proc('NSWOEH_20151029_PortHackingBateBay_MB.zip')
-        self.assertCountEqual(pz.check_name('IMOS_170202_N0-name_BBB.what'),
+        six.assertCountEqual(self, pz.check_name('IMOS_170202_N0-name_BBB.what'),
                               ["File name must start with 'NSWOEH'",
                                "Field 2 should be a valid date (YYYYMMDD).",
                                "Field 3 should be a location code consisting only of letters.",
@@ -169,7 +171,7 @@ class TestNswOehHandler(HandlerTestCase):
 
     def test_check_name_bad_stax(self):
         pz = self.proc('NSWOEH_20111125_KingscliffBeach_STAX.zip')
-        self.assertCountEqual(pz.check_name('IMOS_170202_N0-name_BBB.what'),
+        six.assertCountEqual(self, pz.check_name('IMOS_170202_N0-name_BBB.what'),
                               ["File name must start with 'NSWOEH'",
                                "Field 2 should be a valid date (YYYYMMDD).",
                                "Field 3 should be a location code consisting only of letters.",
@@ -211,8 +213,8 @@ class TestNswOehHandler(HandlerTestCase):
     def test_check_all_bad_mb(self):
         pz = self.proc(BAD_MB_ZIP)
         report = pz.check_all()
-        self.assertCountEqual(report["Zip file contents"], ["Missing bathymetry xyz file"])
-        self.assertCountEqual(report["NSWOEH_20151029_PortHackingBateBay_MB_ScientificRigour.pdf"],
+        six.assertCountEqual(self, report["Zip file contents"], ["Missing bathymetry xyz file"])
+        six.assertCountEqual(self, report["NSWOEH_20151029_PortHackingBateBay_MB_ScientificRigour.pdf"],
                               ["Wrong survey date 20151029 (zip file name has 20170601)",
                                "Wrong location PortHackingBateBay (zip file name has BadSurvey)"
                                ]
@@ -221,11 +223,11 @@ class TestNswOehHandler(HandlerTestCase):
     def test_check_all_bad_stax(self):
         pz = self.proc(BAD_STAX_ZIP)
         report = pz.check_all()
-        self.assertCountEqual(report["Zip file contents"],
+        six.assertCountEqual(self, report["Zip file contents"],
                               ["Missing metadata file (PDF format)",
                                "Missing survey coverage shapefile"]
                               )
-        self.assertCountEqual(report["NSWOEH_20111125_KingscliffBeach_STAX_schema.ini"],
+        six.assertCountEqual(self, report["NSWOEH_20111125_KingscliffBeach_STAX_schema.ini"],
                               ["Wrong survey date 20111125 (zip file name has 20170602)",
                                "Wrong location KingscliffBeach (zip file name has BadSurvey)"
                                ]
