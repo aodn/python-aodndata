@@ -66,7 +66,8 @@ class MooringsProductsHandler(HandlerBase):
                        PropertyIsEqualTo(propertyname='file_version', literal='1'),
                        PropertyIsEqualTo(propertyname='realtime', literal='false'),
                        PropertyIsNotEqualTo(propertyname='data_category', literal='Biogeochem_profiles'),
-                       PropertyIsNotEqualTo(propertyname='data_category', literal='CTD_profiles')
+                       PropertyIsNotEqualTo(propertyname='data_category', literal='CTD_profiles'),
+                       PropertyIsNotEqualTo(propertyname='data_category', literal='aggregated_timeseries')
                        ]
         ogc_filter = ogc_filter_to_string(And(filter_list))
 
