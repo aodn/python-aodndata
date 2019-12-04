@@ -60,6 +60,26 @@ class MooringsProductsHandler(HandlerBase):
                 "manifest file '{self.input_file}' missing information (site_code, variables)".format(self=self)
             )
 
+    def _get_wfs_features(self, filter_list, propertyname='*'):
+        """Query the file index WFS layer with the given filters and return a list of features.
+
+        :param filter_list: list of filters to apply (owslib.fes.OgcExpression instances)
+        :param propertyname: str or list or property name(s) to return
+        :return: list of features from the parsed GetFeature response
+        """
+
+        ogc_filter = ogc_filter_to_string(And(filter_list))
+
+        # Note I need to access _wfs_broker to be able to use query_urls_for_layer() with a filter,
+        # as the corresponding StateQuery method doesn't accept additional kwargs.
+        # TODO: find out why this calls getCapabilities twice (and takes 40s even when response mocked with httpretty)
+        # TODO: replace ._wfs_broker.getfeature_dict() with .getfeature_dict() once aodncore has been updated
+        wfs_response = self.state_query._wfs_broker.getfeature_dict(typename=[self.FILE_INDEX_LAYER],
+                                                                    filter=ogc_filter,
+                                                                    propertyname=propertyname
+                                                                    )
+        return wfs_response['features']
+
     def _get_input_files(self):
         """Download input files to local cache.
 
@@ -75,19 +95,12 @@ class MooringsProductsHandler(HandlerBase):
                        PropertyIsNotEqualTo(propertyname='data_category', literal='CTD_profiles'),
                        PropertyIsNotEqualTo(propertyname='data_category', literal='aggregated_timeseries')
                        ]
-        ogc_filter = ogc_filter_to_string(And(filter_list))
-        # Note I need to access _wfs_broker to be able to use query_urls_for_layer() with a filter,
-        # as the corresponding StateQuery method doesn't accept additional kwargs.
-        # TODO: find out why this calls getCapabilities twice (and takes 40s even when response mocked with httpretty)
-        # TODO: replace ._wfs_broker.getfeature_dict() with .getfeature_dict() once aodncore has been updated
-        wfs_response = self.state_query._wfs_broker.getfeature_dict(typename=[self.FILE_INDEX_LAYER],
-                                                                    filter=ogc_filter,
-                                                                    propertyname=['url', 'variables']
-                                                                    )
+        wfs_features = self._get_wfs_features(filter_list, propertyname=['url', 'variables'])
         self.input_file_variables = {f['properties']['url']: f['properties']['variables'].split(', ')
-                                     for f in wfs_response['features']
+                                     for f in wfs_features
                                      }
         self.input_file_collection = RemotePipelineFileCollection(self.input_file_variables.keys())
+
         # Download input files to local cache.
         self.logger.info("Downloading {n} input files".format(n=len(self.input_file_collection)))
         self.input_file_collection.download(self._upload_store_runner.broker, self.temp_dir)
