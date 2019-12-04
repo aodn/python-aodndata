@@ -5,6 +5,7 @@ from aodndata.version import __version__
 
 ENTRY_POINTS = {
     'pipeline.handlers': [
+        'AatamsDmHandler = aodndata.aatams.aatams_dm:AatamsDmHandler',
         'AatamsNrtHandler = aodndata.aatams.aatams_nrt:AatamsNrtHandler',
         'AbosHandler = aodndata.moorings.handlers:AbosHandler',
         'AnfogHandler = aodndata.anfog.handlers:AnfogHandler',
