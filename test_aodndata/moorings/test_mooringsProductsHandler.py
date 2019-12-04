@@ -50,6 +50,10 @@ class TestMooringsProductsHandler(HandlerTestCase):
         upload_broker.upload(INPUT_FILE_COLLECTION)
 
         handler = self.run_handler(GOOD_MANIFEST)
+        self.assertCountEqual(INPUT_FILE_COLLECTION.get_attribute_list('dest_path'),
+                              handler.input_file_collection.get_attribute_list('dest_path')
+                              )
+        self.assertEqual(len(handler.file_collection), 3)
         self.assertEqual(len(handler.excluded_files), 1)
 
 
