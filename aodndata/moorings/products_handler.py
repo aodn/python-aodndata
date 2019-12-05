@@ -163,7 +163,7 @@ class MooringsProductsHandler(HandlerBase):
             old_product_url = self.old_product_files.get(var)
             if old_product_url and os.path.basename(old_product_url) != os.path.basename(product_url):
                 old_file = PipelineFile(old_product_url, dest_path=old_product_url, is_deletion=True,
-                                        file_update_callback=self._file_update_callback)
+                                        late_deletion=True, file_update_callback=self._file_update_callback)
                 old_file.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
                 self.file_collection.add(old_file)
 
