@@ -1,0 +1,34 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+        {
+            "type": "Feature",
+            "id": "moorings_all_map.fid--44e8da32_16d0014d48c_7b17",
+            "geometry": null,
+            "properties": {
+                "url": "IMOS/ANMN/NRS/NRSROT/aggregated_timeseries/IMOS_ANMN-NRS_SZ_20081120_NRSROT_FV01_PSAL-aggregated-timeseries_END-20190523_C-20190822.nc"
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "moorings_all_map.fid--44e8da32_16d0014d48c_7b18",
+            "geometry": null,
+            "properties": {
+                "url": "IMOS/ANMN/NRS/NRSROT/aggregated_timeseries/IMOS_ANMN-NRS_TZ_20081120_NRSROT_FV01_TEMP-aggregated-timeseries_END-20190523_C-20190819.nc"
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "moorings_all_map.fid--44e8da32_16d0014d48c_7b19",
+            "geometry": null,
+            "properties": {
+                "url": "IMOS/ANMN/NRS/NRSROT/aggregated_timeseries/IMOS_ANMN-NRS_TZ_20081120_NRSROT_FV01_DOX1-2-aggregated-timeseries_END-20190523_C-20190819.nc"
+            }
+        }
+    ],
+    "totalFeatures": 3,
+    "numberMatched": 3,
+    "numberReturned": 3,
+    "timeStamp": "2019-12-05T06:33:53.380Z",
+    "crs": null
+}

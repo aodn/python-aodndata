@@ -1,5 +1,7 @@
 from collections import defaultdict
 import json
+import os
+import re
 
 from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, PropertyIsLike, PropertyIsNotEqualTo, And
 
@@ -106,6 +108,31 @@ class MooringsProductsHandler(HandlerBase):
         self.input_file_collection.download(self._upload_store_runner.broker, self.temp_dir)
         # TODO: Replace temp_dir above with cache_dir?
 
+    def _get_old_product_files(self):
+        """Get a list of the currently published aggregated_timeseries files for the site being processed."""
+
+        filter_list = [PropertyIsEqualTo(propertyname='site_code', literal=self.product_site_code),
+                       PropertyIsEqualTo(propertyname='data_category', literal='aggregated_timeseries')
+                       ]
+        wfs_features = self._get_wfs_features(filter_list, propertyname=['url'])
+
+        self.old_product_files = {}
+        var_pattern = re.compile(r'FV01_([A-Z0-9-]+)-aggregated')
+        for f in wfs_features:
+            product_url = f['properties']['url']
+            var_match = var_pattern.search(product_url)
+            if not var_match:
+                raise InvalidFileNameError(
+                    "Could not determine variable of interest for '{product_url}'".format(product_url=product_url)
+                )
+            variable_of_interest = var_match.group(1).replace('-', '_')
+            self.old_product_files[variable_of_interest] = product_url
+
+            self.logger.info(
+                "Old file for {variable_of_interest}: '{product_url}'".format(variable_of_interest=variable_of_interest,
+                                                                              product_url=product_url)
+                )
+
     def _make_aggregated_timeseries(self):
         """For each variable, generate product and add to file_collection."""
 
@@ -132,6 +159,14 @@ class MooringsProductsHandler(HandlerBase):
             product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(product_file)
 
+            # Delete previous version of the product, making sure the new file name is not the same
+            old_product_url = self.old_product_files.get(var)
+            if old_product_url and os.path.basename(old_product_url) != os.path.basename(product_url):
+                old_file = PipelineFile(old_product_url, dest_path=old_product_url, is_deletion=True,
+                                        file_update_callback=self._file_update_callback)
+                old_file.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
+                self.file_collection.add(old_file)
+
     def preprocess(self):
         """Collect available input files and create the products, adding them to the collection to be published."""
 
@@ -141,6 +176,7 @@ class MooringsProductsHandler(HandlerBase):
         )
 
         self._get_input_files()
+        self._get_old_product_files()
 
         # TODO: Run compliance checks and remove non-compliant files from the input list (log them).
 
