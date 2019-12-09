@@ -18,8 +18,7 @@ matrix:
       env: STAGE="build"
     - name: "rc artefacts"
       env: STAGE="rc"
-    - name: "production artefacts"
-      env: STAGE="production"
+    # 'production' stage is tested by default
 
 install:
   - ./scripts/install_dependencies.sh
