@@ -1,6 +1,5 @@
 language: python
 python:
-  - "2.7"
   - "3.5"
   - "3.6"
 
@@ -17,10 +16,9 @@ matrix:
   include:
     - name: "build artefacts"
       env: STAGE="build"
-    - name: "systest artefacts"
-      env: STAGE="systest"
-    - name: "prod artefacts"
-      env: STAGE="prod"
+    - name: "rc artefacts"
+      env: STAGE="rc"
+    # 'production' stage is tested by default
 
 install:
   - ./scripts/install_dependencies.sh
