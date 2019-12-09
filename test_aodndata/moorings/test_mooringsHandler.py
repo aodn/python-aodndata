@@ -20,6 +20,8 @@ GOOD_CNV_BASENAME = 'IMOS_ANMN-NRS_CTP_20140703_NRSMAI_FV00_CTDPRO.cnv'
 GOOD_CNV = os.path.join(TEST_ROOT, GOOD_CNV_BASENAME)
 BURST_NC_BASENAME = 'IMOS_ANMN-NRS_BCKOSTUZ_20081120T081531Z_NRSROT_FV01_NRSROT-0811-WQM-21_END-20081120T171535Z_C-20190418T000000Z.nc'
 BURST_NC = os.path.join(TEST_ROOT, BURST_NC_BASENAME)
+BURST_ADCP_BASENAME = 'IMOS_ANMN-WA_AETVZ_20181203T080004Z_WACA20_FV01_WACA20-1812-Signature250-194_END-20181204T090004Z_C-20190625T000000Z.nc'
+BURST_ADCP = os.path.join(TEST_ROOT, BURST_ADCP_BASENAME)
 
 
 class TestMooringsHandler(HandlerTestCase):
@@ -164,27 +166,28 @@ class TestMooringsHandler(HandlerTestCase):
             self.assertTrue(f.is_harvested)
 
     def test_burst_processing(self):
-        handler = self.run_handler(BURST_NC,
-                                   include_regexes=['IMOS_ANMN-NRS_.*\\.nc'],
-                                   check_params={'checks': ['cf', 'imos:1.4']}
+        zip_file = make_zip(self.temp_dir, [BURST_NC, BURST_ADCP])
+        handler = self.run_handler(zip_file,
+                                   include_regexes=['.*\\.nc'],
+                                   check_params={'checks': ['cf', 'imos:1.4'],
+                                                 'skip_checks': ['check_dimension_order']}
                                    )
 
-        self.assertEqual(2, len(handler.file_collection))
+        self.assertEqual(3, len(handler.file_collection))
 
         f = handler.file_collection[0]
         self.assertEqual(f.name, BURST_NC_BASENAME)
         self.assertEqual(f.dest_path, os.path.join('IMOS/ANMN/NRS/NRSROT/Biogeochem_timeseries', BURST_NC_BASENAME))
-        self.assertTrue(f.is_checked)
-        self.assertTrue(f.is_stored)
-        self.assertTrue(f.is_harvested)
 
         # there should also be a burst-averaged file
-        f = handler.file_collection[1]
+        f = handler.file_collection[-1]
         self.assertRegexpMatches(f.name, '.*FV02_NRSROT-0811-WQM-21-burst-averaged.*')
         self.assertRegexpMatches(f.dest_path, 'IMOS/ANMN/NRS/NRSROT/Biogeochem_timeseries/burst-averaged/')
-        self.assertTrue(f.is_checked)
-        self.assertTrue(f.is_stored)
-        self.assertTrue(f.is_harvested)
+
+        for f in handler.file_collection:
+            self.assertTrue(f.is_checked)
+            self.assertTrue(f.is_stored)
+            self.assertTrue(f.is_harvested)
 
 
 if __name__ == '__main__':
