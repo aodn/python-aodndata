@@ -30,19 +30,19 @@ class TestMooringsHandler(HandlerTestCase):
         super(TestMooringsHandler, self).setUp()
 
     def test_bad_name_file(self):
-        self.run_handler_with_exception(InvalidFileNameError, BAD_NC, include_regexes=['IMOS_ABOS-DA_.*\.nc'])
+        self.run_handler_with_exception(InvalidFileNameError, BAD_NC, include_regexes=[r'IMOS_ABOS-DA_.*\.nc'])
 
     # NetCDF tests
 
     def test_noncompliant_netcdf(self):
         self.run_handler_with_exception(ComplianceCheckFailedError, BAD_NC,
-                                        include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
+                                        include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
                                         check_params={'checks': ['cf', 'imos:1.4']}
                                         )
 
     def test_good_netcdf(self):
         handler = self.run_handler(GOOD_NC,
-                                   include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
+                                   include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
                                    check_params={'checks': ['cf', 'imos:1.4']}
                                    )
         self.assertEqual(len(handler.file_collection), 1)
@@ -63,7 +63,7 @@ class TestMooringsHandler(HandlerTestCase):
         self.assertEqual(cleanup_regexes, handler.error_cleanup_regexes)
 
     def test_missing_attribute_for_dest_path(self):
-        self.run_handler_with_exception(InvalidFileContentError, BAD_NC, include_regexes=['IMOS_ANMN-NRS_.*\.nc'])
+        self.run_handler_with_exception(InvalidFileContentError, BAD_NC, include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'])
 
     # TODO: def test_create_product(self):
 
@@ -72,7 +72,7 @@ class TestMooringsHandler(HandlerTestCase):
     # PDF file tests
 
     def test_good_pdf(self):
-        handler = self.run_handler(GOOD_PDF, include_regexes=['IMOS_ANMN-NRS_[0-9]{8}_.*\_LOGSHT.pdf'])
+        handler = self.run_handler(GOOD_PDF, include_regexes=[r'IMOS_ANMN-NRS_[0-9]{8}_.*\_LOGSHT.pdf'])
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
         self.assertEqual(f.name, GOOD_PDF_BASENAME)
@@ -90,7 +90,7 @@ class TestMooringsHandler(HandlerTestCase):
     # PNG file tests
 
     def test_good_png(self):
-        handler = self.run_handler(GOOD_PNG, include_regexes=['.*\.png'])
+        handler = self.run_handler(GOOD_PNG, include_regexes=[r'.*\.png'])
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
         self.assertEqual(f.name, GOOD_PNG_BASENAME)
@@ -104,7 +104,7 @@ class TestMooringsHandler(HandlerTestCase):
     # CNV file tests
 
     def test_good_cnv(self):
-        handler = self.run_handler(GOOD_CNV, include_regexes=['.*\.cnv'])
+        handler = self.run_handler(GOOD_CNV, include_regexes=[r'.*\.cnv'])
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
         self.assertEqual(f.name, GOOD_CNV_BASENAME)
@@ -120,7 +120,7 @@ class TestMooringsHandler(HandlerTestCase):
     def test_good_nc_zip(self):
         zip_file = make_zip(self.temp_dir, [GOOD_NC])
         handler = self.run_handler(zip_file,
-                                   include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
+                                   include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
                                    check_params={'checks': ['cf', 'imos:1.4']}
                                    )
         self.assertEqual(len(handler.file_collection), 1)
@@ -136,7 +136,7 @@ class TestMooringsHandler(HandlerTestCase):
     def test_good_and_bad_nc_zip(self):
         zip_file = make_zip(self.temp_dir, [GOOD_NC, BAD_NC])
         handler = self.run_handler_with_exception(ComplianceCheckFailedError, zip_file,
-                                                  include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
+                                                  include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
                                                   check_params={'checks': ['cf', 'imos:1.4']}
                                                   )
         self.assertEqual(len(handler.file_collection), 2)
@@ -156,7 +156,7 @@ class TestMooringsHandler(HandlerTestCase):
     def test_all_formats_zip(self):
         zip_file = make_zip(self.temp_dir, [GOOD_NC, GOOD_PDF, GOOD_PNG, GOOD_CNV])
         handler = self.run_handler(zip_file,
-                                   include_regexes=['IMOS_ANMN-NRS_.*\.(nc|pdf|png|cnv)'],
+                                   include_regexes=[r'IMOS_ANMN-NRS_.*\.(nc|pdf|png|cnv)'],
                                    check_params={'checks': ['cf', 'imos:1.4']}
                                    )
         self.assertEqual(len(handler.file_collection), 4)
@@ -168,7 +168,7 @@ class TestMooringsHandler(HandlerTestCase):
     def test_burst_processing(self):
         zip_file = make_zip(self.temp_dir, [BURST_NC, BURST_ADCP])
         handler = self.run_handler(zip_file,
-                                   include_regexes=['.*\\.nc'],
+                                   include_regexes=[r'.*\.nc'],
                                    check_params={'checks': ['cf', 'imos:1.4'],
                                                  'skip_checks': ['check_dimension_order']}
                                    )
@@ -181,8 +181,8 @@ class TestMooringsHandler(HandlerTestCase):
 
         # there should also be a burst-averaged file
         f = handler.file_collection[-1]
-        self.assertRegexpMatches(f.name, '.*FV02_NRSROT-0811-WQM-21-burst-averaged.*')
-        self.assertRegexpMatches(f.dest_path, 'IMOS/ANMN/NRS/NRSROT/Biogeochem_timeseries/burst-averaged/')
+        self.assertRegex(f.name, r'.*FV02_NRSROT-0811-WQM-21-burst-averaged.*')
+        self.assertRegex(f.dest_path, r'IMOS/ANMN/NRS/NRSROT/Biogeochem_timeseries/burst-averaged/')
 
         for f in handler.file_collection:
             self.assertTrue(f.is_checked)

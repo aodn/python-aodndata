@@ -217,7 +217,7 @@ class TestMooringFileClassifier(BaseTestCase):
                        TEMP={},
                        PSAL={}
                        )
-        with self.assertRaisesRegexp(InvalidFileNameError, "Can't determine product type from file name"):
+        with self.assertRaisesRegex(InvalidFileNameError, r"Can't determine product type from file name"):
             MooringsFileClassifier.dest_path(testfile)
 
     def test_unknown_profiles(self):
@@ -227,7 +227,7 @@ class TestMooringFileClassifier(BaseTestCase):
                        TIME={},
                        DEPTH={}
                        )
-        with self.assertRaisesRegexp(InvalidFileContentError, "Could not determine data category"):
+        with self.assertRaisesRegex(InvalidFileContentError, r"Could not determine data category"):
             MooringsFileClassifier.dest_path(testfile)
 
     def test_nonqc(self):
@@ -246,14 +246,14 @@ class TestMooringFileClassifier(BaseTestCase):
     def test_missing_site_code(self):
         testfile = os.path.join(self.tempdir, 'IMOS_ANMN-NRS_CDEKOSTUZ_20121113T001841Z_BADBAD_FV01_Profile.nc')
         make_test_file(testfile)
-        with self.assertRaisesRegexp(InvalidFileContentError, "has no attribute 'site_code'"):
+        with self.assertRaisesRegex(InvalidFileContentError, r"has no attribute 'site_code'"):
             MooringsFileClassifier.dest_path(testfile)
 
     def test_missing_featuretype(self):
         testfile = os.path.join(self.tempdir,
                                 'IMOS_ANMN-NRS_CDEKOSTUZ_20121113T001841Z_NRSMAI_FV01_Profile-SBE-19plus_C-20151030T034432Z.nc')
         make_test_file(testfile, {'site_code': 'NRSMAI'})
-        with self.assertRaisesRegexp(InvalidFileContentError, "has no attribute 'featureType'"):
+        with self.assertRaisesRegex(InvalidFileContentError, r"has no attribute 'featureType'"):
             MooringsFileClassifier.dest_path(testfile)
 
     def test_logsheet(self):

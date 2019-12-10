@@ -45,7 +45,7 @@ class TestAbosHandler(HandlerTestCase):
         shutil.copy(IMAGES_ZIP, bad_images_zip)
         handler = self.run_handler_with_exception(InvalidFileNameError, bad_images_zip,
                                                   include_regexes=['.*\\.(jpe?g|JPE?G|tiff?|TIFF?)'])
-        self.assertRegexpMatches(handler.error.args[0], r"name does not match pattern for images zip file")
+        self.assertRegex(handler.error.args[0], r"name does not match pattern for images zip file")
 
     def test_mixed_zip(self):
         self.run_handler_with_exception(InvalidFileContentError, MIXED_ZIP)
