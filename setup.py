@@ -61,6 +61,7 @@ INSTALL_REQUIRES = [
 ]
 
 TESTS_REQUIRE = [
+    'pytest',
     'httpretty==0.9.6'
 ]
 
