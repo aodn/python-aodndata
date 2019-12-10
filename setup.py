@@ -79,7 +79,7 @@ PACKAGE_NAME = 'aodndata'
 
 setup(
     name=PACKAGE_NAME,
-    version='0.7.4',
+    version='1.0.0',
     packages=find_packages(exclude=PACKAGE_EXCLUDES),
     url='https://github.com/aodn',
     license='GPLv3',
