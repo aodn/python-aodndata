@@ -1,8 +1,6 @@
 from itertools import chain
 from setuptools import setup, find_packages
 
-from aodndata.version import __version__
-
 ENTRY_POINTS = {
     'pipeline.handlers': [
         'AatamsDmHandler = aodndata.aatams.aatams_dm:AatamsDmHandler',
@@ -55,7 +53,7 @@ ENTRY_POINTS = {
 }
 
 INSTALL_REQUIRES = [
-    'aodncore>=0.31.0',
+    'aodncore>=1.0.0',
     'cc-plugin-imos>=1.3.0',
     'matplotlib==1.5.1',
     'aodntools>=0.4.4',
@@ -80,7 +78,7 @@ PACKAGE_NAME = 'aodndata'
 
 setup(
     name=PACKAGE_NAME,
-    version=__version__,
+    version='0.7.4',
     packages=find_packages(exclude=PACKAGE_EXCLUDES),
     url='https://github.com/aodn',
     license='GPLv3',
