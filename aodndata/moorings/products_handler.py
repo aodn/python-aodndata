@@ -16,7 +16,14 @@ from aodndata.moorings.classifiers import MooringsFileClassifier
 class MooringsProductClassifier(MooringsFileClassifier):
     @classmethod
     def _get_data_category(cls, input_file):
-        return 'aggregated_timeseries'
+        if 'aggregated-timeseries' in input_file:
+            return 'aggregated_timeseries'
+        elif 'hourly-timeseries' in input_file:
+            return 'hourly_timeseries'
+        elif 'gridded-timeseries' in input_file:
+            return 'gridded_timeseries'
+        else:
+            raise InvalidFileNameError(f"Could not determine data category from {name}", input_file)
 
     @classmethod
     def _get_product_level(cls, input_file):
