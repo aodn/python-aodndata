@@ -22,7 +22,6 @@ matrix:
 
 install:
   - ./scripts/install_dependencies.sh
-  - pip install pytest
   - pip install pytest-cov
   - pip install codecov
 
