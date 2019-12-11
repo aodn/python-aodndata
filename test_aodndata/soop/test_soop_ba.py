@@ -1,8 +1,8 @@
 import os
 import unittest
-
+from unittest.mock import patch
 from aodncore.pipeline import PipelineFilePublishType, FileType, PipelineFile, PipelineFileCollection
-from aodncore.testlib import HandlerTestCase, mock
+from aodncore.testlib import HandlerTestCase
 from aodncore.pipeline.exceptions import InvalidInputFileError, InvalidFileContentError
 from aodndata.soop.soop_ba import SoopBaHandler
 from aodncore.pipeline.storage import get_storage_broker
@@ -45,7 +45,7 @@ class TestSoopBaHandler(HandlerTestCase):
         self.handler_class = SoopBaHandler
         super(TestSoopBaHandler, self).setUp()
 
-    @mock.patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_good_ba_file(self, mock_callsign):
         # we expect this to succeed, so if the handler experiences an error, it is considered a
         # "failed test"
@@ -60,7 +60,7 @@ class TestSoopBaHandler(HandlerTestCase):
                          + f.name)
         self.assertTrue(f.is_stored)
 
-    @mock.patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_good_nc_zip(self, mock_callsign):
         handler = self.run_handler(GOOD_ZIP)
         nc_files = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
@@ -85,17 +85,17 @@ class TestSoopBaHandler(HandlerTestCase):
                          + raw.name)
         self.assertEqual(raw.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
 
-    @mock.patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_bad_zip(self, mock_callsign):
         """ test with missing netcdf in ZIP archive"""
         self.run_handler_with_exception(InvalidInputFileError, BAD_ZIP)
 
-    @mock.patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_bad_nc(self, mock_callsign):
         """Test with invalid netcdf missing a report_id"""
         self.run_handler_with_exception(InvalidFileContentError, BAD_NC)
 
-    @mock.patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_delete_previous_file(self, mock_callsign):
         # create some PipelineFiles to represent the existing files on 'S3'
         preexisting_files = PipelineFileCollection()
@@ -145,7 +145,7 @@ class TestSoopBaHandler(HandlerTestCase):
             if png.name == os.path.basename(PNG):
                 self.assertEqual(png.is_deleted, True)
 
-    @mock.patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_overwrite_same_file(self, mock_callsign):
         # check that files with same name are overwritten
         preexisting_files = PipelineFileCollection()
@@ -175,7 +175,7 @@ class TestSoopBaHandler(HandlerTestCase):
                 self.assertEqual(csv.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
                 self.assertEqual(csv.is_deleted, False)
 
-    @mock.patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_deployment_id_with_frequency(self, mock_callsign):
         handler = self.run_handler(TRANSECT_WITH_FRQUENCY)
 

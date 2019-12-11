@@ -9,7 +9,6 @@ from aodncore.pipeline.exceptions import InvalidInputFileError, InvalidFileForma
 
 from . import soop_co2_nrt_nc_generator
 from .ship_callsign import ship_callsign_list
-from six.moves import range
 
 VALID_PROJECT = ['IMOS', 'FutureReefMap', 'SOOP-CO2_RT']
 VESSEL_CODE = {'AA': 'VNAA',

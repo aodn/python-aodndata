@@ -6,8 +6,10 @@ author: Besnard, Laurent
 """
 
 import unittest
+from unittest.mock import patch
 
-from aodncore.testlib import BaseTestCase, mock
+from aodncore.testlib import BaseTestCase
+
 from aodndata.soop.ship_callsign import ship_callsign
 
 
@@ -23,18 +25,18 @@ def mock_platform_altlabels_per_preflabel(category_name='Vessel'):
 
 
 class TestShipCallSign(BaseTestCase):
-    @mock.patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+    @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
            side_effect=mock_platform_altlabels_per_preflabel)
     def test_ship_name(self, mock_ship):
         self.assertEqual(ship_callsign('3FLZ'), 'Tropical-Islander')
 
-    @mock.patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+    @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
            side_effect=mock_platform_altlabels_per_preflabel)
     def test_unknown_ship_name(self, mock_ship):
         self.assertEqual(ship_callsign('unknown'), None)
 
-    @mock.patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
-                side_effect=mock_platform_altlabels_per_preflabel)
+    @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+           side_effect=mock_platform_altlabels_per_preflabel)
     def test_ship_old_new_same_callsign(self, mock_ship):
         """ test when a new vessel has a different callsign but same name """
         self.assertEqual(ship_callsign('VROJ8'), 'Highland-Chief')

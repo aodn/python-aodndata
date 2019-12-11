@@ -26,8 +26,6 @@ from netCDF4 import Dataset, date2num, num2date
 from aodntools.ncwriter import ImosTemplate
 from aodndata.moorings.classifiers import MooringsFileClassifier
 from aodndata.version import __version__
-from six.moves import range
-from six.moves import zip
 
 
 TEMPLATE_JSON = resource_filename('aodndata', 'templates/moorings_burst_average_template.json')
