@@ -54,15 +54,15 @@ ENTRY_POINTS = {
 
 INSTALL_REQUIRES = [
     'aodncore>=1.0.0',
+    'aodntools>=1.0.0',
     'cc-plugin-imos>=1.3.0',
     'matplotlib==1.5.1',
-    'aodntools>=0.4.4',
     'fiona>=1.8.8'
 ]
 
 TESTS_REQUIRE = [
-    'pytest',
-    'httpretty==0.9.6'
+    'httpretty',
+    'pytest'
 ]
 
 EXTRAS_REQUIRE = {
