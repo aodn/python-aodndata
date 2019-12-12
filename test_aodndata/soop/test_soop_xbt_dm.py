@@ -1,5 +1,6 @@
 import os
 import unittest
+from urllib.parse import urlparse
 
 from aodncore.pipeline import PipelineFileCheckType, PipelineFilePublishType, FileType
 from aodncore.testlib import HandlerTestCase
@@ -34,9 +35,8 @@ class TestSoopXbtDmHandler(HandlerTestCase):
         self.assertTrue(f_nc.is_checked)
         self.assertTrue(f_nc.is_stored)
 
-        f_jpg = handler.file_collection[1]  # cant filter by extension because this is a tempfile generated file until dest_path is set
-        image_path = os.path.join(handler.state_query._storage_broker.prefix,
-                                  f_jpg.dest_path)
+        f_jpg = handler.file_collection.filter_by_attribute_id('file_type', FileType.JPEG)[0]
+        image_path = os.path.join(urlparse(self.config.pipeline_config['global']['upload_uri']).path, f_jpg.dest_path)
 
         self.assertTrue(is_jpeg_file(image_path))
 

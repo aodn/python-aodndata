@@ -116,7 +116,7 @@ def create_plot(netcdfFilePath, output_dir):
                   lon="%0.2f" % lon,
                   date_start=date_start))
 
-    img_output = tempfile.NamedTemporaryFile(delete=False, dir=output_dir)
+    img_output = tempfile.NamedTemporaryFile(delete=False, dir=output_dir, suffix='.jpg')
     savefig(img_output, format='jpg')
 
     jpg_dest_path = '{}{}'.format(os.path.splitext(SoopXbtDmHandler.dest_path(netcdfFilePath))[0], '.jpg')
