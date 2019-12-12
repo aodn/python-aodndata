@@ -126,7 +126,10 @@ class MooringsProductsHandler(HandlerBase):
                     "Could not determine variable of interest for '{product_url}'".format(product_url=product_url)
                 )
             variable_of_interest = var_match.group(1).replace('-', '_')
-            self.old_product_files[variable_of_interest] = product_url
+            if variable_of_interest not in self.old_product_files:
+                self.old_product_files[variable_of_interest] = [product_url]
+            else:
+                self.old_product_files[variable_of_interest].append(product_url)
 
             self.logger.info(
                 "Old file for {variable_of_interest}: '{product_url}'".format(variable_of_interest=variable_of_interest,
@@ -162,9 +165,17 @@ class MooringsProductsHandler(HandlerBase):
             product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(product_file)
 
-            # Delete previous version of the product, making sure the new file name is not the same
-            old_product_url = self.old_product_files.get(var)
-            if old_product_url and os.path.basename(old_product_url) != os.path.basename(product_url):
+            self._cleanup_previous_version(product_file.name, var)
+
+    def _cleanup_previous_version(self, product_name, var):
+        """Delete any previously published version(s) of the product for this variable file.
+        Ignores cases where the previous version has exactly the same file name, as this will simply be overwritten.
+
+        :param product_name: Name of the newly generated product
+        :param var: Name of the variable of interest
+        """
+        for old_product_url in self.old_product_files.get(var, []):
+            if os.path.basename(old_product_url) != product_name:
                 old_file = PipelineFile(old_product_url, dest_path=old_product_url, is_deletion=True,
                                         late_deletion=True, file_update_callback=self._file_update_callback)
                 old_file.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
