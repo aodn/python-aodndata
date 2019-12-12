@@ -47,7 +47,7 @@ class MooringsProductsHandler(HandlerBase):
         self.product_variables = None
         self.input_file_collection = None
         self.input_file_variables = None
-        self.excluded_files = defaultdict(set)
+        self.excluded_files = dict()
 
     def _read_manifest(self):
         """Read the manifest file and extract key parameters for product"""
@@ -62,7 +62,7 @@ class MooringsProductsHandler(HandlerBase):
                 "manifest file '{self.input_file}' missing information (site_code, variables)".format(self=self)
             )
 
-    def _get_wfs_features(self, filter_list, propertyname='*'):
+    def get_wfs_features(self, filter_list, propertyname='*'):
         """Query the file index WFS layer with the given filters and return a list of features.
 
         :param filter_list: list of filters to apply (owslib.fes.OgcExpression instances)
@@ -97,7 +97,7 @@ class MooringsProductsHandler(HandlerBase):
                        PropertyIsNotEqualTo(propertyname='data_category', literal='CTD_profiles'),
                        PropertyIsNotEqualTo(propertyname='data_category', literal='aggregated_timeseries')
                        ]
-        wfs_features = self._get_wfs_features(filter_list, propertyname=['url', 'variables'])
+        wfs_features = self.get_wfs_features(filter_list, propertyname=['url', 'variables'])
         self.input_file_variables = {f['properties']['url']: f['properties']['variables'].split(', ')
                                      for f in wfs_features
                                      }
@@ -114,7 +114,7 @@ class MooringsProductsHandler(HandlerBase):
         filter_list = [PropertyIsEqualTo(propertyname='site_code', literal=self.product_site_code),
                        PropertyIsEqualTo(propertyname='data_category', literal='aggregated_timeseries')
                        ]
-        wfs_features = self._get_wfs_features(filter_list, propertyname=['url'])
+        wfs_features = self.get_wfs_features(filter_list, propertyname=['url'])
 
         self.old_product_files = {}
         var_pattern = re.compile(r'FV01_([A-Z0-9-]+)-aggregated')
@@ -153,7 +153,10 @@ class MooringsProductsHandler(HandlerBase):
             if errors:
                 self.logger.warning("{n} files were excluded from the aggregation.".format(n=len(errors)))
                 for f, e in errors.items():
-                    self.excluded_files[f].update(e)
+                    if f not in self.excluded_files:
+                        self.excluded_files[f] = set(e)
+                    else:
+                        self.excluded_files[f].update(e)
 
             product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
             product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
