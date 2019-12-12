@@ -58,7 +58,7 @@ INSTALL_REQUIRES = [
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8',
     'matplotlib>=1.5.1',
-    'pillow'  # indirectly used by matplotlib in savefig. See soop_xbt_dm handler
+    'pillow>=6.2.1'  # provide additional image formats for matplotlib
 ]
 
 TESTS_REQUIRE = [
