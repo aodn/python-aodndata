@@ -11,6 +11,7 @@ GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.
 GOOD_FRMAP = os.path.join(TEST_ROOT, 'FutureReefMap_GST_20150518T124011Z_9V2768_FV01.nc')
 GOOD_ZIP = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.zip')
 GOOD_RT_IN_TXT = os.path.join(TEST_ROOT, 'IN_2018-022-0000dat.txt')
+GOOD_RT_IN_2_TXT = os.path.join(TEST_ROOT, 'IN_2019-345-0000dat.txt')
 GOOD_RT_AA_TXT = os.path.join(TEST_ROOT, 'AA_2019-032-0001dat.txt')
 
 ship_callsign_ls = {'VNAA': 'Aurora-Australis',
@@ -95,6 +96,27 @@ class TestSoopCo2Handler(HandlerTestCase):
         self.assertEqual(f_txt.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
         self.assertEqual(os.path.join('IMOS/SOOP/SOOP-CO2/VLMJ_Investigator/REALTIME/2018/1/',
                                       os.path.basename(GOOD_RT_IN_TXT)),
+                         f_txt.archive_path)
+        self.assertTrue(f_nc.is_checked)
+        self.assertTrue(f_nc.is_stored)
+
+    def test_good_rt_in_2_txt(self):
+        handler = self.run_handler(GOOD_RT_IN_2_TXT,
+                                   custom_params={'ship_callsign_ls': ship_callsign_ls},
+                                   check_params={'checks': ['cf', 'imos:1.4']})
+
+        f_txt = handler.file_collection.filter_by_attribute_value('extension', '.txt')[0]
+        self.assertEqual(f_txt.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+
+        f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual('IMOS/SOOP/SOOP-CO2/VLMJ_Investigator/REALTIME/2019/12/'
+                         'IMOS_SOOP-CO2_GST_20191211T000435Z_VLMJ_FV00_END-20191212T000127Z.nc',
+                         f_nc.dest_path)
+
+        self.assertEqual(f_txt.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-CO2/VLMJ_Investigator/REALTIME/2019/12/',
+                                      os.path.basename(GOOD_RT_IN_2_TXT)),
                          f_txt.archive_path)
         self.assertTrue(f_nc.is_checked)
         self.assertTrue(f_nc.is_stored)

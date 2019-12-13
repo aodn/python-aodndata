@@ -222,6 +222,7 @@ def read_realtime_file(self):
 
     dataf = check_parameters(dataf, platform_code_short,
                              input_rt_parameter, self.src_path)
+    dataf = dataf.apply(lambda x: x.str.strip() if x.dtype == "object" else x)  # strip whitespace
 
     return dataf, platform_code
 
@@ -247,7 +248,7 @@ def check_parameters(dataf, vessel_code, input_param, src_file):
         # var TYPE conversion to string outside this function
         for param in rt_input_parameters:
             if param not in set(['Type', 'PcDate', 'PcTime']):
-                dataf[param] = dataf[param].apply(pd.to_numeric)
+                dataf[param] = dataf[param].apply(pd.to_numeric, errors='coerce')  # convert bad non numeric to NaN
 
     if all(np.isnan(dataf['GpsShipLatitude'])) or all(np.isnan(dataf['GpsShipLongitude'])):
         raise InvalidFileContentError(
