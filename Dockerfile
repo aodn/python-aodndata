@@ -11,6 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
     git \
     libfreetype6-dev \
+    libmagic1 \
     libpng-dev \
     libudunits2-dev \
     pkg-config \
