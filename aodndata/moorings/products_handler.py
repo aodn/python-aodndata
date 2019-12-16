@@ -6,7 +6,8 @@ import re
 from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, PropertyIsLike, PropertyIsNotEqualTo, And
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType, PipelineFileCollection, PipelineFile
-from aodncore.pipeline.exceptions import ComplianceCheckFailedError, InvalidFileContentError, InvalidFileNameError
+from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNameError, MissingFileError,
+                                          PipelineSystemError)
 from aodncore.pipeline.files import RemotePipelineFileCollection, RemotePipelineFile
 from aodncore.util.wfs import ogc_filter_to_string
 
@@ -80,6 +81,11 @@ class MooringsProductsHandler(HandlerBase):
                                                                     filter=ogc_filter,
                                                                     propertyname=propertyname
                                                                     )
+        if not wfs_response or 'features' not in wfs_response:
+            raise PipelineSystemError("Invalid WFS response received from '{wfs_url}'".format(
+                wfs_url=self.config.pipeline_config['global'].get('wfs_url')
+            ))
+
         return wfs_response['features']
 
     def _get_input_files(self):
@@ -98,6 +104,9 @@ class MooringsProductsHandler(HandlerBase):
                        PropertyIsNotEqualTo(propertyname='data_category', literal='aggregated_timeseries')
                        ]
         wfs_features = self.get_wfs_features(filter_list, propertyname=['url', 'variables'])
+        if not wfs_features:
+            raise MissingFileError("No input files found for site '{self.product_site_code}'".format(self=self))
+
         self.input_file_variables = {f['properties']['url']: f['properties']['variables'].split(', ')
                                      for f in wfs_features
                                      }
