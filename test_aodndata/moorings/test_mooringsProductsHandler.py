@@ -1,6 +1,7 @@
 import json
 import os
 import unittest
+from unittest.mock import patch
 
 import httpretty
 from aodncore.pipeline import (PipelineFile, PipelineFileCollection,
@@ -48,13 +49,9 @@ class TestMooringsProductsHandler(HandlerTestCase):
         self.handler_class = MooringsProductsHandler
         super(TestMooringsProductsHandler, self).setUp()
 
-    @httpretty.activate
-    def test_good_manifest(self):
-        httpretty.register_uri(httpretty.GET, self.config.pipeline_config['global']['wfs_url'],
-                               responses=[TEST_GETCAPABILITIES_RESPONSE, TEST_GETCAPABILITIES_RESPONSE,
-                                          TEST_GETFEATURE_RESPONSE, TEST_GETFEATURE_OLD_PRODUCTS_RESPONSE]
-                               )
-        # TODO: remove double TEST_GETCAPABILITIES_RESPONSE above, when it's no longer needed
+    @patch('aodncore.util.wfs.WebFeatureService')
+    def test_good_manifest(self, mock_webfeatureservice):
+        mock_webfeatureservice().getfeature().getvalue.return_value = TEST_GETFEATURE_JSON
 
         upload_broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         upload_broker.upload(INPUT_FILE_COLLECTION)
@@ -64,7 +61,7 @@ class TestMooringsProductsHandler(HandlerTestCase):
                               handler.input_file_collection.get_attribute_list('dest_path')
                               )
         self.assertEqual(len(handler.file_collection), 5)
-        
+
         published_files = handler.file_collection.filter_by_attribute_id('publish_type',
                                                                          PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertEqual(len(published_files), 3)
