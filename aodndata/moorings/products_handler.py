@@ -16,6 +16,9 @@ from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
 from aodndata.moorings.classifiers import MooringsFileClassifier
 
 
+AGGREGATED_VARIABLE_PATTERN = re.compile(r'FV01_([A-Z0-9-]+)-aggregated')
+
+
 class MooringsProductClassifier(MooringsFileClassifier):
     @classmethod
     def _get_data_category(cls, input_file):
@@ -126,10 +129,9 @@ class MooringsProductsHandler(HandlerBase):
         wfs_features = self.get_wfs_features(filter_list, propertyname=['url'])
 
         self.old_product_files = {}
-        var_pattern = re.compile(r'FV01_([A-Z0-9-]+)-aggregated')
         for f in wfs_features:
             product_url = f['properties']['url']
-            var_match = var_pattern.search(product_url)
+            var_match = AGGREGATED_VARIABLE_PATTERN.search(product_url)
             if not var_match:
                 raise InvalidFileNameError(
                     "Could not determine variable of interest for '{product_url}'".format(product_url=product_url)
