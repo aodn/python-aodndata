@@ -76,14 +76,10 @@ class MooringsProductsHandler(HandlerBase):
 
         ogc_filter = ogc_filter_to_string(And(filter_list))
 
-        # Note I need to access _wfs_broker to be able to use query_urls_for_layer() with a filter,
-        # as the corresponding StateQuery method doesn't accept additional kwargs.
-        # TODO: find out why this calls getCapabilities twice (and takes 40s even when response mocked with httpretty)
-        # TODO: replace ._wfs_broker.getfeature_dict() with .getfeature_dict() once aodncore has been updated
-        wfs_response = self.state_query._wfs_broker.getfeature_dict(typename=[self.FILE_INDEX_LAYER],
-                                                                    filter=ogc_filter,
-                                                                    propertyname=propertyname
-                                                                    )
+        wfs_response = self.state_query.query_wfs_getfeature_dict(typename=[self.FILE_INDEX_LAYER],
+                                                                  filter=ogc_filter,
+                                                                  propertyname=propertyname
+                                                                  )
         if not wfs_response or 'features' not in wfs_response:
             raise PipelineSystemError("Invalid WFS response received from '{wfs_url}'".format(
                 wfs_url=self.config.pipeline_config['global'].get('wfs_url')
