@@ -18,20 +18,14 @@ PRODUCT_FILE = os.path.join(
     'IMOS_ANMN-NRS_TZ_20181213_NRSROT_FV01_TEMP-aggregated-timeseries_END-20190523_C-20191218.nc'
 )
 
-GETCAPABILITIES_FILE = os.path.join(TEST_ROOT, 'getCapabilities.xml')
 GETFEATURE_FILE = os.path.join(TEST_ROOT, 'getFeature.json')
 GETFEATURE_OLD_PRODUCTS_FILE = os.path.join(TEST_ROOT, 'getFeature_old_products.json')
 
-with open(GETCAPABILITIES_FILE) as f:
-    TEST_GETCAPABILITIES_RESPONSE = httpretty.Response(f.read())
-
 with open(GETFEATURE_FILE) as f:
     TEST_GETFEATURE_JSON = f.read()
-TEST_GETFEATURE_RESPONSE = httpretty.Response(TEST_GETFEATURE_JSON)
 
 with open(GETFEATURE_OLD_PRODUCTS_FILE) as f:
     TEST_GETFEATURE_OLD_PRODUCTS_JSON = f.read()
-TEST_GETFEATURE_OLD_PRODUCTS_RESPONSE = httpretty.Response(TEST_GETFEATURE_OLD_PRODUCTS_JSON)
 
 features = json.loads(TEST_GETFEATURE_JSON)['features']
 INPUT_FILE_COLLECTION = PipelineFileCollection()
