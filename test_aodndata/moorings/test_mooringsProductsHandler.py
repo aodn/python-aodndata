@@ -1,4 +1,3 @@
-import httpretty
 import json
 import os
 import unittest
@@ -13,20 +12,14 @@ from aodndata.moorings.products_handler import MooringsProductsHandler
 TEST_ROOT = os.path.dirname(__file__)
 GOOD_MANIFEST = os.path.join(TEST_ROOT, 'test_product.json_manifest')
 
-GETCAPABILITIES_FILE = os.path.join(TEST_ROOT, 'getCapabilities.xml')
 GETFEATURE_FILE = os.path.join(TEST_ROOT, 'getFeature.json')
 GETFEATURE_OLD_PRODUCTS_FILE = os.path.join(TEST_ROOT, 'getFeature_old_products.json')
 
-with open(GETCAPABILITIES_FILE) as f:
-    TEST_GETCAPABILITIES_RESPONSE = httpretty.Response(f.read())
-
 with open(GETFEATURE_FILE) as f:
     TEST_GETFEATURE_JSON = f.read()
-TEST_GETFEATURE_RESPONSE = httpretty.Response(TEST_GETFEATURE_JSON)
 
 with open(GETFEATURE_OLD_PRODUCTS_FILE) as f:
     TEST_GETFEATURE_OLD_PRODUCTS_JSON = f.read()
-TEST_GETFEATURE_OLD_PRODUCTS_RESPONSE = httpretty.Response(TEST_GETFEATURE_OLD_PRODUCTS_JSON)
 
 features = json.loads(TEST_GETFEATURE_JSON)['features']
 INPUT_FILE_COLLECTION = PipelineFileCollection()
@@ -64,7 +57,7 @@ class TestMooringsProductsHandler(HandlerTestCase):
             self.assertTrue(f.is_harvested and f.is_stored)
 
         deleted_files = handler.file_collection.filter_by_attribute_id('publish_type',
-                                                                        PipelineFilePublishType.DELETE_UNHARVEST)
+                                                                       PipelineFilePublishType.DELETE_UNHARVEST)
         self.assertEqual(len(deleted_files), 2)
         for f in deleted_files:
             self.assertTrue(f.is_harvested and f.is_stored)
