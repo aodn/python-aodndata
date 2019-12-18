@@ -1,14 +1,13 @@
-from collections import defaultdict
 import json
 import os
 import re
 
-from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, PropertyIsLike, PropertyIsNotEqualTo, And
+from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And
 
-from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType, PipelineFileCollection, PipelineFile
-from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNameError, MissingFileError,
-                                          PipelineSystemError)
-from aodncore.pipeline.files import RemotePipelineFileCollection, RemotePipelineFile
+from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFile
+from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNameError, InvalidFileFormatError,
+                                          MissingFileError, PipelineSystemError)
+from aodncore.pipeline.files import RemotePipelineFileCollection
 from aodncore.util.wfs import ogc_filter_to_string
 
 from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
