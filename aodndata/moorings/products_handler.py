@@ -39,24 +39,18 @@ class MooringsProductClassifier(MooringsFileClassifier):
     @classmethod
     def dest_path(cls, input_file):
         """
-        Destination object path for a moorings netCDF file. Of the form:
+        Destination object path for a moorings product file. Of the form:
 
-          'IMOS/<facility>/<subfacility>/<site_code>/<data_category>/<product_level>'
+          'IMOS/ANMN/<subfacility>/<site_code>/<data_category>', or
+          'IMOS/ABOS/<subfacility>/<data_category>'
 
         where
-        <facility> = 'ANMN' or 'ABOS'
         <subfacility> is the sub-facility code ('NRS', 'NSW', 'SOTS', etc...)
         <site_code> is the value of the site_code global attribute
-        <data_category> is a broad category like 'Temperature', 'CTD_profiles', etc...
-        <product_level> is
-         - 'non-QC' for FV00 files
-         - empty for FV01 files
-         - 'burst-averaged' or 'gridded' as appropriate, for FV02 files
+        <data_category> is 'aggregated_timeseries', 'hourly_timeseries', or 'gridded_timeseries'
         The basename of the input file is appended.
 
         """
-        name_fields = cls._get_file_name_fields(input_file)
-
         dir_list = [cls.PROJECT]
         dir_list.extend(cls._get_facility(input_file))
 
