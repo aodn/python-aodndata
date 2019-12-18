@@ -28,16 +28,17 @@ TEST_GETFEATURE_RESPONSE = httpretty.Response(TEST_GETFEATURE_JSON)
 features = json.loads(TEST_GETFEATURE_JSON)['features']
 INPUT_FILE_COLLECTION = PipelineFileCollection()
 for f in features:
-    pf = PipelineFile(os.path.join(TEST_ROOT,
-                                   os.path.basename(f['properties']['url'])),
-                      dest_path=f['properties']['url'])
+    pf = PipelineFile(
+            os.path.join(TEST_ROOT, os.path.basename(f['properties']['url'])),
+            dest_path=f['properties']['url']
+    )
     pf.publish_type = PipelineFilePublishType.UPLOAD_ONLY
     INPUT_FILE_COLLECTION.add(pf)
 
 
 class TestMooringsProductsHandler(HandlerTestCase):
     def setUp(self):
-        self.tempdir = mkdtemp()
+        self.temp_dir = mkdtemp()
         self.handler_class = MooringsProductsHandler
         super(TestMooringsProductsHandler, self).setUp()
 
@@ -46,17 +47,13 @@ class TestMooringsProductsHandler(HandlerTestCase):
 
     @httpretty.activate
     def test_good_manifest(self):
-        httpretty.register_uri(
-            httpretty.GET,
-            self.config.pipeline_config['global']['wfs_url'],
-            responses=[
-                TEST_GETCAPABILITIES_RESPONSE, TEST_GETCAPABILITIES_RESPONSE,
-                TEST_GETFEATURE_RESPONSE
-            ])
+        httpretty.register_uri(httpretty.GET, self.config.pipeline_config['global']['wfs_url'],
+                               responses=[TEST_GETCAPABILITIES_RESPONSE, TEST_GETCAPABILITIES_RESPONSE,
+                                          TEST_GETFEATURE_RESPONSE]
+                               )
         # TODO: remove double TEST_GETCAPABILITIES_RESPONSE above, when it's no longer needed
 
-        upload_broker = get_storage_broker(
-            self.config.pipeline_config['global']['upload_uri'])
+        upload_broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         upload_broker.upload(INPUT_FILE_COLLECTION)
 
         handler = self.run_handler(GOOD_MANIFEST)
