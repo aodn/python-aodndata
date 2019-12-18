@@ -45,7 +45,8 @@ class TestMooringsProductsHandler(HandlerTestCase):
 
     @patch('aodncore.util.wfs.WebFeatureService')
     def test_good_manifest(self, mock_webfeatureservice):
-        mock_webfeatureservice().getfeature().getvalue.return_value = TEST_GETFEATURE_JSON
+        mock_webfeatureservice().getfeature().getvalue.side_effect = [TEST_GETFEATURE_JSON,
+                                                                      TEST_GETFEATURE_OLD_PRODUCTS_JSON]
 
         upload_broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         upload_broker.upload(INPUT_FILE_COLLECTION)
