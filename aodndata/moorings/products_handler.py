@@ -24,7 +24,9 @@ class MooringsProductClassifier(MooringsFileClassifier):
         elif 'gridded-timeseries' in input_file:
             return 'gridded_timeseries'
         else:
-            raise InvalidFileNameError(f"Could not determine data category from {name}", input_file)
+            raise InvalidFileNameError(
+                "Could not determine data category from {name}".format(name=input_file)
+            )
 
     @classmethod
     def _get_product_level(cls, input_file):
