@@ -1,5 +1,6 @@
 from collections import defaultdict
 import json
+import os
 
 from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, PropertyIsLike, PropertyIsNotEqualTo, And
 
@@ -28,6 +29,45 @@ class MooringsProductClassifier(MooringsFileClassifier):
     @classmethod
     def _get_product_level(cls, input_file):
         return ''
+
+    @classmethod
+    def dest_path(cls, input_file):
+        """
+        Destination object path for a moorings netCDF file. Of the form:
+
+          'IMOS/<facility>/<subfacility>/<site_code>/<data_category>/<product_level>'
+
+        where
+        <facility> = 'ANMN' or 'ABOS'
+        <subfacility> is the sub-facility code ('NRS', 'NSW', 'SOTS', etc...)
+        <site_code> is the value of the site_code global attribute
+        <data_category> is a broad category like 'Temperature', 'CTD_profiles', etc...
+        <product_level> is
+         - 'non-QC' for FV00 files
+         - empty for FV01 files
+         - 'burst-averaged' or 'gridded' as appropriate, for FV02 files
+        The basename of the input file is appended.
+
+        """
+        name_fields = cls._get_file_name_fields(input_file)
+
+        dir_list = [cls.PROJECT]
+        dir_list.extend(cls._get_facility(input_file))
+
+        if input_file.endswith('.nc'):
+            if 'ABOS' not in input_file:
+                dir_list.append(cls._get_site_code(input_file))
+            dir_list.append(cls._get_data_category(input_file))
+            dir_list.append(cls._get_product_level(input_file))
+
+        else:
+            raise InvalidFileFormatError(
+                "Don't know where to put file '{name}' (unhandled extension)".format(name=input_file)
+            )
+
+        dir_list.append(os.path.basename(input_file))
+
+        return cls._make_path(dir_list)
 
 
 class MooringsProductsHandler(HandlerBase):
