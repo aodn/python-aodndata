@@ -1,8 +1,6 @@
 import json
 import os
-import shutil
 import unittest
-from tempfile import mkdtemp
 
 import httpretty
 from aodncore.pipeline import (PipelineFile, PipelineFileCollection,
@@ -10,7 +8,7 @@ from aodncore.pipeline import (PipelineFile, PipelineFileCollection,
 from aodncore.pipeline.storage import get_storage_broker
 from aodncore.testlib import HandlerTestCase, make_test_file
 
-from aodndata.moorings.products_handler import MooringsProductsHandler
+from aodndata.moorings.products_handler import MooringsProductsHandler, MooringsProductClassifier
 
 TEST_ROOT = os.path.dirname(__file__)
 GOOD_MANIFEST = os.path.join(TEST_ROOT, 'test_product.json_manifest')
@@ -38,12 +36,8 @@ for f in features:
 
 class TestMooringsProductsHandler(HandlerTestCase):
     def setUp(self):
-        self.temp_dir = mkdtemp()
         self.handler_class = MooringsProductsHandler
         super(TestMooringsProductsHandler, self).setUp()
-
-    def tearDown(self):
-        shutil.rmtree(self.tempdir)
 
     @httpretty.activate
     def test_good_manifest(self):
@@ -59,10 +53,13 @@ class TestMooringsProductsHandler(HandlerTestCase):
         handler = self.run_handler(GOOD_MANIFEST)
         self.assertEqual(len(handler.excluded_files), 1)
 
-    def test_aodn_moorings_aggregated(self):
+
+class TestMooringProductClassifier(HandlerTestCase):
+
+    def test_anmn_aggregated_timeseries(self):
         expected_prefix = 'IMOS/ANMN/QLD/GBRLSL/aggregated_timeseries'
         filename = 'IMOS_ANMN-QLD_BZ_20121103_GBRLSL_FV01_CPHL-aggregated-timeseries_END-20140522_C-20191120.nc'
-        testfile = os.path.join(self.tempdir, filename)
+        testfile = os.path.join(self.temp_dir, filename)
         make_test_file(
             testfile, {
                 'site_code': 'GBRLSL',
@@ -70,14 +67,14 @@ class TestMooringsProductsHandler(HandlerTestCase):
                 'featureType': 'timeSeries'
             })
         dest_dir, dest_filename = os.path.split(
-            MooringsProductsHandler.dest_path(testfile))
+            MooringsProductClassifier.dest_path(testfile))
         self.assertEqual(dest_dir, expected_prefix)
         self.assertEqual(dest_filename, filename)
 
-    def test_aodn_moorings_hourly_timeseries_qc(self):
+    def test_anmn_hourly_timeseries_qc(self):
         expected_prefix = 'IMOS/ANMN/QLD/GBRLSL/hourly_timeseries'
         filename = 'IMOS_ANMN-QLD_BSTUZ_20071103_GBRLSL_FV02_hourly-timeseries_END-20140523_C-20191010.nc'
-        testfile = os.path.join(self.tempdir, filename)
+        testfile = os.path.join(self.temp_dir, filename)
         make_test_file(
             testfile, {
                 'site_code': 'GBRLSL',
@@ -89,10 +86,10 @@ class TestMooringsProductsHandler(HandlerTestCase):
         self.assertEqual(dest_dir, expected_prefix)
         self.assertEqual(dest_filename, filename)
 
-    def test_aodn_moorings_hourly_timeseries_nonqc(self):
+    def test_anmn_hourly_timeseries_nonqc(self):
         expected_prefix = 'IMOS/ANMN/QLD/GBRLSL/hourly_timeseries'
         filename = 'IMOS_ANMN-QLD_BSTUZ_20071103_GBRLSL_FV02_hourly-timeseries-including-non-QC_END-20140523_C-20191010.nc'
-        testfile = os.path.join(self.tempdir, filename)
+        testfile = os.path.join(self.temp_dir, filename)
         make_test_file(
             testfile, {
                 'site_code': 'GBRLSL',
@@ -104,10 +101,10 @@ class TestMooringsProductsHandler(HandlerTestCase):
         self.assertEqual(dest_dir, expected_prefix)
         self.assertEqual(dest_filename, filename)
 
-    def test_aodn_moorings_gridded_timeseries(self):
+    def test_anmn_gridded_timeseries(self):
         expected_prefix = 'IMOS/ANMN/NRS/NRSROT/gridded_timeseries'
         filename = 'IMOS_ANMN-NRS_SZ_20081120_NRSROT_FV02_PSAL-gridded-timeseries_END-20190523_C-20191121.nc'
-        testfile = os.path.join(self.tempdir, filename)
+        testfile = os.path.join(self.temp_dir, filename)
         make_test_file(
             testfile, {
                 'site_code': 'NRSROT',
