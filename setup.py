@@ -1,8 +1,6 @@
 from itertools import chain
 from setuptools import setup, find_packages
 
-from aodndata.version import __version__
-
 ENTRY_POINTS = {
     'pipeline.handlers': [
         'AatamsDmHandler = aodndata.aatams.aatams_dm:AatamsDmHandler',
@@ -55,16 +53,17 @@ ENTRY_POINTS = {
 }
 
 INSTALL_REQUIRES = [
-    'aodncore>=0.31.0',
+    'aodncore>=1.0.0',
+    'aodntools>=1.0.0',
     'cc-plugin-imos>=1.3.0',
-    'matplotlib==1.5.1',
-    'aodntools>=0.4.4',
-    'pandas==0.24.2',
-    'fiona>=1.8.8'
+    'fiona>=1.8.8',
+    'matplotlib>=1.5.1',
+    'pillow>=6.2.1'  # provide additional image formats for matplotlib
 ]
 
 TESTS_REQUIRE = [
-    'httpretty==0.9.6'
+    'httpretty',
+    'pytest'
 ]
 
 EXTRAS_REQUIRE = {
@@ -81,7 +80,7 @@ PACKAGE_NAME = 'aodndata'
 
 setup(
     name=PACKAGE_NAME,
-    version=__version__,
+    version='1.0.6',
     packages=find_packages(exclude=PACKAGE_EXCLUDES),
     url='https://github.com/aodn',
     license='GPLv3',
@@ -89,11 +88,23 @@ setup(
     author_email='developers@emii.org.au',
     description='AODN pipeline library',
     zip_safe=False,
+    python_requires='>=3.5',
     install_requires=INSTALL_REQUIRES,
     extras_require=EXTRAS_REQUIRE,
     tests_require=TESTS_REQUIRE,
     test_suite='test_aodndata',
     entry_points=ENTRY_POINTS,
     include_package_data=True,
-    package_data={'aodndata': ['templates/*.json']}
+    package_data={'aodndata': ['templates/*.json']},
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Natural Language :: English',
+        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: Implementation :: CPython',
+    ],
 )

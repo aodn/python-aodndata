@@ -2,12 +2,11 @@ import datetime
 import os
 import tempfile
 
+from aodncore.pipeline import HandlerBase, PipelineFile, PipelineFilePublishType
 from matplotlib.pyplot import (plot, savefig, subplots, subplots_adjust, text,
                                title, xticks)
-from netCDF4 import Dataset, num2date
+from netCDF4 import Dataset
 from numpy import ma
-
-from aodncore.pipeline import HandlerBase, PipelineFile, PipelineFilePublishType
 
 
 class SoopXbtDmHandler(HandlerBase):
@@ -117,8 +116,8 @@ def create_plot(netcdfFilePath, output_dir):
                   lon="%0.2f" % lon,
                   date_start=date_start))
 
-    jpg_output = tempfile.NamedTemporaryFile(delete=False, dir=output_dir)
-    savefig(jpg_output)
+    img_output = tempfile.NamedTemporaryFile(delete=False, dir=output_dir, suffix='.jpg')
+    savefig(img_output, format='jpg')
 
     jpg_dest_path = '{}{}'.format(os.path.splitext(SoopXbtDmHandler.dest_path(netcdfFilePath))[0], '.jpg')
-    return jpg_output.name, jpg_dest_path
+    return img_output.name, jpg_dest_path

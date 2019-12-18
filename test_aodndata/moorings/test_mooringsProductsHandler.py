@@ -15,6 +15,7 @@ GOOD_MANIFEST = os.path.join(TEST_ROOT, 'test_product.json_manifest')
 
 GETCAPABILITIES_FILE = os.path.join(TEST_ROOT, 'getCapabilities.xml')
 GETFEATURE_FILE = os.path.join(TEST_ROOT, 'getFeature.json')
+GETFEATURE_OLD_PRODUCTS_FILE = os.path.join(TEST_ROOT, 'getFeature_old_products.json')
 
 with open(GETCAPABILITIES_FILE) as f:
     TEST_GETCAPABILITIES_RESPONSE = httpretty.Response(f.read())
@@ -22,6 +23,10 @@ with open(GETCAPABILITIES_FILE) as f:
 with open(GETFEATURE_FILE) as f:
     TEST_GETFEATURE_JSON = f.read()
 TEST_GETFEATURE_RESPONSE = httpretty.Response(TEST_GETFEATURE_JSON)
+
+with open(GETFEATURE_OLD_PRODUCTS_FILE) as f:
+    TEST_GETFEATURE_OLD_PRODUCTS_JSON = f.read()
+TEST_GETFEATURE_OLD_PRODUCTS_RESPONSE = httpretty.Response(TEST_GETFEATURE_OLD_PRODUCTS_JSON)
 
 features = json.loads(TEST_GETFEATURE_JSON)['features']
 INPUT_FILE_COLLECTION = PipelineFileCollection()
@@ -43,7 +48,7 @@ class TestMooringsProductsHandler(HandlerTestCase):
     def test_good_manifest(self):
         httpretty.register_uri(httpretty.GET, self.config.pipeline_config['global']['wfs_url'],
                                responses=[TEST_GETCAPABILITIES_RESPONSE, TEST_GETCAPABILITIES_RESPONSE,
-                                          TEST_GETFEATURE_RESPONSE]
+                                          TEST_GETFEATURE_RESPONSE, TEST_GETFEATURE_OLD_PRODUCTS_RESPONSE]
                                )
         # TODO: remove double TEST_GETCAPABILITIES_RESPONSE above, when it's no longer needed
 
@@ -51,6 +56,23 @@ class TestMooringsProductsHandler(HandlerTestCase):
         upload_broker.upload(INPUT_FILE_COLLECTION)
 
         handler = self.run_handler(GOOD_MANIFEST)
+        self.assertCountEqual(INPUT_FILE_COLLECTION.get_attribute_list('dest_path'),
+                              handler.input_file_collection.get_attribute_list('dest_path')
+                              )
+        self.assertEqual(len(handler.file_collection), 5)
+        
+        published_files = handler.file_collection.filter_by_attribute_id('publish_type',
+                                                                         PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(len(published_files), 3)
+        for f in published_files:
+            self.assertTrue(f.is_harvested and f.is_stored)
+
+        deleted_files = handler.file_collection.filter_by_attribute_id('publish_type',
+                                                                        PipelineFilePublishType.DELETE_UNHARVEST)
+        self.assertEqual(len(deleted_files), 2)
+        for f in deleted_files:
+            self.assertTrue(f.is_harvested and f.is_stored)
+
         self.assertEqual(len(handler.excluded_files), 1)
 
 

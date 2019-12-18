@@ -1,8 +1,9 @@
 import os
 import unittest
+from unittest.mock import patch
 
 from aodncore.pipeline.exceptions import InvalidFileNameError
-from aodncore.testlib import HandlerTestCase, mock
+from aodncore.testlib import HandlerTestCase
 
 from aodndata.srs.srs_oc_soop_rad import SrsOcSoopRadHandler
 
@@ -36,7 +37,7 @@ class TestSrsOcSoopRadHandler(HandlerTestCase):
         self.handler_class = SrsOcSoopRadHandler
         super(TestSrsOcSoopRadHandler, self).setUp()
 
-    @mock.patch("aodndata.srs.srs_oc_soop_rad.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    @patch("aodndata.srs.srs_oc_soop_rad.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_good_netcdf(self, mock_ship):
         dest_path = SrsOcSoopRadHandler.dest_path(NC_FILE)
         self.assertEqual(dest_path,
@@ -52,7 +53,7 @@ class TestSrsOcSoopRadHandler(HandlerTestCase):
                          os.path.join('IMOS/SRS/OC/radiometer/VMQ9273_Solander/2013/fv02-products',
                                       'IMOS_SRS-OC_F_20130730T010221Z_VMQ9273_FV02_DALEC_20130730T082813Z.nc'))
 
-    @mock.patch("aodndata.srs.srs_oc_soop_rad.ship_callsign_list", side_effect=mock_ship_callsign_list)
+    @patch("aodndata.srs.srs_oc_soop_rad.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_bad_netcdf(self, mock_ship):
         with self.assertRaises(InvalidFileNameError):
             SrsOcSoopRadHandler.dest_path(NC_FILE_BAD_1)

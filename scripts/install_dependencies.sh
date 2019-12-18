@@ -4,7 +4,7 @@ set -ex
 
 STAGE=${STAGE:-production}
 
-PIPARGS="-c constraints.txt"
+PIPARGS=""
 if [ "$1" == "--user" ]; then
   PIPARGS="${PIPARGS} --user"
 fi
@@ -25,5 +25,4 @@ pip install ${PIPARGS} $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNTOOLS_URL} \
 pip install ${PIPARGS} $(aodnfetcher -c ${WHEEL_CACHE_DIR} ${AODNCORE_URL} \
     | python -c "import json, sys; print(json.load(sys.stdin)['${AODNCORE_URL}']['local_file'])")
 
-pip install ${PIPARGS} -r requirements.txt
-pip install ${PIPARGS} ".[testing]"
+pip install ${PIPARGS} -r test_requirements.txt
