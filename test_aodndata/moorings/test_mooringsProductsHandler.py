@@ -12,6 +12,10 @@ from aodndata.moorings.products_handler import MooringsProductsHandler, Moorings
 
 TEST_ROOT = os.path.dirname(__file__)
 GOOD_MANIFEST = os.path.join(TEST_ROOT, 'test_product.json_manifest')
+PRODUCT_FILE = os.path.join(
+    TEST_ROOT,
+    'IMOS_ANMN-NRS_TZ_20181213_NRSROT_FV01_TEMP-aggregated-timeseries_END-20190523_C-20191218.nc'
+)
 
 GETCAPABILITIES_FILE = os.path.join(TEST_ROOT, 'getCapabilities.xml')
 GETFEATURE_FILE = os.path.join(TEST_ROOT, 'getFeature.json')
@@ -68,12 +72,22 @@ class TestMooringsProductsHandler(HandlerTestCase):
             self.assertTrue(f.is_harvested and f.is_stored)
 
         deleted_files = handler.file_collection.filter_by_attribute_id('publish_type',
-                                                                        PipelineFilePublishType.DELETE_UNHARVEST)
+                                                                       PipelineFilePublishType.DELETE_UNHARVEST)
         self.assertEqual(len(deleted_files), 2)
         for f in deleted_files:
             self.assertTrue(f.is_harvested and f.is_stored)
 
         self.assertEqual(len(handler.excluded_files), 1)
+
+    def test_publish_product_nc(self):
+        handler = self.run_handler(PRODUCT_FILE)
+        self.assertEqual(len(handler.file_collection), 1)
+        f = handler.file_collection[0]
+        self.assertTrue(f.is_harvested and f.is_stored)
+        self.assertEqual(
+            os.path.join('IMOS/ANMN/NRS/NRSROT/aggregated_timeseries', os.path.basename(PRODUCT_FILE)),
+            f.dest_path
+        )
 
 
 class TestMooringProductClassifier(HandlerTestCase):

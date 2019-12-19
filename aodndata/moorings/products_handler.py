@@ -4,7 +4,7 @@ import re
 
 from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And
 
-from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFile
+from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFile, FileType
 from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNameError, InvalidFileFormatError,
                                           MissingFileError, PipelineSystemError)
 from aodncore.pipeline.files import RemotePipelineFileCollection
@@ -71,7 +71,7 @@ class MooringsProductClassifier(MooringsFileClassifier):
 
 
 class MooringsProductsHandler(HandlerBase):
-    """Handler to create products from moorings files.
+    """Handler to create and publish products from moorings files.
 
     The input file is a JSON document containing a site_code and a list of variables. The handler will then create
     the products for each variable at that site, using all the relevant input files available on S3.
@@ -81,13 +81,15 @@ class MooringsProductsHandler(HandlerBase):
         "site_code": "NRSMAI",
         "variables": ["TEMP", "PSAL", "DOX1", "DOX2", "CPHL"]
     }
+
+    The handler can also publish product netCDF files that have been generated externally.
     """
 
     FILE_INDEX_LAYER = 'imos:moorings_all_map'
 
     def __init__(self, *args, **kwargs):
         super(MooringsProductsHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.json_manifest']
+        self.allowed_extensions = ['.json_manifest', '.nc', '.zip']
         self.product_site_code = None
         self.product_variables = None
         self.input_file_collection = None
@@ -234,7 +236,12 @@ class MooringsProductsHandler(HandlerBase):
                 self.file_collection.add(old_file)
 
     def preprocess(self):
-        """Collect available input files and create the products, adding them to the collection to be published."""
+        """If the input is a manifest file, collect available input files and
+        create the products, adding them to the collection to be published.
+        """
+
+        if self.file_type is not FileType.JSON_MANIFEST:
+            return
 
         self._read_manifest()
         self.logger.info(
