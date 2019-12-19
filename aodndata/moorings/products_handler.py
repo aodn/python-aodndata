@@ -1,14 +1,13 @@
-from collections import defaultdict
 import json
 import os
 import re
 
-from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, PropertyIsLike, PropertyIsNotEqualTo, And
+from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And
 
-from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType, PipelineFileCollection, PipelineFile
-from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNameError, MissingFileError,
-                                          PipelineSystemError)
-from aodncore.pipeline.files import RemotePipelineFileCollection, RemotePipelineFile
+from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFile, FileType
+from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNameError, InvalidFileFormatError,
+                                          MissingFileError, PipelineSystemError)
+from aodncore.pipeline.files import RemotePipelineFileCollection
 from aodncore.util.wfs import ogc_filter_to_string
 
 from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
@@ -22,15 +21,57 @@ AGGREGATED_VARIABLE_PATTERN = re.compile(r'FV01_([A-Z0-9-]+)-aggregated')
 class MooringsProductClassifier(MooringsFileClassifier):
     @classmethod
     def _get_data_category(cls, input_file):
-        return 'aggregated_timeseries'
+        if 'aggregated-timeseries' in input_file:
+            return 'aggregated_timeseries'
+        elif 'hourly-timeseries' in input_file:
+            return 'hourly_timeseries'
+        elif 'gridded-timeseries' in input_file:
+            return 'gridded_timeseries'
+        else:
+            raise InvalidFileNameError(
+                "Could not determine data category from {name}".format(name=input_file)
+            )
 
     @classmethod
     def _get_product_level(cls, input_file):
         return ''
 
+    @classmethod
+    def dest_path(cls, input_file):
+        """
+        Destination object path for a moorings product file. Of the form:
+
+          'IMOS/ANMN/<subfacility>/<site_code>/<data_category>', or
+          'IMOS/ABOS/<subfacility>/<data_category>'
+
+        where
+        <subfacility> is the sub-facility code ('NRS', 'NSW', 'SOTS', etc...)
+        <site_code> is the value of the site_code global attribute
+        <data_category> is 'aggregated_timeseries', 'hourly_timeseries', or 'gridded_timeseries'
+        The basename of the input file is appended.
+
+        """
+        dir_list = [cls.PROJECT]
+        dir_list.extend(cls._get_facility(input_file))
+
+        if input_file.endswith('.nc'):
+            if 'ABOS' not in input_file:
+                dir_list.append(cls._get_site_code(input_file))
+            dir_list.append(cls._get_data_category(input_file))
+            dir_list.append(cls._get_product_level(input_file))
+
+        else:
+            raise InvalidFileFormatError(
+                "Don't know where to put file '{name}' (unhandled extension)".format(name=input_file)
+            )
+
+        dir_list.append(os.path.basename(input_file))
+
+        return cls._make_path(dir_list)
+
 
 class MooringsProductsHandler(HandlerBase):
-    """Handler to create products from moorings files.
+    """Handler to create and publish products from moorings files.
 
     The input file is a JSON document containing a site_code and a list of variables. The handler will then create
     the products for each variable at that site, using all the relevant input files available on S3.
@@ -40,13 +81,15 @@ class MooringsProductsHandler(HandlerBase):
         "site_code": "NRSMAI",
         "variables": ["TEMP", "PSAL", "DOX1", "DOX2", "CPHL"]
     }
+
+    The handler can also publish product netCDF files that have been generated externally.
     """
 
     FILE_INDEX_LAYER = 'imos:moorings_all_map'
 
     def __init__(self, *args, **kwargs):
         super(MooringsProductsHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.json_manifest']
+        self.allowed_extensions = ['.json_manifest', '.nc', '.zip']
         self.product_site_code = None
         self.product_variables = None
         self.input_file_collection = None
@@ -193,7 +236,12 @@ class MooringsProductsHandler(HandlerBase):
                 self.file_collection.add(old_file)
 
     def preprocess(self):
-        """Collect available input files and create the products, adding them to the collection to be published."""
+        """If the input is a manifest file, collect available input files and
+        create the products, adding them to the collection to be published.
+        """
+
+        if self.file_type is not FileType.JSON_MANIFEST:
+            return
 
         self._read_manifest()
         self.logger.info(
