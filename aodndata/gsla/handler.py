@@ -11,7 +11,7 @@ GSLA_PREFIX_PATH = "IMOS/OceanCurrent/GSLA"
 
 GSLA_REGEX = re.compile(r"""
                        IMOS_OceanCurrent_HV_
-                       (?P<nc_time_cov_start>[0-9]{8}T[0]{6}Z)_GSLA_FV02_
+                       (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)_GSLA_FV02_
                        (?P<product_type>NRT00|DM00|DM01)_C-
                        (?P<creation_date>[0-9]{8}T[0-9]{6}Z)\.nc(\.gz)?$
                        """, re.VERBOSE)
