@@ -18,6 +18,7 @@ ALTI_VALID_SATS = ["CRYOSAT-2",
                    "JASON-3",
                    "SARAL",
                    "SENTINEL-3A",
+                   "SENTINEL-3B",
                    "TOPEX"
                    ]
 ALTI_FILE_PATTERN = re.compile(r"""
