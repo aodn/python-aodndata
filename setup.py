@@ -57,7 +57,7 @@ INSTALL_REQUIRES = [
     'aodntools>=1.0.0',
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8',
-    'matplotlib>=1.5.1',
+    'matplotlib>=3.0.3',
     'pillow>=6.2.1,<7.0.0'  # provide additional image formats for matplotlib
 ]
 
