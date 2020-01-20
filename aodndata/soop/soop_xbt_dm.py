@@ -88,6 +88,7 @@ def create_plot(netcdfFilePath, output_dir):
 
     ax1.set_xlabel(sst_longname + ' in ' + sst_units)
     ax1.set_ylabel(depth_longname + ' in ' + depth_units)
+    ax1.set_facecolor('w')
 
     try:
         if all(temp_values.mask):
