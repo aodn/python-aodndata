@@ -20,7 +20,8 @@ class AuvHandler(HandlerBase):
         return os.path.basename(self.input_file).split('-')[1].split('.')[0]
 
     def manifest_type(self):
-        return os.path.basename(self.input_file).split('-')[1].split('.')[1]
+        # 0 is the main dive name, 1 the manifest type, 2 is manifest
+        return os.path.basename(self.input_file).split('.')[1]
 
     def dest_path(self, filepath):
         """The dest_path has already been added to the PipelineFile by the MapManifestResolveRunner, so simply validate
