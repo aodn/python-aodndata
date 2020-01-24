@@ -3,8 +3,7 @@ import os
 import tempfile
 
 from aodncore.pipeline import HandlerBase, PipelineFile, PipelineFilePublishType
-from matplotlib.pyplot import (plot, savefig, subplots, subplots_adjust, text,
-                               title, xticks)
+import matplotlib.pyplot as plt
 from netCDF4 import Dataset
 from numpy import ma
 
@@ -83,8 +82,8 @@ def create_plot(netcdfFilePath, output_dir):
     # Modify the mask in order to change the boolean, since some previous non Fillvalue data are now Fillvalue
     temp_values = ma.masked_values(temp_values, sst_fillvalue)
 
-    fig, ax1 = subplots(figsize=(13, 9.2), dpi=80, facecolor='w', edgecolor='k')
-    subplots_adjust(left=0.075, right=0.95, top=0.9, bottom=0.25)
+    fig, ax1 = plt.subplots(figsize=(13, 9.2), dpi=80, facecolor='w', edgecolor='k')
+    plt.subplots_adjust(left=0.075, right=0.95, top=0.9, bottom=0.25)
 
     ax1.set_xlabel(sst_longname + ' in ' + sst_units)
     ax1.set_ylabel(depth_longname + ' in ' + depth_units)
@@ -92,24 +91,24 @@ def create_plot(netcdfFilePath, output_dir):
 
     try:
         if all(temp_values.mask):
-            text(0.5, 0.5, 'No Good Data available', color='r',
-                 fontsize=20,
-                 horizontalalignment='center',
-                 verticalalignment='center',
-                 transform=ax1.transAxes)
+            plt.text(0.5, 0.5, 'No Good Data available', color='r',
+                                   fontsize=20,
+                                   horizontalalignment='center',
+                                   verticalalignment='center',
+                                   transform=ax1.transAxes)
         else:
-            plot(temp_values, -depth_values)
+            plt.plot(temp_values, -depth_values)
     except:
-        plot(temp_values, -depth_values)
+        plt.plot(temp_values, -depth_values)
 
     ax1.set_ylim(-1100, 0)
-    xticks([-3, 0, 5, 10, 15, 20, 25, 30, 35])
+    plt.xticks([-3, 0, 5, 10, 15, 20, 25, 30, 35])
 
     date_start = datetime.datetime.strptime(time_coverage_start, "%Y-%m-%dT%H:%M:%SZ").strftime(
         "%Y-%m-%d %H:%M:%S UTC")
 
-    title('{title_dataset} \n Cruise {cruise_id}-{xbt_line_desc} - XBT id {xbt_unique_id}\nlocation {lat}S ; {lon}E\n {date_start}'
-          .format(title_dataset=title_dataset,
+    plt.title('{title_dataset} \n Cruise {cruise_id}-{xbt_line_desc} - XBT id {xbt_unique_id}\nlocation {lat}S ; {lon}E\n {date_start}'
+                            .format(title_dataset=title_dataset,
                   cruise_id=cruise_id,
                   xbt_line_desc=xbt_line_description,
                   xbt_unique_id=str(xbt_unique_id),
@@ -118,7 +117,11 @@ def create_plot(netcdfFilePath, output_dir):
                   date_start=date_start))
 
     img_output = tempfile.NamedTemporaryFile(delete=False, dir=output_dir, suffix='.jpg')
-    savefig(img_output, format='jpg')
+    plt.savefig(img_output, format='jpg')
+
+    ax1.clear()
+    fig.clf()
+    plt.close(fig)
 
     jpg_dest_path = '{}{}'.format(os.path.splitext(SoopXbtDmHandler.dest_path(netcdfFilePath))[0], '.jpg')
     return img_output.name, jpg_dest_path
