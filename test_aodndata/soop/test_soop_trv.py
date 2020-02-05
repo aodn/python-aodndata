@@ -45,7 +45,7 @@ class TestSoopTrvHandler(HandlerTestCase):
         mock_webfeatureservice().get_schema.return_value = TEST_GET_SCHEMA_RESPONSE
 
         handler = self.run_handler(GOOD_NC,
-                                   include_regexes=['IMOS_SOOP-TRV_B_.*\.nc'],
+                                   include_regexes=[r'IMOS_SOOP-TRV_B_.*\.nc'],
                                    check_params={'checks': ['cf', 'imos:1.3']}
                                    )
 

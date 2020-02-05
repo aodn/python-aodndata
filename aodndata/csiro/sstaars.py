@@ -23,7 +23,7 @@ class SstaarsHandler(HandlerBase):
         sstaars_aodn_dir = os.path.join(sstaars_alt_dir, 'AODN-product')
         netcdf_file_name = os.path.basename(filepath)
 
-        regex_daily_files = re.compile('SSTAARS_daily_fit_[0-9]{3}\.nc')
+        regex_daily_files = re.compile(r'SSTAARS_daily_fit_[0-9]{3}\.nc')
 
         if netcdf_file_name == 'SSTAARS.nc':
             return os.path.join(sstaars_alt_dir, netcdf_file_name)
@@ -31,4 +31,4 @@ class SstaarsHandler(HandlerBase):
             return os.path.join(sstaars_aodn_dir, netcdf_file_name)
         else:
             raise InvalidFileNameError(
-                'invalid file name {filepath}. Not matching \'STAARS.*\.nc\''.format(filepath=filepath))
+                r"invalid file name {filepath}. Not matching 'STAARS.*\.nc'".format(filepath=filepath))

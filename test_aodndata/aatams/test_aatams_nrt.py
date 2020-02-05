@@ -25,7 +25,7 @@ class TestAatamsNrtHandler(HandlerTestCase):
             f.write(os.path.join(test_nc_path, os.path.basename(GOOD_NC)))
 
         handler = self.run_handler(MANIFEST_FILE,
-                                   include_regexes=['IMOS_AATAMS-SATTAG.*\.nc'],
+                                   include_regexes=[r'IMOS_AATAMS-SATTAG.*\.nc'],
                                    check_params={'checks': ['cf']}
                                    )
         f = handler.file_collection[0]

@@ -24,7 +24,7 @@ class SrsOcBodBawHandler(HandlerBase):
 
         filename = os.path.basename(self.remove_creation_date_from_filename(filepath))
         m = re.search(
-            '^IMOS_SRS-OC-BODBAW_X_([0-9]+T[0-9]+Z)_(.*)-(suspended_matter|pigment|backscattering|absorption).*_END-([0-9]+T[0-9]+Z)\.(nc|csv|png)$',
+            r'^IMOS_SRS-OC-BODBAW_X_([0-9]+T[0-9]+Z)_(.*)-(suspended_matter|pigment|backscattering|absorption).*_END-([0-9]+T[0-9]+Z)\.(nc|csv|png)$',
             filename)
         if m is None:
             raise ValueError("file name not matching regex to deduce dest_path")

@@ -21,13 +21,13 @@ SHAPEFILE_ATTRIBUTES = {'MB': {'SDate', 'Location', 'Area', 'XYZ_File', 'XYA_Fil
 SHAPEFILE_PATTERN = re.compile(r'.*_SHP.(' + '|'.join(SHAPEFILE_EXTENSIONS) + ')')
 ALL_EXTENSIONS = ('zip', 'xyz', 'xya', 'tif', 'tiff', 'sd', 'kmz', 'pdf') + SHAPEFILE_EXTENSIONS
 SOFTWARE_CODES = ('FLD', 'FMG', 'ARC', 'GTX', 'GSP', 'HYP', 'QIM')
-SOFTWARE_PATTERN = '(' + '|'.join(SOFTWARE_CODES) + ')(\d{3})$'
+SOFTWARE_PATTERN = '(' + '|'.join(SOFTWARE_CODES) + r')(\d{3})$'
 FILE_VERSIONS = ('FV00', 'FV01', 'FV02')
-SURVEY_NAME_PATTERN = re.compile('NSWOEH_(\d{8}_[A-Za-z]+)')
+SURVEY_NAME_PATTERN = re.compile(r'NSWOEH_(\d{8}_[A-Za-z]+)')
 SURVEY_METHODS = {'MB': 'Multi-beam', 'STAX': 'Single-beam', 'LD': 'LIDAR-LADS'}
-SURVEY_METHODS_PATTERN = re.compile('NSWOEH_[^_]+_[^_]+_(' + '|'.join(SURVEY_METHODS.keys()) + ')')
+SURVEY_METHODS_PATTERN = re.compile(r'NSWOEH_[^_]+_[^_]+_(' + '|'.join(SURVEY_METHODS.keys()) + ')')
 SYSTEM_TYPES = 'GSS|R2S|MRG'
-SYSTEM_TYPES_PATTERN = re.compile(r"(BTY|BKS)GRD\d{3}" + "({})".format(SYSTEM_TYPES))
+SYSTEM_TYPES_PATTERN = re.compile(r'(BTY|BKS)GRD\d{3}' + "({})".format(SYSTEM_TYPES))
 
 # Methods that only require a coverage shapefile, nothing else is checked, just stored as is in the original zip
 BASIC_PACKAGED_METHODS = ('STAX', 'LD')

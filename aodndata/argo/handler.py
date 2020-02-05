@@ -10,7 +10,7 @@ class ArgoHandler(HandlerBase):
 
         relative_path_root = os.path.join(self._config.pipeline_config['global']['wip_dir'], 'Argo/dac')
         self.resolve_params = {'relative_path_root': relative_path_root}
-        self.include_regexes = ['.*\.nc']
+        self.include_regexes = [r'.*\.nc']
 
     def preprocess(self):
         """ set NO_ACTION to non NetCDF files"""

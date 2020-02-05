@@ -38,7 +38,7 @@ class TestAcornHandler(HandlerTestCase):
 
     def test_good_netcdf_generic_fv00(self):
         handler = self.run_handler(GOOD_NC_FV00,
-                                   include_regexes=['IMOS_ACORN_.*\.nc']
+                                   include_regexes=[r'IMOS_ACORN_.*\.nc']
                                    )
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
@@ -54,8 +54,8 @@ class TestAcornHandler(HandlerTestCase):
         # mock JSON file by adding allowed_regexes & allowed_dest_path_regexes
         self.run_handler_with_exception(InvalidInputFileError, GOOD_NC_FV00,
                                         allowed_regexes=[
-                                            '^IMOS_ACORN_[A-Z].*_[0-9]{8}T[0-9]{6}Z_[A-Z]{3,4}_FV01_(radial|sea-state|wavespec|windp|wavep|1-hour-avg)\.nc$'],
-                                        allowed_dest_path_regexes=["^IMOS/ACORN/.*FV01.*\.nc$"]
+                                            r'^IMOS_ACORN_[A-Z].*_[0-9]{8}T[0-9]{6}Z_[A-Z]{3,4}_FV01_(radial|sea-state|wavespec|windp|wavep|1-hour-avg)\.nc$'],
+                                        allowed_dest_path_regexes=[r'^IMOS/ACORN/.*FV01.*\.nc$']
                                         )
 
     def test_fv01_in_rt(self):
@@ -63,13 +63,13 @@ class TestAcornHandler(HandlerTestCase):
         # mock JSON file by adding allowed_regexes & allowed_dest_path_regexes
         self.run_handler_with_exception(InvalidInputFileError, GOOD_NC_FV01,
                                         allowed_regexes=[
-                                            '^IMOS_ACORN_[A-Z].*_[0-9]{8}T[0-9]{6}Z_[A-Z]{3,4}_FV00_(radial|sea-state|wavespec|windp|wavep|1-hour-avg)\.nc$'],
-                                        allowed_dest_path_regexes=["^IMOS/ACORN/.*FV00.*\.nc$"]
+                                            r'^IMOS_ACORN_[A-Z].*_[0-9]{8}T[0-9]{6}Z_[A-Z]{3,4}_FV00_(radial|sea-state|wavespec|windp|wavep|1-hour-avg)\.nc$'],
+                                        allowed_dest_path_regexes=[r'^IMOS/ACORN/.*FV00.*\.nc$']
                                         )
 
     def test_non_index_netcdf(self):
         handler = self.run_handler(NON_INDEX_NC,
-                                   include_regexes=['IMOS_ACORN_.*\.nc']
+                                   include_regexes=[r'IMOS_ACORN_.*\.nc']
                                    )
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
@@ -122,7 +122,7 @@ class TestAcornHandler(HandlerTestCase):
             nc_obj.date_created = datetime.strftime(new_time, '%Y-%m-%dT%H:%M:%SZ')
 
         # run the handler on the new file with an older creation date
-        handler = self.handler_class(nc_file_old_creation_date_path, include_regexes=['IMOS_ACORN_.*\.nc'])
+        handler = self.handler_class(nc_file_old_creation_date_path, include_regexes=[r'IMOS_ACORN_.*\.nc'])
         handler.opendap_root = broker.prefix
         handler.run()
 
@@ -156,7 +156,7 @@ class TestAcornHandler(HandlerTestCase):
             nc_obj.date_created = datetime.strftime(new_time, '%Y-%m-%dT%H:%M:%SZ')
 
         # run the handler on the new file with an newer creation date
-        handler = self.handler_class(nc_file_new_creation_date_path, include_regexes=['IMOS_ACORN_.*\.nc'])
+        handler = self.handler_class(nc_file_new_creation_date_path, include_regexes=[r'IMOS_ACORN_.*\.nc'])
         handler.opendap_root = broker.prefix
         handler.run()
 

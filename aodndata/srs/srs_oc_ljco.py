@@ -19,7 +19,7 @@ class SrsOcLjcoHandler(HandlerBase):
         netcdf_filename = re.sub('_C-.*.nc$', '.nc', netcdf_filename)  # remove creation date
 
         # looking for product_name
-        m = re.search('^IMOS_SRS-OC-LJCO_.*_([0-9]{8}T[0-9]{6}Z)_(SRC|LJCO)_FV0([0-2]{1}).*\.nc$', netcdf_filename)
+        m = re.search(r'^IMOS_SRS-OC-LJCO_.*_([0-9]{8}T[0-9]{6}Z)_(SRC|LJCO)_FV0([0-2]{1}).*\.nc$', netcdf_filename)
 
         if m is None:
             raise InvalidFileNameError("file name not matching regex to deduce dest_path")

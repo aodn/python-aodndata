@@ -22,7 +22,7 @@ class TestSrsOcBodBawHandler(HandlerTestCase):
 
     def test_netcdf(self):
         handler = self.run_handler(NC_FILE,
-                                   include_regexes=['IMOS_SRS-OC-BODBAW_X_.*\.nc'],
+                                   include_regexes=[r'IMOS_SRS-OC-BODBAW_X_.*\.nc'],
                                    check_params={'checks': ['cf'],
                                                  'criteria': 'lenient'}
                                    )

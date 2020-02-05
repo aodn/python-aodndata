@@ -62,7 +62,7 @@ class TestAuvHandler(HandlerTestCase):
             f.write(os.path.join(test_netcdf_path, os.path.basename(NETCDF_B)))
 
         handler = self.run_handler(manifest_file,
-                                   include_regexes=['IMOS_AUV_B_.*\.nc']
+                                   include_regexes=[r'IMOS_AUV_B_.*\.nc']
                                    )
         f = handler.file_collection[0]
 
@@ -80,7 +80,7 @@ class TestAuvHandler(HandlerTestCase):
         with open(manifest_file, 'w') as f:
             f.write(test_report_path)
 
-        handler = self.handler_class(manifest_file, include_regexes=['.*\.pdf'])
+        handler = self.handler_class(manifest_file, include_regexes=[r'.*\.pdf'])
         handler.relative_path_root = self.temp_dir
         handler.run()
 

@@ -29,7 +29,7 @@ class TestSoopAsfSstHandler(HandlerTestCase):
     @patch("aodndata.soop.soop_asf_sst.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_good_netcdf_asf_fmt(self, mock_callsign):
         handler = self.run_handler(GOOD_NC_ASF_FMT,
-                                     include_regexes=['IMOS_SOOP-ASF_FMT_.*\.nc'])
+                                     include_regexes=[r'IMOS_SOOP-ASF_FMT_.*\.nc'])
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
         self.assertEqual(f.check_type, PipelineFileCheckType.FORMAT_CHECK)
@@ -43,7 +43,7 @@ class TestSoopAsfSstHandler(HandlerTestCase):
     @patch("aodndata.soop.soop_asf_sst.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_good_netcdf_asf_mt(self, mock_callsign):
         handler = self.run_handler(GOOD_NC_ASF_MT,
-                                     include_regexes=['IMOS_SOOP-ASF_MT_.*\.nc']
+                                     include_regexes=[r'IMOS_SOOP-ASF_MT_.*\.nc']
                                      )
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
@@ -58,7 +58,7 @@ class TestSoopAsfSstHandler(HandlerTestCase):
     @patch("aodndata.soop.soop_asf_sst.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_good_netcdf_sst(self, mock_callsign):
         handler = self.handler_class(GOOD_NC_SST,
-                                     include_regexes=['IMOS_SOOP-SST_.*\.nc']
+                                     include_regexes=[r'IMOS_SOOP-SST_.*\.nc']
                                      )
         handler.run()
         self.assertEqual(len(handler.file_collection), 1)
