@@ -222,7 +222,7 @@ def read_realtime_file(self):
 
     dataf = check_parameters(dataf, platform_code_short,
                              input_rt_parameter, self.src_path)
-    dataf = dataf.apply(lambda x: x.str.strip() if x.dtype == "object" else x)  # strip whitespace
+    dataf = dataf.apply(lambda x: x.astype(str).str.strip() if x.dtype == "object" else x)  # strip whitespace
 
     return dataf, platform_code
 
