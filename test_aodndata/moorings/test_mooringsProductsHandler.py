@@ -3,7 +3,6 @@ import os
 import unittest
 from unittest.mock import patch
 
-import httpretty
 from aodncore.pipeline import (PipelineFile, PipelineFileCollection,
                                PipelineFilePublishType)
 from aodncore.pipeline.storage import get_storage_broker
