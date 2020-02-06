@@ -185,7 +185,7 @@ def netcdf_writer(log_path, output_dir, ship_name, meta_path=[]):
         'time_coverage_start': df.index.strftime('%Y-%m-%dT%H:%M:%SZ')[0],
         'time_coverage_end': df.index.strftime('%Y-%m-%dT%H:%M:%SZ')[-1],
         'featureType': feature_type,
-        'date_created': pd.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        'date_created': datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
         'platform_code': SHIP_CODE,
         'vessel_name': ship_name,
         'geospatial_lat_min': df.LATITUDE.dropna().min(),
@@ -194,7 +194,7 @@ def netcdf_writer(log_path, output_dir, ship_name, meta_path=[]):
         'geospatial_lon_max': df.LONGITUDE.dropna().max(),
         'measurement_frequency': measurement_frequency_str,
         'history': "File created {date_created}".format(
-            date_created=pd.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"))
+            date_created=datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"))
     })
 
     if measurement_frequency == 1:
