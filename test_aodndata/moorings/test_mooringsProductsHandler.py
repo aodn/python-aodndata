@@ -54,33 +54,44 @@ class TestMooringsProductsHandler(HandlerTestCase):
         self.assertCountEqual(INPUT_FILE_COLLECTION.get_attribute_list('dest_path'),
                               handler.input_file_collection.get_attribute_list('dest_path')
                               )
-        self.assertEqual(len(handler.file_collection), 7)
 
-        # check new product files
         expected_new_products = {'TEMP-aggregated-timeseries',
                                  'PSAL-aggregated-timeseries',
                                  'CHLF-aggregated-timeseries',
                                  'hourly-timeseries',
                                  'hourly-timeseries-including-non-QC'
-}
-        published_files = handler.file_collection.filter_by_attribute_id('publish_type',
-                                                                         PipelineFilePublishType.HARVEST_UPLOAD)
-        self.assertEqual(len(published_files), len(expected_new_products))
-        for f in published_files:
+                                 }
+        expected_deleted_products = {'TEMP-aggregated-timeseries',
+                                     'PSAL-aggregated-timeseries',
+                                     'hourly-timeseries',
+                                     }
+
+        self.assertEqual(len(handler.file_collection), len(expected_new_products) + len(expected_deleted_products))
+        for f in handler.file_collection:
             self.assertTrue(f.is_harvested and f.is_stored)
-        published_products = {get_product_type(f.name) for f in published_files}
+
+        # check new product files
+        published_files = (handler.file_collection
+                                  .filter_by_attribute_id('publish_type', PipelineFilePublishType.HARVEST_UPLOAD)
+                                  .get_attribute_list('name')
+                           )
+        self.assertEqual(len(published_files), len(expected_new_products))
+        published_products = {get_product_type(f) for f in published_files}
         self.assertSetEqual(published_products, expected_new_products)
 
         # check deletion of previous versions
-        expected_deleted_products = {'TEMP-aggregated-timeseries', 'PSAL-aggregated-timeseries'}
-        deleted_files = handler.file_collection.filter_by_attribute_id('publish_type',
-                                                                       PipelineFilePublishType.DELETE_UNHARVEST)
+        deleted_files = (handler.file_collection
+                                .filter_by_attribute_id('publish_type', PipelineFilePublishType.DELETE_UNHARVEST)
+                                .get_attribute_list('name')
+                         )
         self.assertEqual(len(deleted_files), len(expected_deleted_products))
-        for f in deleted_files:
-            self.assertTrue(f.is_harvested and f.is_stored)
-        deleted_products = {get_product_type(f.name) for f in deleted_files}
+        deleted_products = {get_product_type(f) for f in deleted_files}
         self.assertSetEqual(deleted_products, expected_deleted_products)
 
+        # published and deleted files should never have the same name!
+        self.assertEqual(set(), set(published_files) & set(deleted_files))
+
+        # check input files excluded from the products
         self.assertEqual(len(handler.excluded_files), 1)
 
     def test_publish_product_nc(self):
