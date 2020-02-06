@@ -8,7 +8,7 @@ from aodncore.pipeline import (PipelineFile, PipelineFileCollection,
 from aodncore.pipeline.storage import get_storage_broker
 from aodncore.testlib import HandlerTestCase, make_test_file
 
-from aodndata.moorings.products_handler import MooringsProductsHandler, MooringsProductClassifier
+from aodndata.moorings.products_handler import MooringsProductsHandler, MooringsProductClassifier, get_product_type
 
 TEST_ROOT = os.path.dirname(__file__)
 GOOD_MANIFEST = os.path.join(TEST_ROOT, 'test_product.json_manifest')
@@ -54,19 +54,32 @@ class TestMooringsProductsHandler(HandlerTestCase):
         self.assertCountEqual(INPUT_FILE_COLLECTION.get_attribute_list('dest_path'),
                               handler.input_file_collection.get_attribute_list('dest_path')
                               )
-        self.assertEqual(len(handler.file_collection), 5)
+        self.assertEqual(len(handler.file_collection), 7)
 
+        # check new product files
+        expected_new_products = {'TEMP-aggregated-timeseries',
+                                 'PSAL-aggregated-timeseries',
+                                 'CHLF-aggregated-timeseries',
+                                 'hourly-timeseries',
+                                 'hourly-timeseries-including-non-QC'
+}
         published_files = handler.file_collection.filter_by_attribute_id('publish_type',
                                                                          PipelineFilePublishType.HARVEST_UPLOAD)
-        self.assertEqual(len(published_files), 3)
+        self.assertEqual(len(published_files), len(expected_new_products))
         for f in published_files:
             self.assertTrue(f.is_harvested and f.is_stored)
+        published_products = {get_product_type(f.name) for f in published_files}
+        self.assertSetEqual(published_products, expected_new_products)
 
+        # check deletion of previous versions
+        expected_deleted_products = {'TEMP-aggregated-timeseries', 'PSAL-aggregated-timeseries'}
         deleted_files = handler.file_collection.filter_by_attribute_id('publish_type',
                                                                        PipelineFilePublishType.DELETE_UNHARVEST)
-        self.assertEqual(len(deleted_files), 2)
+        self.assertEqual(len(deleted_files), len(expected_deleted_products))
         for f in deleted_files:
             self.assertTrue(f.is_harvested and f.is_stored)
+        deleted_products = {get_product_type(f.name) for f in deleted_files}
+        self.assertSetEqual(deleted_products, expected_deleted_products)
 
         self.assertEqual(len(handler.excluded_files), 1)
 

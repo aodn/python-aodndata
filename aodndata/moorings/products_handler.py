@@ -2,7 +2,7 @@ import json
 import os
 import re
 
-from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And
+from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And, Or
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFile, FileType
 from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNameError, InvalidFileFormatError,
@@ -11,6 +11,7 @@ from aodncore.pipeline.files import RemotePipelineFileCollection
 from aodncore.util.wfs import ogc_filter_to_string
 
 from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
+from aodntools.timeseries_products.hourly_timeseries import hourly_aggregator
 
 from aodndata.moorings.classifiers import MooringsFileClassifier
 
@@ -111,6 +112,7 @@ class MooringsProductsHandler(HandlerBase):
         self.input_file_collection = None
         self.input_file_variables = None
         self.excluded_files = dict()
+        self.product_qc_flags = [[1, 2], [0, 1, 2]]
 
     def _read_manifest(self):
         """Read the manifest file and extract key parameters for product"""
@@ -180,10 +182,13 @@ class MooringsProductsHandler(HandlerBase):
         # TODO: Replace temp_dir above with cache_dir?
 
     def _get_old_product_files(self):
-        """Get a list of the currently published aggregated_timeseries files for the site being processed."""
+        """Get a list of the currently published product files for the site being processed."""
 
         filter_list = [PropertyIsEqualTo(propertyname='site_code', literal=self.product_site_code),
-                       PropertyIsEqualTo(propertyname='data_category', literal='aggregated_timeseries')
+                       Or([PropertyIsEqualTo(propertyname='data_category', literal='aggregated_timeseries'),
+                           PropertyIsEqualTo(propertyname='data_category', literal='hourly_timeseries'),
+                           PropertyIsEqualTo(propertyname='data_category', literal='gridded_timeseries')
+                           ])
                        ]
         wfs_features = self.get_wfs_features(filter_list, propertyname=['url'])
 
@@ -202,7 +207,7 @@ class MooringsProductsHandler(HandlerBase):
             )
 
     def _make_aggregated_timeseries(self):
-        """For each variable, generate product and add to file_collection."""
+        """For each variable, generate aggregated timeseries product and add to file_collection."""
 
         for var in self.product_variables:
             # Filter input_list to the files relevant for this var
@@ -218,6 +223,31 @@ class MooringsProductsHandler(HandlerBase):
                                                   download_url_prefix="https://s3-ap-southeast-2.amazonaws.com/imos-data/",
                                                   opendap_url_prefix="http://thredds.aodn.org.au/thredds/dodsC/"
                                                   )
+            if errors:
+                self.logger.warning("{n} files were excluded from the aggregation.".format(n=len(errors)))
+                for f, e in errors.items():
+                    if f not in self.excluded_files:
+                        self.excluded_files[f] = set(e)
+                    else:
+                        self.excluded_files[f].update(e)
+
+            product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
+            product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+            self.file_collection.add(product_file)
+
+            self._cleanup_previous_version(product_file.name)
+
+    def _make_hourly_timeseries(self):
+        """Generate hourly products for the site and add to file_collection."""
+
+        # Filter input_list to the files relevant for this var
+        input_list = [f.local_path for f in self.input_file_collection]
+        self.logger.info("Creating hourly products from {n} input files".format(n=len(input_list)))
+
+        for qc_flags in self.product_qc_flags:
+
+            product_url, errors = hourly_aggregator(input_list, self.product_site_code, qc_flags, self.temp_dir)
+
             if errors:
                 self.logger.warning("{n} files were excluded from the aggregation.".format(n=len(errors)))
                 for f, e in errors.items():
@@ -265,6 +295,7 @@ class MooringsProductsHandler(HandlerBase):
         # TODO: Run compliance checks and remove non-compliant files from the input list (log them).
 
         self._make_aggregated_timeseries()
+        self._make_hourly_timeseries()
 
         # TODO: Include the list of excluded files as another table in the notification email (instead of the log)
         if self.excluded_files:
