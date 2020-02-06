@@ -206,6 +206,16 @@ class MooringsProductsHandler(HandlerBase):
                                                                       product_url=product_url)
             )
 
+    def _handle_errors(self, errors):
+        """Keep track of any input files that were excluded from the product and log a brief warning."""
+        if errors:
+            self.logger.warning("{n} files were excluded from the product.".format(n=len(errors)))
+            for f, e in errors.items():
+                if f not in self.excluded_files:
+                    self.excluded_files[f] = set(e)
+                else:
+                    self.excluded_files[f].update(e)
+
     def _make_aggregated_timeseries(self):
         """For each variable, generate aggregated timeseries product and add to file_collection."""
 
@@ -223,13 +233,7 @@ class MooringsProductsHandler(HandlerBase):
                                                   download_url_prefix="https://s3-ap-southeast-2.amazonaws.com/imos-data/",
                                                   opendap_url_prefix="http://thredds.aodn.org.au/thredds/dodsC/"
                                                   )
-            if errors:
-                self.logger.warning("{n} files were excluded from the aggregation.".format(n=len(errors)))
-                for f, e in errors.items():
-                    if f not in self.excluded_files:
-                        self.excluded_files[f] = set(e)
-                    else:
-                        self.excluded_files[f].update(e)
+            self._handle_errors(errors)
 
             product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
             product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
@@ -248,13 +252,7 @@ class MooringsProductsHandler(HandlerBase):
 
             product_url, errors = hourly_aggregator(input_list, self.product_site_code, qc_flags, self.temp_dir)
 
-            if errors:
-                self.logger.warning("{n} files were excluded from the aggregation.".format(n=len(errors)))
-                for f, e in errors.items():
-                    if f not in self.excluded_files:
-                        self.excluded_files[f] = set(e)
-                    else:
-                        self.excluded_files[f].update(e)
+            self._handle_errors(errors)
 
             product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
             product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
@@ -299,7 +297,7 @@ class MooringsProductsHandler(HandlerBase):
 
         # TODO: Include the list of excluded files as another table in the notification email (instead of the log)
         if self.excluded_files:
-            self.logger.warning("Files exluded from aggregations:")
+            self.logger.warning("Files exluded from some of the products generated:")
             for f, e in self.excluded_files.items():
                 self.logger.warning("'{f}': {e}".format(f=f, e=list(e)))
 
