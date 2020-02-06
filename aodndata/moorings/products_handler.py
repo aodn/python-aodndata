@@ -17,6 +17,7 @@ from aodndata.moorings.classifiers import MooringsFileClassifier
 
 
 PRODUCT_TYPE_PATTERN = re.compile(r'FV0[12]_([^_]+)_END')
+VALID_PRODUCTS = {'aggregated', 'hourly'}
 
 
 def get_product_type(file_path):
@@ -109,6 +110,7 @@ class MooringsProductsHandler(HandlerBase):
         self.allowed_extensions = ['.json_manifest', '.nc', '.zip']
         self.product_site_code = None
         self.product_variables = None
+        self.products_to_create = VALID_PRODUCTS
         self.input_file_collection = None
         self.input_file_variables = None
         self.excluded_files = dict()
@@ -126,6 +128,14 @@ class MooringsProductsHandler(HandlerBase):
             raise InvalidFileContentError(
                 "manifest file '{self.input_file}' missing information (site_code, variables)".format(self=self)
             )
+        if 'products' in manifest:
+            invalid_products = set(manifest['products']) - VALID_PRODUCTS
+            if invalid_products:
+                raise InvalidFileContentError(
+                    "invalid product(s) {invalid_products} requested "
+                    "in manifest file '{self.input_file}'".format(invalid_products=invalid_products, self=self)
+                )
+            self.products_to_create = set(manifest['products'])
 
     def get_wfs_features(self, filter_list, propertyname='*'):
         """Query the file index WFS layer with the given filters and return a list of features.
@@ -292,8 +302,10 @@ class MooringsProductsHandler(HandlerBase):
 
         # TODO: Run compliance checks and remove non-compliant files from the input list (log them).
 
-        self._make_aggregated_timeseries()
-        self._make_hourly_timeseries()
+        if 'aggregated' in self.products_to_create:
+            self._make_aggregated_timeseries()
+        if 'hourly' in self.products_to_create:
+            self._make_hourly_timeseries()
 
         # TODO: Include the list of excluded files as another table in the notification email (instead of the log)
         if self.excluded_files:
