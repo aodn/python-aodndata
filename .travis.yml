@@ -20,6 +20,12 @@ matrix:
       env: STAGE="rc"
     # 'production' stage is tested by default
 
+jobs:
+  include:
+    - python: "3.6"
+  allow_failures:
+    - python: "3.6"
+
 install:
   - ./scripts/install_dependencies.sh
   - pip install pytest-cov
