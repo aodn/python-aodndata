@@ -39,7 +39,7 @@ def get_main_var_folder_name(filepath):
 
 
 def remove_md5_from_filename(filepath):
-    return re.sub('\.[0-9a-z]{32}\.nc$', '.nc', filepath)
+    return re.sub(r'\.[0-9a-z]{32}\.nc$', '.nc', filepath)
 
 
 def get_product_version(filepath):

@@ -29,23 +29,23 @@ class TestGenericHandler(HandlerTestCase):
 
     def test_noncompliant_netcdf(self):
         self.run_handler_with_exception(ComplianceCheckFailedError, BAD_NC,
-                                        include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
+                                        include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
                                         check_params={'checks': ['cf', 'imos:1.4']},
                                         dest_path_function=dest_path_anmn_nrs_realtime)
 
     def test_bad_name_netcdf(self):
         self.run_handler_with_exception(InvalidFileNameError, BAD_NC,
-                                        include_regexes=['IMOS_ANMN-NRS_.*realtime\.nc'],
+                                        include_regexes=[r'IMOS_ANMN-NRS_.*realtime\.nc'],
                                         dest_path_function=dest_path_anmn_nrs_realtime)
 
     def test_missing_attribute_for_dest_path(self):
         self.run_handler_with_exception(InvalidFileContentError, BAD_NC,
-                                        include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
+                                        include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
                                         dest_path_function=dest_path_anmn_nrs_realtime)
 
     def test_good_netcdf(self):
         handler = self.run_handler(GOOD_NC,
-                                   include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
+                                   include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
                                    check_params={'checks': ['cf', 'imos:1.3']},
                                    dest_path_function=dest_path_anmn_nrs_realtime)
 
@@ -59,7 +59,7 @@ class TestGenericHandler(HandlerTestCase):
 
     def test_bad_zip(self):
         self.run_handler_with_exception(ComplianceCheckFailedError, ZIP_FILE,
-                                        include_regexes=['IMOS_ANMN-NRS_.*\.nc'],
+                                        include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
                                         check_params={'checks': ['cf', 'imos:1.3']},
                                         dest_path_function=dest_path_anmn_nrs_realtime)
 

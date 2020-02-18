@@ -17,7 +17,7 @@ class SrsOcSoopRadHandler(HandlerBase):
     def dest_path(filepath):
         filepath = re.sub('_C-.*$', '.nc', filepath)  # strip creation date from filepath if exists
         netcdf_filename = os.path.basename(filepath)
-        m = re.search('^IMOS_SRS-OC_F_([0-9]{8}T[0-9]{6}Z)_(.*)_FV0([0-2]{1})_DALEC_.*\.nc$', netcdf_filename)
+        m = re.search(r'^IMOS_SRS-OC_F_([0-9]{8}T[0-9]{6}Z)_(.*)_FV0([0-2]{1})_DALEC_.*\.nc$', netcdf_filename)
 
         if m is None:
             raise InvalidFileNameError("file name not matching regex to deduce dest_path")

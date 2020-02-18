@@ -5,11 +5,11 @@ from aodncore.pipeline.exceptions import InvalidFileNameError
 class GenericHandler(HandlerBase):
     """This is a generic handler that implements the simple validate-publish workflow for a single netCDf file or a
     collection of netCDF files. A dest_path_function argument must be specified. The entire process fails if any
-    input file is ecluded by the regex patterns, is not a valid netCDF file, or fails the compliance checks.
+    input file is excluded by the regex patterns, is not a valid netCDF file, or fails the compliance checks.
 
     Usage:
     handler = GenericHandler(input_file,
-                             include_regexes=['*\.nc'],
+                             include_regexes=[r'*\.nc'],
                              exclude_regexes=[],
                              check_params={'checks': ['cf', 'imos:1.4']},
                              dest_path_function=my_dest_path
