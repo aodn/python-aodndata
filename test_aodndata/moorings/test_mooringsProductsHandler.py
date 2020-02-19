@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from aodncore.pipeline import (PipelineFile, PipelineFileCollection,
                                PipelineFilePublishType)
+from aodncore.pipeline.exceptions import InvalidFileContentError
 from aodncore.pipeline.storage import get_storage_broker
 from aodncore.testlib import HandlerTestCase, make_test_file
 
@@ -12,6 +13,8 @@ from aodndata.moorings.products_handler import MooringsProductsHandler, Moorings
 
 TEST_ROOT = os.path.dirname(__file__)
 GOOD_MANIFEST = os.path.join(TEST_ROOT, 'test_product.json_manifest')
+AGGREGATED_ONLY_MANIFEST = os.path.join(TEST_ROOT, 'test_product_aggregated.json_manifest')
+BAD_VAR_MANIFEST = os.path.join(TEST_ROOT, 'test_product_bad_var.json_manifest')
 PRODUCT_FILE = os.path.join(
     TEST_ROOT,
     'IMOS_ANMN-NRS_TZ_20181213_NRSROT_FV01_TEMP-aggregated-timeseries_END-20190523_C-20191218.nc'
@@ -19,12 +22,16 @@ PRODUCT_FILE = os.path.join(
 
 GETFEATURE_FILE = os.path.join(TEST_ROOT, 'getFeature.json')
 GETFEATURE_OLD_PRODUCTS_FILE = os.path.join(TEST_ROOT, 'getFeature_old_products.json')
+GETFEATURE_EMPTY_FILE = os.path.join(TEST_ROOT, 'getFeature_empty.json')
 
 with open(GETFEATURE_FILE) as f:
     TEST_GETFEATURE_JSON = f.read()
 
 with open(GETFEATURE_OLD_PRODUCTS_FILE) as f:
     TEST_GETFEATURE_OLD_PRODUCTS_JSON = f.read()
+
+with open(GETFEATURE_EMPTY_FILE) as f:
+    TEST_GETFEATURE_EMPTY_JSON = f.read()
 
 features = json.loads(TEST_GETFEATURE_JSON)['features']
 INPUT_FILE_COLLECTION = PipelineFileCollection()
@@ -40,15 +47,14 @@ for f in features:
 class TestMooringsProductsHandler(HandlerTestCase):
     def setUp(self):
         self.handler_class = MooringsProductsHandler
-        super(TestMooringsProductsHandler, self).setUp()
-
-    @patch('aodncore.util.wfs.WebFeatureService')
-    def test_good_manifest(self, mock_webfeatureservice):
-        mock_webfeatureservice().getfeature().getvalue.side_effect = [TEST_GETFEATURE_JSON,
-                                                                      TEST_GETFEATURE_OLD_PRODUCTS_JSON]
-
         upload_broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         upload_broker.upload(INPUT_FILE_COLLECTION)
+        super().setUp()
+
+    @patch('aodncore.util.wfs.WebFeatureService')
+    def test_all_products(self, mock_webfeatureservice):
+        mock_webfeatureservice().getfeature().getvalue.side_effect = [TEST_GETFEATURE_JSON,
+                                                                      TEST_GETFEATURE_OLD_PRODUCTS_JSON]
 
         handler = self.run_handler(GOOD_MANIFEST)
         self.assertCountEqual(INPUT_FILE_COLLECTION.get_attribute_list('dest_path'),
@@ -93,6 +99,30 @@ class TestMooringsProductsHandler(HandlerTestCase):
 
         # check input files excluded from the products
         self.assertEqual(len(handler.excluded_files), 1)
+
+    @patch('aodncore.util.wfs.WebFeatureService')
+    def test_aggregated_only_no_old_files(self, mock_webfeatureservice):
+        mock_webfeatureservice().getfeature().getvalue.side_effect = [TEST_GETFEATURE_JSON,
+                                                                      TEST_GETFEATURE_EMPTY_JSON]
+
+        handler = self.run_handler(AGGREGATED_ONLY_MANIFEST)
+
+        expected_new_products = {'TEMP-aggregated-timeseries',
+                                 'PSAL-aggregated-timeseries',
+                                 'CHLF-aggregated-timeseries',
+                                 }
+
+        self.assertEqual(len(handler.file_collection), len(expected_new_products))
+        for f in handler.file_collection:
+            self.assertTrue(f.is_harvested and f.is_stored)
+            self.assertIs(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+            self.assertIn(get_product_type(f.name), expected_new_products)
+
+    @patch('aodncore.util.wfs.WebFeatureService')
+    def test_bad_var(self, mock_webfeatureservice):
+        mock_webfeatureservice().getfeature().getvalue.side_effect = [TEST_GETFEATURE_JSON,
+                                                                      TEST_GETFEATURE_OLD_PRODUCTS_JSON]
+        self.run_handler_with_exception(InvalidFileContentError, BAD_VAR_MANIFEST)
 
     def test_publish_product_nc(self):
         handler = self.run_handler(PRODUCT_FILE)

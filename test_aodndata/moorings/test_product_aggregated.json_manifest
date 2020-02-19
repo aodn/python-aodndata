@@ -1,0 +1,5 @@
+{
+    "site_code": "NRSROT",
+    "variables": ["TEMP", "PSAL", "CHLF"],
+    "products":["aggregated"]
+}
