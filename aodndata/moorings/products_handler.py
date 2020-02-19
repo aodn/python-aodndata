@@ -18,6 +18,8 @@ from aodndata.moorings.classifiers import MooringsFileClassifier
 
 PRODUCT_TYPE_PATTERN = re.compile(r'FV0[12]_([^_]+)_END')
 VALID_PRODUCTS = {'aggregated', 'hourly'}
+DOWNLOAD_URL_PREFIX = "https://s3-ap-southeast-2.amazonaws.com/imos-data/"
+OPENDAP_URL_PREFIX = "http://thredds.aodn.org.au/thredds/dodsC/"
 
 
 def get_product_type(file_path):
@@ -235,8 +237,8 @@ class MooringsProductsHandler(HandlerBase):
 
             product_url, errors = main_aggregator(input_list, var, self.product_site_code, input_dir=self.temp_dir,
                                                   output_dir=self.products_dir,
-                                                  download_url_prefix="https://s3-ap-southeast-2.amazonaws.com/imos-data/",
-                                                  opendap_url_prefix="http://thredds.aodn.org.au/thredds/dodsC/"
+                                                  download_url_prefix=DOWNLOAD_URL_PREFIX,
+                                                  opendap_url_prefix=OPENDAP_URL_PREFIX
                                                   )
             self._handle_errors(errors)
 
@@ -255,7 +257,12 @@ class MooringsProductsHandler(HandlerBase):
 
         for qc_flags in self.product_qc_flags:
 
-            product_url, errors = hourly_aggregator(input_list, self.product_site_code, qc_flags, self.temp_dir)
+            product_url, errors = hourly_aggregator(input_list, self.product_site_code, qc_flags,
+                                                    input_dir=self.temp_dir,
+                                                    output_dir=self.products_dir,
+                                                    download_url_prefix=DOWNLOAD_URL_PREFIX,
+                                                    opendap_url_prefix=OPENDAP_URL_PREFIX
+                                                    )
 
             self._handle_errors(errors)
 
