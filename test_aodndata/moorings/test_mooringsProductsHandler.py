@@ -11,6 +11,8 @@ from aodncore.testlib import HandlerTestCase, make_test_file
 
 from aodndata.moorings.products_handler import MooringsProductsHandler, MooringsProductClassifier, get_product_type
 
+
+# Input files used in tests
 TEST_ROOT = os.path.dirname(__file__)
 GOOD_MANIFEST = os.path.join(TEST_ROOT, 'test_product.json_manifest')
 AGGREGATED_ONLY_MANIFEST = os.path.join(TEST_ROOT, 'test_product_aggregated.json_manifest')
@@ -20,6 +22,7 @@ PRODUCT_FILE = os.path.join(
     'IMOS_ANMN-NRS_TZ_20181213_NRSROT_FV01_TEMP-aggregated-timeseries_END-20190523_C-20191218.nc'
 )
 
+# Load JSON files used to mock WFS responses
 GETFEATURE_FILE = os.path.join(TEST_ROOT, 'getFeature.json')
 GETFEATURE_OLD_PRODUCTS_FILE = os.path.join(TEST_ROOT, 'getFeature_old_products.json')
 GETFEATURE_EMPTY_FILE = os.path.join(TEST_ROOT, 'getFeature_empty.json')
@@ -33,6 +36,8 @@ with open(GETFEATURE_OLD_PRODUCTS_FILE) as f:
 with open(GETFEATURE_EMPTY_FILE) as f:
     TEST_GETFEATURE_EMPTY_JSON = f.read()
 
+# Create collection of input files for the products
+# These will be uploaded to the mocked equivalent of S3 (where the real input files will be)
 features = json.loads(TEST_GETFEATURE_JSON)['features']
 INPUT_FILE_COLLECTION = PipelineFileCollection()
 for f in features:
