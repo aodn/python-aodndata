@@ -53,6 +53,7 @@ ENTRY_POINTS = {
 }
 
 INSTALL_REQUIRES = [
+    'schema>=0.7.0',
     'aodncore>=1.0.0',
     'aodntools>=1.0.0',
     'cc-plugin-imos>=1.3.0',
