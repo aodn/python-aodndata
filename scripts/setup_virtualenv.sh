@@ -7,7 +7,7 @@ VIRTUALENV_DIR=${VIRTUALENV_DIR:-python-aodndata-virtualenv}
 HERE=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
 echo "##### Creating/updating virtual environment #####"
-virtualenv -p python3 ${VIRTUALENV_DIR}
+virtualenv -p /usr/bin/python3 ${VIRTUALENV_DIR}
 source ${VIRTUALENV_DIR}/bin/activate
 ${HERE}/install_dependencies.sh
 
