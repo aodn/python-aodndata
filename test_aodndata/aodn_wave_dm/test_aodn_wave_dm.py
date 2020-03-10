@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from aodncore.pipeline.exceptions import InvalidFileNameError
+from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError
 
 from aodndata.aodn_wave_dm.aodn_wave_dm import dest_path_aodn_wave_dm
 
@@ -76,6 +76,26 @@ class TestAodnWaveDmHandler(unittest.TestCase):
                              'Byron_Bay',
                              os.path.basename(good_nc)))
 
+        good_nc = os.path.join(TEST_ROOT,
+                               'DTA_20190531T030000Z_CIWRB_WAVERIDER_FV01_END-20190531T210000Z.nc')
+        self.assertEqual(dest_path_aodn_wave_dm(good_nc),
+                         os.path.join(
+                             'Defence_Technology_Agency-New_Zealand',
+                             'Waverider_Buoys',
+                             'DELAYED',
+                             'Campbell_Island',
+                             os.path.basename(good_nc)))
+
+        good_nc = os.path.join(TEST_ROOT,
+                               'DTA_20170530T030000Z_SOWRB_WAVERIDER_FV01_END-20170530T210000Z.nc')
+        self.assertEqual(dest_path_aodn_wave_dm(good_nc),
+                         os.path.join(
+                             'Defence_Technology_Agency-New_Zealand',
+                             'Waverider_Buoys',
+                             'DELAYED',
+                             'Southern_Ocean',
+                             os.path.basename(good_nc)))
+
         bad = os.path.join(TEST_ROOT, 'bad.nc')
         with self.assertRaises(InvalidFileNameError):
             dest_path_aodn_wave_dm(bad)
@@ -83,6 +103,11 @@ class TestAodnWaveDmHandler(unittest.TestCase):
         bad = os.path.join(TEST_ROOT, 'BOM_W_20001129T034756Z_UNKNOWN_WAVERIDER_FV01_END-20001231T140424Z.nc')
         with self.assertRaises(InvalidFileNameError):
             dest_path_aodn_wave_dm(bad)
+
+        bad = os.path.join(TEST_ROOT, 'DTA_20170530T030000Z_WRONG-SITE-CODE_WAVERIDER_FV01_END-20170530T210000Z.nc')
+        with self.assertRaises(InvalidFileContentError):
+            dest_path_aodn_wave_dm(bad)
+
 
 if __name__ == '__main__':
     unittest.main()
