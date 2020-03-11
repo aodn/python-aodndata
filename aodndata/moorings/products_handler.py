@@ -12,6 +12,7 @@ from aodncore.util.wfs import ogc_filter_to_string
 
 from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
 from aodntools.timeseries_products.hourly_timeseries import hourly_aggregator
+from aodntools.timeseries_products.gridded_timeseries import grid_variable
 
 from aodndata.moorings.classifiers import MooringsFileClassifier
 
@@ -105,7 +106,7 @@ class MooringsProductsHandler(HandlerBase):
     """
 
     FILE_INDEX_LAYER = 'imos:moorings_all_map'
-    VALID_PRODUCTS = {'aggregated', 'hourly'}
+    VALID_PRODUCTS = {'aggregated', 'hourly', 'gridded'}
 
     def __init__(self, *args, **kwargs):
         super(MooringsProductsHandler, self).__init__(*args, **kwargs)
@@ -274,6 +275,39 @@ class MooringsProductsHandler(HandlerBase):
 
             self._cleanup_previous_version(product_file.name)
 
+    def _make_gridded_timeseries(self):
+        """Generage TEMP gridded product from the new hourly product file."""
+
+        # Find the full QC'd hourly product to use as input
+        hourly_files = (self.file_collection
+                            .filter_by_attribute_regex('name', r'.*FV02_hourly-timeseries_END')
+                            .filter_by_attribute_id('publish_type', PipelineFilePublishType.HARVEST_UPLOAD)
+                        )
+        if len(hourly_files) != 1:
+            raise MissingFileError("Don't have an hourly-timeseries file as input for gridded product!")
+        hourly_file = hourly_files[0]
+        self.logger.info("Creating gridded product from '{hourly_file.name}'".format(hourly_file=hourly_file))
+
+        # create a local symlink in temp_dir which includes the final S3 id (dest_path) so that
+        # it is recorded in the gridded file's metadata
+        hourly_file.dest_path = self.dest_path(hourly_file.local_path)
+        hourly_temp_path = os.path.join(self.temp_dir, hourly_file.dest_path)
+        os.makedirs(os.path.dirname(hourly_temp_path))
+        os.symlink(hourly_file.local_path, hourly_temp_path)
+
+        # create gridded file and add to collection for publication
+        product_url = grid_variable(hourly_file.dest_path, 'TEMP',
+                                    input_dir=self.temp_dir, output_dir=self.products_dir,
+                                    download_url_prefix=DOWNLOAD_URL_PREFIX,
+                                    opendap_url_prefix=OPENDAP_URL_PREFIX
+                                    )
+
+        product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
+        product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+        self.file_collection.add(product_file)
+
+        self._cleanup_previous_version(product_file.name)
+
     def _cleanup_previous_version(self, product_filename):
         """Identify any previously published version(s) of the given product file and mark them for deletion.
         Ignores cases where the previous version has exactly the same file name, as this will simply be overwritten.
@@ -310,8 +344,14 @@ class MooringsProductsHandler(HandlerBase):
 
         if 'aggregated' in self.products_to_create:
             self._make_aggregated_timeseries()
-        if 'hourly' in self.products_to_create:
+
+        # Even if only the gridded product is requested, we need to re-generate and publish the hourly too,
+        # as it is the input file for the gridded.
+        if 'hourly' in self.products_to_create or 'gridded' in self.products_to_create:
             self._make_hourly_timeseries()
+
+        if 'gridded' in self.products_to_create:
+            self._make_gridded_timeseries()
 
         # TODO: Include the list of excluded files as another table in the notification email (instead of the log)
         if self.excluded_files:

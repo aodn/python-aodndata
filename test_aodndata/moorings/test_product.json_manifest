@@ -1,5 +1,5 @@
 {
     "site_code": "NRSROT",
     "variables": ["TEMP", "PSAL", "CHLF"],
-    "products":["aggregated", "hourly"]
+    "products":["aggregated", "hourly", "gridded"]
 }
