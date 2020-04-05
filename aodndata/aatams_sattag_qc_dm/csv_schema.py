@@ -1,6 +1,6 @@
 """A Class to validate/type convert CSV files based on a schema."""
 import csv
-
+from logger import logger
 from schema import And, Schema, SchemaError
 
 DIALECT_CSV = {"delimiter": ",", "strict": True}
@@ -182,18 +182,6 @@ class CSVSchema:
                 adict[key] += [data[lind]]
         return adict
 
-    @classmethod
-    def report(cls, msg):
-        """Report a msg.
-
-        Args:
-          msg(str): the msg
-
-        Returns:
-
-        """
-        print(cls.__name__ + ": " + msg)
-
     def validate_file(self, file):
         """Validate a csv file.
 
@@ -205,28 +193,28 @@ class CSVSchema:
           data(Dict[str,List[Any]]): A dict with data columns converted as keys
 
         """
-        self.report("Validation Started for %s" % file)
-        self.report("\tLoading content schema for %s" % file)
+        logger.info("Validation Started for %s" % file)
+        logger.info("\tLoading content schema for %s" % file)
 
         schema_name = self.file2schema(file)
         fschema = self.file_schemas[schema_name]
 
-        self.report("\tLoading data from %s" % file)
+        logger.info("\tLoading data from %s" % file)
         _, header, data_list = self.load_csv(
             file, bulk_load=self.bulk_load, skip_every=self.skip_every,
         )
 
-        self.report("\tValidating Header in %s" % file)
+        logger.info("\tValidating Header in %s" % file)
         valid_header = self.validate_header(header, fschema)
 
-        self.report("\tAggregating data rows for validation in %s" % file)
+        logger.info("\tAggregating data rows for validation in %s" % file)
         col_dict = self.aggregate_to_dict(header, data_list)
 
-        self.report("\tValidating data types in %s" % file)
+        logger.info("\tValidating data types in %s" % file)
         valid_dataset = {}
         for key, value in col_dict.items():
             valid_dataset[key] = Schema([fschema[key]]).validate(value)
-            self.report("\t\t %s[%s] is valid" % (file, key))
+            logger.info("\t\t %s[%s] is valid" % (file, key))
 
         return valid_header, valid_dataset
 

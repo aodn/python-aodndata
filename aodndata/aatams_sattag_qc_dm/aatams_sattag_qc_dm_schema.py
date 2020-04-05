@@ -1,5 +1,5 @@
-"""This module defines the AATAMS SATTAG QC DM Schema class and their respective
-functions."""
+"""This module defines the Aatams Sattelite Tag Quality Control Delay Mode Schema class
+and their respective functions."""
 import os
 from datetime import datetime
 from functools import partial
@@ -24,7 +24,7 @@ DATE_FMT_STR_2 = "%m/%d/%y %H:%M:%S"
 
 
 # schema functions -> Return arg or False
-def valid_device(astr):  # TODO expand to particular devices fmts?
+def valid_device(astr):
     """Check if a valid device.
 
     Args:
@@ -35,10 +35,10 @@ def valid_device(astr):  # TODO expand to particular devices fmts?
       bool: False if invalid
 
     """
-    return astr if len(astr.split("-")) >= 3 else False
+    return astr if len(astr.split("-")) == 3 else False
 
 
-def valid_wmo_device(astr):  # TODO expand to particular codes?
+def valid_wmo_device(astr):
     """Check if a valid wmo device.
 
     Args:
@@ -49,10 +49,10 @@ def valid_wmo_device(astr):  # TODO expand to particular codes?
       bool: False if invalid
 
     """
-    return astr if astr[0] == "Q" else False
+    return astr if isinstance(astr, str) else False
 
 
-def valid_tag_type(astr):  # TODO expand to particular strings.
+def valid_tag_type(astr):
     """Check if a valid tag type.
 
     Args:
@@ -63,10 +63,10 @@ def valid_tag_type(astr):  # TODO expand to particular strings.
       bool: False if invalid
 
     """
-    return astr if "_" in astr else False
+    return astr if isinstance(astr, str) else False
 
 
-def valid_longitude(afloat):  # TODO check convention
+def valid_longitude(afloat):
     """Check if a valid longitude.
 
     Args:
@@ -96,7 +96,7 @@ def valid_latitude(afloat):
     return afloat if valid else False
 
 
-def not_applicable(astr):  # TODO: handle every case as particular?
+def not_applicable(astr):
     """Check string for emptiness, not applicable or NaN string.
 
     Args:
@@ -143,7 +143,7 @@ def iter_int(alist):
       ValueError: if an item cannot be an int.
 
     """
-    [int(x) for x in alist]
+    return [int(x) for x in alist]
 
 
 def iter_float(alist):
@@ -159,7 +159,7 @@ def iter_float(alist):
       ValueError: if an item cannot be an float.
 
     """
-    [float(x) for x in alist]
+    return [float(x) for x in alist]
 
 
 def str2date(astr, fmt):
@@ -206,7 +206,7 @@ def check_file_names(file_names, flist):
 
     """
     ngroup0 = set(file_names)
-    ngroup1 = set([os.path.basename(x).split("_")[0] for x in flist])
+    ngroup1 = {os.path.basename(x).split("_")[0] for x in flist}
     return ngroup0 == ngroup1
 
 
@@ -247,7 +247,7 @@ def is_equal(x, y):
       bool: True or False
 
     """
-    return True if x == y else False
+    return x == y
 
 
 check_number_of_files_is_correct = partial(
@@ -257,7 +257,7 @@ check_name_of_files_is_correct = partial(check_file_names, AATAMS_DM_FILE_TYPE_N
 
 # Schema dicts & cases
 FILENAMES_IN_ZIP_SCHEMA = And(
-    check_number_of_files_is_correct, check_name_of_files_is_correct
+    check_number_of_files_is_correct, check_name_of_files_is_correct,
 )
 
 CSV_SEX_CLASS = Or("f", "m")
@@ -283,21 +283,21 @@ CSV_LONGITUDE = And(CSV_FLOAT, Or(valid_longitude, 0))
 CSV_LATITUDE = And(CSV_FLOAT, Or(valid_latitude, 0))  # as above
 
 METADATA_SCHEMA = {
-    "sattag_program": str,  # TODO
+    "sattag_program": str,
     "device_id": valid_device,
     "ptt": CSV_INT,
-    "body": str,  # TODO
+    "body": str,
     "device_wmo_ref": valid_wmo_device,
-    "tag_type": valid_tag_type,  # TODO
-    "common_name": str,  # TODO
-    "species": str,  # TODO
+    "tag_type": valid_tag_type,
+    "common_name": str,
+    "species": str,
     "release_longitude": CSV_LONGITUDE,
     "release_latitude": CSV_LATITUDE,
-    "release_site": str,  # TODO
+    "release_site": str,
     "release_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
     "recovery_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
-    "age_class": CSV_AGE_CLASS,  # TODO not applicable is case!?
-    "sex": CSV_SEX_CLASS,  # TODO not applicable is case!?
+    "age_class": CSV_AGE_CLASS,
+    "sex": CSV_SEX_CLASS,
     "length": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "estimated_mass": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "actual_mass": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
@@ -310,15 +310,15 @@ COORD_SCHEMA = {
     "lon": Or(CSV_EMPTY, CSV_LONGITUDE),
     "ssm_lon": Or(CSV_EMPTY, CSV_LONGITUDE),
     "ssm_lat": Or(CSV_EMPTY, CSV_LATITUDE),
-    "ssm_x": Or(CSV_EMPTY, CSV_FLOAT),  # TODO ssm are positive floats?
+    "ssm_x": Or(CSV_EMPTY, CSV_FLOAT),
     "ssm_y": Or(CSV_EMPTY, CSV_FLOAT),
     "ssm_x.se": Or(CSV_EMPTY, CSV_FLOAT),
     "ssm_y.se": Or(CSV_EMPTY, CSV_FLOAT),
 }
 
 POS_SCHEMA = {
-    "x": Or(CSV_EMPTY, CSV_FLOAT),  # TODO check negatives?
-    "y": Or(CSV_EMPTY, CSV_FLOAT),  # TODO check negatives?
+    "x": Or(CSV_EMPTY, CSV_FLOAT),
+    "y": Or(CSV_EMPTY, CSV_FLOAT),
     "x.se": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "y.se": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "u": Or(CSV_EMPTY, CSV_FLOAT),
@@ -332,7 +332,7 @@ CTD_SCHEMA = {
     "ptt": METADATA_SCHEMA["ptt"],
     "end.date": Or(CSV_DATE_ISO, CSV_DATE_US),
     "max.dbar": CSV_POSITIVE_FLOAT,
-    "num": CSV_INT,  # TODO apparently a boolean.
+    "num": CSV_INT,
     "n.temp": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "n.cond": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "n.sal": Or(CSV_EMPTY, CSV_POSITIVE_INT),
@@ -348,13 +348,13 @@ CTD_SCHEMA = {
     "n.oxy": Or(CSV_EMPTY, CSV_INT),
     "oxy.dbar": Or(CSV_EMPTY, CSV_LIST_OF_INT),
     "oxy.vals": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
-    "qc.profile": CSV_INT,  # TODO apparently a boolean.
+    "qc.profile": CSV_INT,
     "qc.temp": Or(CSV_EMPTY, CSV_LIST_OF_INT),
     "qc.sal": Or(CSV_EMPTY, CSV_LIST_OF_INT),
     "sal.corrected.vals": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
     "created": Or(CSV_DATE_ISO, CSV_DATE_US),
     "modified": Or(CSV_DATE_ISO, CSV_DATE_US),
-    "n.photo": Or(CSV_EMPTY, CSV_INT),  # TODO
+    "n.photo": Or(CSV_EMPTY, CSV_INT),
     "photo.dbar": Or(CSV_EMPTY, CSV_LIST_OF_INT),
     "photo.vals": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
     **COORD_SCHEMA,
@@ -377,19 +377,19 @@ DIAG_SCHEMA = {
     "pass.dur": CSV_INT,
     "freq": CSV_POSITIVE_FLOAT,
     "v.mask": CSV_INT,
-    "alt": CSV_EMPTY,  # TODO
-    "est.speed": Or(CSV_EMPTY, CSV_FLOAT),  # TODO check range.
+    "alt": CSV_EMPTY,
+    "est.speed": Or(CSV_EMPTY, CSV_FLOAT),
     "km.from.home": Or(CSV_EMPTY, CSV_FLOAT),
     "iq": CSV_INT,
     "nops": CSV_INT,
-    "deleted": CSV_EMPTY,  # TODO
+    "deleted": CSV_EMPTY,
     "actual.ptt": CSV_INT,
     "error.radius": CSV_INT,
     "semi.major.axis": CSV_INT,
     "semi.minor.axis": CSV_INT,
     "ellipse.orientation": CSV_INT,
     "hdop": CSV_INT,
-    "satellite": str,  # TODO
+    "satellite": str,
     "diag.id": CSV_INT,
     "lon.y": Or(CSV_EMPTY, CSV_LONGITUDE),
     "lat.y": Or(CSV_EMPTY, CSV_LATITUDE),
@@ -405,13 +405,13 @@ DIVE_SCHEMA = {
     "surf.dur": CSV_INT,
     "dive.dur": CSV_INT,
     "max.dep": CSV_POSITIVE_FLOAT,
-    **{"d" + str(x): Or(CSV_EMPTY, CSV_POSITIVE_FLOAT) for x in range(1, 5)},  # TODO
+    **{"d" + str(x): Or(CSV_EMPTY, CSV_POSITIVE_FLOAT) for x in range(1, 5)},
     **{"v" + str(x): Or(CSV_EMPTY, CSV_FLOAT) for x in range(1, 6)},
-    "travel.r": Or(CSV_EMPTY, CSV_FLOAT),  # TODO
-    "homedist": Or(CSV_EMPTY, CSV_FLOAT),  # TODO
-    "bottom": Or(CSV_EMPTY, CSV_FLOAT),  # TODO
-    **{"t" + str(x): CSV_FLOAT for x in range(1, 5)},  # TODO
-    "d.speed": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),  # TODO
+    "travel.r": Or(CSV_EMPTY, CSV_FLOAT),
+    "homedist": Or(CSV_EMPTY, CSV_FLOAT),
+    "bottom": Or(CSV_EMPTY, CSV_FLOAT),
+    **{"t" + str(x): CSV_FLOAT for x in range(1, 5)},
+    "d.speed": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "n.depths": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "n.speeds": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "depth.str": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
@@ -422,8 +422,8 @@ DIVE_SCHEMA = {
     "grp.number": CSV_POSITIVE_INT,
     "d5": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),  # wtf...
     "t5": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
-    "degc.str": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),  # TODO
-    "illum.str": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),  # TODO
+    "degc.str": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
+    "illum.str": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
     **{
         x: Or(CSV_EMPTY, CSV_POSITIVE_INT)
         for x in [
@@ -453,7 +453,7 @@ DIVE_SCHEMA = {
             "pitch.asc",
         ]
     },
-    "pitch.str": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),  # TODO
+    "pitch.str": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
     "qc": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     **{"d" + str(x): Or(CSV_EMPTY, CSV_POSITIVE_FLOAT) for x in range(6, 26)},
     **{"t" + str(x): Or(CSV_EMPTY, CSV_POSITIVE_FLOAT) for x in range(6, 26)},
@@ -497,61 +497,77 @@ SUMMARY_SCHEMA = {
     "cnt": CSV_POSITIVE_INT,
     "s.date": Or(CSV_DATE_ISO, CSV_DATE_US),
     "e.date": Or(CSV_DATE_ISO, CSV_DATE_US),
-    "div.dist": Or(CSV_EMPTY, CSV_FLOAT),  # TODO
-    "surf.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),  # TODO
-    "dive.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),  # TODO
-    "haul.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),  # TODO
-    "n.cycles": CSV_INT,
+    "div.dist": Or(CSV_EMPTY, CSV_FLOAT),
+    "surf.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
+    "dive.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
+    "haul.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
+    "n.cycles": And(CSV_INT, Or(0, is_positive)),
     "av.depth": CSV_FLOAT,
     "max.depth": CSV_FLOAT,
-    "cruise.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
-    "avg.sst": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
-    "avg.speed": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
+    "cruise.tm": str,  # ignore
+    "avg.sst": str,  # ignore
+    "avg.speed": str,  # ignore
     "sd.depth": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "av.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "sd.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "max.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.n.cycles": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.av.depth": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.max.depth": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.avg.speed": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.sd.depth": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.av.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.sd.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.max.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.dive.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
-    "av.surf.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "sd.surf.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "max.surf.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.av.surf.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.sd.surf.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "dp.max.surf.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "pca": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "swim.eff.desc": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
-    "swim.eff.asc": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
-    "swim.eff.whole": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
-    "secs.desc": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "secs.asc": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "pitch.desc": Or(CSV_EMPTY, CSV_INT),
-    "pitch.asc": Or(CSV_EMPTY, CSV_INT),
-    "av.haulout.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "sd.haulout.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "max.haulout.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "av.phosi.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "sd.phosi.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "max.phosi.dur": Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.n.cycles": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.av.depth": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.max.depth": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.avg.speed": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.sd.depth": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.av.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.sd.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.max.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.dive.tm": str,  # Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
+    "av.surf.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "sd.surf.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "max.surf.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.av.surf.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.sd.surf.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "dp.max.surf.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "pca": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "swim.eff.desc": str,  # Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
+    "swim.eff.asc": str,  # Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
+    "swim.eff.whole": str,  # Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
+    "secs.desc": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "secs.asc": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "pitch.desc": str,  # Or(CSV_EMPTY, CSV_INT),
+    "pitch.asc": str,  # Or(CSV_EMPTY, CSV_INT),
+    "av.haulout.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "sd.haulout.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "max.haulout.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "av.phosi.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "sd.phosi.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
+    "max.phosi.dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "ssm_lon": COORD_SCHEMA["ssm_lon"],
     "ssm_lat": COORD_SCHEMA["ssm_lat"],
     "ssm_x": COORD_SCHEMA["ssm_x"],
-    "ssm_y": COORD_SCHEMA["ssm_y"],
-    "ssm_x.se": COORD_SCHEMA["ssm_x.se"],
-    "ssm_y.se": COORD_SCHEMA["ssm_y.se"],
+    "ssm_y": str,  # COORD_SCHEMA["ssm_y"],
+    "ssm_x.se": str,  # COORD_SCHEMA["ssm_x.se"],
+    "ssm_y.se": str,  # COORD_SCHEMA["ssm_y.se"],
     "cid": METADATA_SCHEMA["sattag_program"],
 }
 
 
-class AATAMS_SATTAG_QC_DM_SCHEMA(CSVSchema):
-    """The AATAMS SATTAG QC DM SCHEMA class."""
+class AatamsSattagQcDmSchema(CSVSchema):
+    """The AATAMS SATTAG QC DM SCHEMA class.
+
+    This is a schema class for validation
+    of AATAMS csv files.
+
+    The class inherit properties from
+    CSVSchema to be able to open ,load and
+    validate headers and columns.
+
+    The workflow can be defined in three states:
+
+    1. Validation of the zip file (see zip_schema)
+    2. Validation of the metadata file - headers/fields (see file_schemas)
+    3. Validation of all other files - headers/fields (see file_schemas)
+    4. Validation of cross references among files (see cross_validation_scope_list)
+
+    """
 
     @staticmethod
     def file2schema(file_str):
@@ -567,6 +583,12 @@ class AATAMS_SATTAG_QC_DM_SCHEMA(CSVSchema):
         return os.path.basename(file_str).split("_")[0]
 
     def __init__(self, skip_every=0, bulk_load=True):
+        """Initialize the class with CSV reading options.
+
+        skip_every: integer to skip every n line in the csv
+        bulk_load: boolean to read the entire csv in memory
+
+        """
         super().__init__(skip_every=skip_every, bulk_load=bulk_load)
 
         # self.manifest_schema = ...
@@ -737,5 +759,4 @@ class AATAMS_SATTAG_QC_DM_SCHEMA(CSVSchema):
             self.report("Validation ended for %s" % file)
             self.headers[schema_name] = header
             setattr(self, schema_name, valid_data)
-
         self.cross_set_validation(self.cross_validation_scope_list)
