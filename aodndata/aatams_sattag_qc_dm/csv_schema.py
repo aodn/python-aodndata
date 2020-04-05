@@ -9,9 +9,6 @@ DIALECT_CSV = {"delimiter": ",", "strict": True}
 class CSVSchema:
     """A class to validate and/or type convert a CSV file."""
 
-    cross_content_scope = {}
-    cross_values = {}
-
     @staticmethod
     def validate_header(header, cschema):
         """Validate the CSV Headers.
@@ -153,15 +150,15 @@ class CSVSchema:
                     row_numbers = row_numbers[::skip_every]
             else:
                 data_rows = []
-                row_numbers = []
+                row_numbers = []  # type:ignore
                 for nrow, row in enumerate(reader):
                     if skip_every:
                         if nrow % skip_every:
                             data_rows += [row]
-                            row_numbers += [nrow]
+                            row_numbers += [nrow]  # type: ignore
                     else:
                         data_rows += [row]
-                        row_numbers += [nrow]
+                        row_numbers += [nrow]  # type:ignore
             return row_numbers, header, data_rows
 
     @staticmethod
@@ -184,28 +181,6 @@ class CSVSchema:
             for lind, key in enumerate(headers):
                 adict[key] += [data[lind]]
         return adict
-
-    @staticmethod
-    def compute_cross_values(datadict, keys=None):
-        """Compute a cross value dictionary {k:set(v)}.
-
-        This dictionary is useful to compare
-        if a value of a key is within a group of values.
-
-        Args:
-          datadict(dict): the original dict.
-          keys():
-
-          keys: the selected keys.
-
-        Returns:
-
-        """
-        cross_values = {}
-        if set(keys).issubset(datadict.keys()):
-            cross_values = {x: set() for x in keys}
-            _ = [cross_values[x].update(datadict[x]) for x in cross_values.keys()]
-        return cross_values
 
     @classmethod
     def report(cls, msg):
@@ -250,26 +225,8 @@ class CSVSchema:
         self.report("\tValidating data types in %s" % file)
         valid_dataset = {}
         for key, value in col_dict.items():
-            # TODO continue to validate per column since the fail output can be verbose!?
             valid_dataset[key] = Schema([fschema[key]]).validate(value)
             self.report("\t\t %s[%s] is valid" % (file, key))
-
-        if self.same_keys_content:
-            self.report("\t\t\tValidating inter columns in %s" % file)
-            self.validate_self_content(self.same_keys_content, valid_dataset)
-
-        if self.cross_content_scope and self.cross_values:
-            self.report("\t\t\t\tValidating cross columns references in %s" % file)
-            for key, value in self.cross_values.items():
-                isdiff = set(valid_dataset[key]).difference(value)
-                if isdiff:
-                    errmsg = (
-                        "Cross content comparison failed.\n\
-                            %s[%s] = %s\n~\n%s"
-                        % (file, key, value, self.cross_values[key])
-                    )
-                    raise SchemaError(errmsg)
-        self.report("Validation ended for %s" % file)
 
         return valid_header, valid_dataset
 

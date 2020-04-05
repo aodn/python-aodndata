@@ -1,8 +1,10 @@
+"""This module defines the AATAMS SATTAG QC DM Schema class and their respective
+functions."""
 import os
 from datetime import datetime
 from functools import partial
 
-from schema import And, Or, Schema, Use
+from schema import And, Or, Schema, Use, SchemaError
 
 from .csv_schema import CSVSchema
 
@@ -564,8 +566,8 @@ class AATAMS_SATTAG_QC_DM_SCHEMA(CSVSchema):
         """
         return os.path.basename(file_str).split("_")[0]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, skip_every=0, bulk_load=True):
+        super().__init__(skip_every=skip_every, bulk_load=bulk_load)
 
         # self.manifest_schema = ...
         self.zip_schema = FILENAMES_IN_ZIP_SCHEMA
@@ -580,10 +582,25 @@ class AATAMS_SATTAG_QC_DM_SCHEMA(CSVSchema):
             "summary": SUMMARY_SCHEMA,
         }
 
-        self.same_keys_content = []
-        self.cross_content_scope = {
-            "cid": "sattag_program",
-        }
+        self.cross_validation_scope_list = [
+            {
+                "metadata": "sattag_program",
+                "ctd": "cid",
+                "diag": "cid",
+                "dive": "cid",
+                "haulout": "cid",
+                "ssmoutputs": "cid",
+                "summary": "cid",
+            },
+        ]
+        self.headers = {}
+        self.metadata = {}
+        self.ctd = {}
+        self.diag = {}
+        self.dive = {}
+        self.haulout = {}
+        self.ssmoutputs = {}
+        self.sumary = {}
 
     def validate_zip_names(self, file_list):
         """Validate the file names.
@@ -608,7 +625,8 @@ class AATAMS_SATTAG_QC_DM_SCHEMA(CSVSchema):
           file_list: a list of csv files.
 
         Returns:
-          Dict[str,Any]: A dictionary with the result of the schema call for every file header.
+          Dict[str,Any]: A dictionary with the result of the schema call
+          for every file header.
 
         Raises:
           SchemaError: if any header is non-conformant.
@@ -623,6 +641,54 @@ class AATAMS_SATTAG_QC_DM_SCHEMA(CSVSchema):
             self.report("Validating headers in %s" % file)
             headers[schema_name] = self.validate_header(header, schema)
         return headers
+
+    def cross_set_validation(self, scope_list):
+        """Perform cross validation of column values across different file types. The
+        validation is done by comparing the sets of different columns across the
+        different file/data types.
+
+        For example, comparison of the set(metadata['sattag_program'])
+        against the set(ctd['cid']).
+
+        Args:
+          scope_dict: A list of cross validation dict scopes
+
+        Returns:
+          None: if all valid
+
+        Raises:
+          SchemaError: if cross validatiton fails.
+
+        """
+        if not scope_list:
+            self.report("Cross validation skipped")
+            return
+
+        self.report("Validating cross references")
+        for cvdict in scope_list:
+            filetypes = list(cvdict.keys())
+            datanames = list(cvdict.values())
+
+            filetype0 = filetypes.pop(0)
+            dataname0 = datanames.pop(0)
+            xset = set(getattr(self, filetype0)[dataname0])
+
+            for filetype, dataname in zip(filetypes, datanames):
+                self.report(
+                    "\tValidating cross columns references from %s[%s] against %s[%s]"
+                    % (filetype0, dataname0, filetype, dataname)
+                )
+                yset = set(getattr(self, filetype)[dataname])
+                isdiff = xset.symmetric_difference(yset)
+                if isdiff:
+                    errmsg = (
+                        "Cross content comparison failed for value: %s.\n\
+                                    %s[%s] = %s\n\
+                                    while \n\
+                                    %s[%s] = %s."
+                        % (isdiff, filetype, dataname, xset, filetype0, dataname0, yset)
+                    )
+                    raise SchemaError(errmsg)
 
     def quick_validation(self, file_list):
         """Perform validation only in zip file names and headers.
@@ -639,8 +705,6 @@ class AATAMS_SATTAG_QC_DM_SCHEMA(CSVSchema):
         """
         self.validate_zip_names(file_list)
         self.validate_headers_only(file_list)
-
-    pass
 
     def extensive_validation(self, file_list):
         """Extensive validation of files within a AATAMS_DM zip.
@@ -665,21 +729,13 @@ class AATAMS_SATTAG_QC_DM_SCHEMA(CSVSchema):
         schema_name = "metadata"
         metadata_file = [x for x in file_list if self.file2schema(x) == schema_name]
 
-        self.headers = {}
         self.headers["metadata"], self.metadata = self.validate_file(metadata_file[0])
-
-        if self.cross_content_scope:
-            self.report("\tPopulating cross content based on %s" % metadata_file)
-            ckeys = self.cross_content_scope.keys()
-            self.cross_values = self.compute_cross_values(self.metadata, keys=ckeys)
 
         for file in file_list:
             schema_name = self.file2schema(file)
             header, valid_data = self.validate_file(file)
+            self.report("Validation ended for %s" % file)
             self.headers[schema_name] = header
             setattr(self, schema_name, valid_data)
 
-        pass
-
-
-pass
+        self.cross_set_validation(self.cross_validation_scope_list)
