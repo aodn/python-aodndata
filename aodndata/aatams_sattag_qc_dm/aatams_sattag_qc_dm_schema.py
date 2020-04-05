@@ -3,6 +3,7 @@ and their respective functions."""
 import os
 from datetime import datetime
 from functools import partial
+from logger import logger
 
 from schema import And, Or, Schema, Use, SchemaError
 
@@ -637,7 +638,7 @@ class AatamsSattagQcDmSchema(CSVSchema):
           SchemaError: If the zip files are non-conformant.
 
         """
-        self.report("Validating filename conventions")
+        logger.info("Validating filename conventions")
         return Schema(self.zip_schema).validate(file_list)
 
     def validate_headers_only(self, file_list):
@@ -658,9 +659,9 @@ class AatamsSattagQcDmSchema(CSVSchema):
         for file in file_list:
             schema_name = self.file2schema(file)
             schema = self.file_schemas[schema_name]
-            self.report("Loading headers in %s" % file)
+            logger.info("Loading headers in %s" % file)
             header = self.load_csv_header(file)
-            self.report("Validating headers in %s" % file)
+            logger.info("Validating headers in %s" % file)
             headers[schema_name] = self.validate_header(header, schema)
         return headers
 
@@ -683,10 +684,10 @@ class AatamsSattagQcDmSchema(CSVSchema):
 
         """
         if not scope_list:
-            self.report("Cross validation skipped")
+            logger.info("Cross validation skipped")
             return
 
-        self.report("Validating cross references")
+        logger.info("Validating cross references")
         for cvdict in scope_list:
             filetypes = list(cvdict.keys())
             datanames = list(cvdict.values())
@@ -696,7 +697,7 @@ class AatamsSattagQcDmSchema(CSVSchema):
             xset = set(getattr(self, filetype0)[dataname0])
 
             for filetype, dataname in zip(filetypes, datanames):
-                self.report(
+                logger.info(
                     "\tValidating cross columns references from %s[%s] against %s[%s]"
                     % (filetype0, dataname0, filetype, dataname)
                 )
@@ -756,7 +757,7 @@ class AatamsSattagQcDmSchema(CSVSchema):
         for file in file_list:
             schema_name = self.file2schema(file)
             header, valid_data = self.validate_file(file)
-            self.report("Validation ended for %s" % file)
+            logger.info("Validation ended for %s" % file)
             self.headers[schema_name] = header
             setattr(self, schema_name, valid_data)
         self.cross_set_validation(self.cross_validation_scope_list)
