@@ -3,11 +3,14 @@ and their respective functions."""
 import os
 from datetime import datetime
 from functools import partial
-from logger import logger
+import logging
 
 from schema import And, Or, Schema, Use, SchemaError
 
 from aodndata.common.csv_schema import CSVSchema
+
+
+logger = logging.getLogger(__name__)
 
 AATAMS_DM_NUMBER_OF_FILES_IN_ZIP = 7
 AATAMS_DM_FILE_TYPE_NAMES = (

@@ -1,7 +1,9 @@
 """A Class to validate/type convert CSV files based on a schema."""
 import csv
-from logger import logger
 from schema import And, Schema, SchemaError
+import logging
+
+logger = logging.getLogger(__name__)
 
 DIALECT_CSV = {"delimiter": ",", "strict": True}
 
