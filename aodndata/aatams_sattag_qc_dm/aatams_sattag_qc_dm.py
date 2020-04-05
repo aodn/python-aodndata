@@ -1,7 +1,7 @@
-"""handler for the AATAMS_SATTAG_QC_DM handler."""
+"""The AATAMS_SATTAG_QC_DM handler."""
 import os
 
-from aodncore.pipeline import HandlerBase, PipelineFilePublishType
+from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType
 from .aatams_sattag_qc_dm_schema import AATAMS_SATTAG_QC_DM_SCHEMA
 
 # AATAMS DM global constants
@@ -35,6 +35,12 @@ class AatamsSattagQcDmHandler(HandlerBase):
         files_in_zip = [x.local_path for x in self.file_collection]
         valid = self.validation_call(files_in_zip)
         if valid:
+            self.file_collection.add(self.input_file)
+
+            self.file_collection.filter_by_attribute_id(
+                "file_type", FileType.ZIP,
+            ).set_publish_types(PipelineFilePublishType.ARCHIVE_ONLY)
+
             self.file_collection.filter_by_attribute_value(
                 "extension", ".csv",
             ).set_publish_types(PipelineFilePublishType.HARVEST_UPLOAD)
