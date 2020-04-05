@@ -2,7 +2,7 @@
 import os
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType
-from .aatams_sattag_qc_dm_schema import AATAMS_SATTAG_QC_DM_SCHEMA
+from .aatams_sattag_qc_dm_schema import AatamsSattagQcDmSchema
 
 # AATAMS DM global constants
 AATAMS_SATTAG_QC_DM_BASE = "IMOS/AATAMS/AATAMS_SATTAG_QC_DM"
@@ -26,8 +26,10 @@ class AatamsSattagQcDmHandler(HandlerBase):
         self.archive_input_file = True
         self.archive_path_function = self.dest_path_function
 
-        self.schema = AATAMS_SATTAG_QC_DM_SCHEMA()
+        # Initialize the schema class and set default validation method
+        self.schema = AatamsSattagQcDmSchema()
         self.validation_call = self.schema.extensive_validation
+        # Use below to just validate the file names and csv headers
         # self.validation_call = self.SCHEMA.quick_validation
 
     def preprocess(self):

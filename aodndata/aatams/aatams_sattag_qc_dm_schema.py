@@ -7,7 +7,7 @@ from logger import logger
 
 from schema import And, Or, Schema, Use, SchemaError
 
-from .csv_schema import CSVSchema
+from aodndata.common.csv_schema import CSVSchema
 
 AATAMS_DM_NUMBER_OF_FILES_IN_ZIP = 7
 AATAMS_DM_FILE_TYPE_NAMES = (
