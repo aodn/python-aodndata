@@ -111,7 +111,7 @@ def not_applicable(astr):
       bool: False if invalid
 
     """
-    if astr in ("", "NA", "NaN"):
+    if astr.strip().lower() in ("", "na", "nan"):
         return ""
     else:
         return False
