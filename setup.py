@@ -58,8 +58,6 @@ INSTALL_REQUIRES = [
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8',
     'matplotlib>=3.0.3',
-    'pandas>=0.24.2,<0.25.0',
-    'xarray>=0.11.3,<0.14.0',
     'pillow>=6.2.1,<7.0.0'  # provide additional image formats for matplotlib
 ]
 
