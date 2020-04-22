@@ -122,6 +122,24 @@ class TestMooringFileClassifier(BaseTestCase):
         self.assertEqual(dest_dir, 'IMOS/ANMN/QLD/GBROTE/Biogeochem_timeseries')
         self.assertEqual(dest_filename, filename)
 
+    def test_eco_bb2flwb(self):
+        filename = ('IMOS_ANMN-NRS_EKZ_20130125T140759Z_NRSROT_FV01_NRSROT-1301-ECO-BB2FLWB-21_END-20130520T135245Z'
+                    '_C-20191115T024327Z.nc')
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile, {'site_code': 'NRSROT', 'featureType': 'timeseries'}, CDOM={}, VSF470={})
+        dest_dir, dest_filename = os.path.split(MooringsFileClassifier.dest_path(testfile))
+        self.assertEqual(dest_dir, 'IMOS/ANMN/NRS/NRSROT/Biogeochem_timeseries')
+        self.assertEqual(dest_filename, filename)
+
+    def test_eco_parsb(self):
+        filename = ('IMOS_ANMN-QLD_FZ_20180514T083000Z_GBRPPS_FV01_GBRPPS-1805-ECO-PARSB-26.5_END-20181110T074743Z'
+                    '_C-20190807T070104Z.nc')
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile, {'site_code': 'GBRPPS', 'featureType': 'timeseries'}, PAR={})
+        dest_dir, dest_filename = os.path.split(MooringsFileClassifier.dest_path(testfile))
+        self.assertEqual(dest_dir, 'IMOS/ANMN/QLD/GBRPPS/Biogeochem_timeseries')
+        self.assertEqual(dest_filename, filename)
+
     def test_burst_averaged(self):
         filename = 'IMOS_ANMN-NRS_KOSTUZ_20140808T080100Z_NRSROT_FV02_NRSROT-1408-WQM-55-burst-averaged_END-20141215T234700Z_C-20150319T075400Z.nc'
         testfile = os.path.join(self.tempdir, filename)

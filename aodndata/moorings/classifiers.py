@@ -17,7 +17,7 @@ class MooringsFileClassifier(FileClassifier):
     PROJECT = 'IMOS'
 
     SALINITY_VAR = {'PSAL', 'CNDC'}
-    BGC_VAR = {'CPHL', 'CHLF', 'CHLU', 'FLU2', 'TURB', 'DOX1', 'DOX1_1', 'DOX2', 'DOXY', 'DOXS'}
+    BGC_VAR = {'CPHL', 'CHLF', 'CHLU', 'FLU2', 'TURB', 'DOX1', 'DOX1_1', 'DOX2', 'DOXY', 'DOXS', 'CDOM', 'PAR'}
     VELOCITY_VAR = {'UCUR', 'VCUR', 'WCUR', 'UCUR_MAG', 'VCUR_MAG', 'CSPD'}
     WAVE_VAR = {'VAVH', 'SSDS', 'SSDS_MAG', 'SSWD', 'SSWD_MAG', 'SSWDT', 'SSWST', 'SSWV', 'SSWV_MAG', 'SSWVT', 'VAVT',
                 'VDEN', 'VDEV', 'VDEP', 'VDES', 'VDIR', 'VDIR_MAG', 'VDIRT', 'WHTE', 'WHTH', 'WPFM', 'WPMH', 'WPSM',

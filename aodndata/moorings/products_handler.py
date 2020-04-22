@@ -2,7 +2,7 @@ import json
 import os
 import re
 
-from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And
+from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And, Or
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFile, FileType
 from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNameError, InvalidFileFormatError,
@@ -11,11 +11,30 @@ from aodncore.pipeline.files import RemotePipelineFileCollection
 from aodncore.util.wfs import ogc_filter_to_string
 
 from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
+from aodntools.timeseries_products.hourly_timeseries import hourly_aggregator
 
 from aodndata.moorings.classifiers import MooringsFileClassifier
 
 
-AGGREGATED_VARIABLE_PATTERN = re.compile(r'FV01_([A-Z0-9-]+)-aggregated')
+PRODUCT_TYPE_PATTERN = re.compile(r'FV0[12]_([^_]+)_END')
+DOWNLOAD_URL_PREFIX = "https://s3-ap-southeast-2.amazonaws.com/imos-data/"
+OPENDAP_URL_PREFIX = "http://thredds.aodn.org.au/thredds/dodsC/"
+
+
+def get_product_type(file_path):
+    """Return a product type label for the given file (extracted from the file name).
+    For example "PSAL-aggregated-timeseries", or "hourly-timeseries".
+
+    :param file_path: str path or name of file
+    :returns: str product type label
+    """
+    file_name = os.path.basename(file_path)
+    name_match = PRODUCT_TYPE_PATTERN.search(file_name)
+    if not name_match:
+        raise InvalidFileNameError(
+            "Could not extract produt type from '{file_name}'".format(file_name=file_name)
+        )
+    return name_match.group(1)
 
 
 class MooringsProductClassifier(MooringsFileClassifier):
@@ -86,12 +105,14 @@ class MooringsProductsHandler(HandlerBase):
     """
 
     FILE_INDEX_LAYER = 'imos:moorings_all_map'
+    VALID_PRODUCTS = {'aggregated', 'hourly'}
 
     def __init__(self, *args, **kwargs):
         super(MooringsProductsHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.json_manifest', '.nc', '.zip']
         self.product_site_code = None
         self.product_variables = None
+        self.products_to_create = self.VALID_PRODUCTS
         self.input_file_collection = None
         self.input_file_variables = None
         self.excluded_files = dict()
@@ -108,6 +129,14 @@ class MooringsProductsHandler(HandlerBase):
             raise InvalidFileContentError(
                 "manifest file '{self.input_file}' missing information (site_code, variables)".format(self=self)
             )
+        if 'products' in manifest:
+            invalid_products = set(manifest['products']) - self.VALID_PRODUCTS
+            if invalid_products:
+                raise InvalidFileContentError(
+                    "invalid product(s) {invalid_products} requested "
+                    "in manifest file '{self.input_file}'".format(invalid_products=invalid_products, self=self)
+                )
+            self.products_to_create = set(manifest['products'])
 
     def get_wfs_features(self, filter_list, propertyname='*'):
         """Query the file index WFS layer with the given filters and return a list of features.
@@ -118,11 +147,6 @@ class MooringsProductsHandler(HandlerBase):
         """
 
         ogc_filter = ogc_filter_to_string(And(filter_list))
-
-        # Note I need to access _wfs_broker to be able to use query_urls_for_layer() with a filter,
-        # as the corresponding StateQuery method doesn't accept additional kwargs.
-        # TODO: find out why this calls getCapabilities twice (and takes 40s even when response mocked with httpretty)
-        # TODO: replace ._wfs_broker.getfeature_dict() with .getfeature_dict() once aodncore has been updated
         wfs_response = self.state_query.query_wfs_getfeature_dict(typename=[self.FILE_INDEX_LAYER],
                                                                   filter=ogc_filter,
                                                                   propertyname=propertyname
@@ -164,34 +188,43 @@ class MooringsProductsHandler(HandlerBase):
         # TODO: Replace temp_dir above with cache_dir?
 
     def _get_old_product_files(self):
-        """Get a list of the currently published aggregated_timeseries files for the site being processed."""
+        """Get a list of the currently published product files for the site being processed."""
 
+        product_data_category = Or([PropertyIsEqualTo(propertyname='data_category', literal='aggregated_timeseries'),
+                                    PropertyIsEqualTo(propertyname='data_category', literal='hourly_timeseries'),
+                                    PropertyIsEqualTo(propertyname='data_category', literal='gridded_timeseries')]
+                                   )
         filter_list = [PropertyIsEqualTo(propertyname='site_code', literal=self.product_site_code),
-                       PropertyIsEqualTo(propertyname='data_category', literal='aggregated_timeseries')
+                       product_data_category
                        ]
         wfs_features = self.get_wfs_features(filter_list, propertyname=['url'])
 
         self.old_product_files = {}
         for f in wfs_features:
             product_url = f['properties']['url']
-            var_match = AGGREGATED_VARIABLE_PATTERN.search(product_url)
-            if not var_match:
-                raise InvalidFileNameError(
-                    "Could not determine variable of interest for '{product_url}'".format(product_url=product_url)
-                )
-            variable_of_interest = var_match.group(1).replace('-', '_')
-            if variable_of_interest not in self.old_product_files:
-                self.old_product_files[variable_of_interest] = [product_url]
+            product_type = get_product_type(product_url)
+            if product_type not in self.old_product_files:
+                self.old_product_files[product_type] = [product_url]
             else:
-                self.old_product_files[variable_of_interest].append(product_url)
+                self.old_product_files[product_type].append(product_url)
 
             self.logger.info(
-                "Old file for {variable_of_interest}: '{product_url}'".format(variable_of_interest=variable_of_interest,
-                                                                              product_url=product_url)
-                )
+                "Old file for {product_type}: '{product_url}'".format(product_type=product_type,
+                                                                      product_url=product_url)
+            )
+
+    def _log_excluded_files(self, errors):
+        """Keep track of any input files that were excluded from the product and log a brief warning."""
+        if errors:
+            self.logger.warning("{n} files were excluded from the product.".format(n=len(errors)))
+            for f, e in errors.items():
+                if f not in self.excluded_files:
+                    self.excluded_files[f] = set(e)
+                else:
+                    self.excluded_files[f].update(e)
 
     def _make_aggregated_timeseries(self):
-        """For each variable, generate product and add to file_collection."""
+        """For each variable, generate aggregated timeseries product and add to file_collection."""
 
         for var in self.product_variables:
             # Filter input_list to the files relevant for this var
@@ -204,32 +237,54 @@ class MooringsProductsHandler(HandlerBase):
 
             product_url, errors = main_aggregator(input_list, var, self.product_site_code, input_dir=self.temp_dir,
                                                   output_dir=self.products_dir,
-                                                  download_url_prefix="https://s3-ap-southeast-2.amazonaws.com/imos-data/",
-                                                  opendap_url_prefix="http://thredds.aodn.org.au/thredds/dodsC/"
+                                                  download_url_prefix=DOWNLOAD_URL_PREFIX,
+                                                  opendap_url_prefix=OPENDAP_URL_PREFIX
                                                   )
-            if errors:
-                self.logger.warning("{n} files were excluded from the aggregation.".format(n=len(errors)))
-                for f, e in errors.items():
-                    if f not in self.excluded_files:
-                        self.excluded_files[f] = set(e)
-                    else:
-                        self.excluded_files[f].update(e)
+            self._log_excluded_files(errors)
 
             product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
             product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(product_file)
 
-            self._cleanup_previous_version(product_file.name, var)
+            self._cleanup_previous_version(product_file.name)
 
-    def _cleanup_previous_version(self, product_name, var):
-        """Delete any previously published version(s) of the product for this variable file.
+    def _make_hourly_timeseries(self):
+        """Generate hourly products for the site and add to file_collection."""
+
+        # Filter input_list to the files relevant for this var
+        input_list = [f.local_path for f in self.input_file_collection]
+        self.logger.info("Creating hourly products from {n} input files".format(n=len(input_list)))
+
+        # create two versions of the product, one with only good data (flags 1 & 2),
+        # and one also including non-QC'd data (flag 0)
+        for qc_flags in ((1, 2), (0, 1, 2)):
+
+            product_url, errors = hourly_aggregator(input_list, self.product_site_code, qc_flags,
+                                                    input_dir=self.temp_dir,
+                                                    output_dir=self.products_dir,
+                                                    download_url_prefix=DOWNLOAD_URL_PREFIX,
+                                                    opendap_url_prefix=OPENDAP_URL_PREFIX
+                                                    )
+
+            self._log_excluded_files(errors)
+
+            product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
+            product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+            self.file_collection.add(product_file)
+
+            self._cleanup_previous_version(product_file.name)
+
+    def _cleanup_previous_version(self, product_filename):
+        """Identify any previously published version(s) of the given product file and mark them for deletion.
         Ignores cases where the previous version has exactly the same file name, as this will simply be overwritten.
 
-        :param product_name: Name of the newly generated product
-        :param var: Name of the variable of interest
+        :param product_filename: File name of the newly generated product
         """
-        for old_product_url in self.old_product_files.get(var, []):
-            if os.path.basename(old_product_url) != product_name:
+        product_type = get_product_type(product_filename)
+        for old_product_url in self.old_product_files.get(product_type, []):
+            if os.path.basename(old_product_url) != product_filename:
+                # Add the previous version as a "late deletion". It will be deleted during the handler's `publish`
+                # step after (and only if) all new files have been successfully published.
                 old_file = PipelineFile(old_product_url, dest_path=old_product_url, is_deletion=True,
                                         late_deletion=True, file_update_callback=self._file_update_callback)
                 old_file.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
@@ -253,11 +308,14 @@ class MooringsProductsHandler(HandlerBase):
 
         # TODO: Run compliance checks and remove non-compliant files from the input list (log them).
 
-        self._make_aggregated_timeseries()
+        if 'aggregated' in self.products_to_create:
+            self._make_aggregated_timeseries()
+        if 'hourly' in self.products_to_create:
+            self._make_hourly_timeseries()
 
         # TODO: Include the list of excluded files as another table in the notification email (instead of the log)
         if self.excluded_files:
-            self.logger.warning("Files exluded from aggregations:")
+            self.logger.warning("Files exluded from some of the products generated:")
             for f, e in self.excluded_files.items():
                 self.logger.warning("'{f}': {e}".format(f=f, e=list(e)))
 
