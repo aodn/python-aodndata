@@ -34,13 +34,14 @@ class AatamsSattagQcDmHandler(HandlerBase):
 
     def preprocess(self):
         """Validate individual files within the zip."""
-        files_in_zip = [x.local_path for x in self.file_collection]
+        files_in_zip = self.file_collection.get_attribute_list('local_path')
         self.validation_call(files_in_zip)
+
         self.file_collection.add(self.input_file)
         self.file_collection.filter_by_attribute_id(
             "file_type", FileType.ZIP,
         ).set_publish_types(PipelineFilePublishType.ARCHIVE_ONLY)
 
         self.file_collection.filter_by_attribute_value(
-            "extension", ".csv",
+            "file_type", FileType.CSV,
         ).set_publish_types(PipelineFilePublishType.HARVEST_UPLOAD)
