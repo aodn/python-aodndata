@@ -54,7 +54,7 @@ ENTRY_POINTS = {
 
 INSTALL_REQUIRES = [
     'aodncore>=1.0.0',
-    'aodntools>=1.1.0',
+    'aodntools>=1.2.5',
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8',
     'matplotlib>=3.0.3',
@@ -80,7 +80,7 @@ PACKAGE_NAME = 'aodndata'
 
 setup(
     name=PACKAGE_NAME,
-    version='1.1.5',
+    version='1.2.0',
     packages=find_packages(exclude=PACKAGE_EXCLUDES),
     url='https://github.com/aodn',
     license='GPLv3',

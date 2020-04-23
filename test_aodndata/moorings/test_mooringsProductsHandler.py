@@ -70,7 +70,8 @@ class TestMooringsProductsHandler(HandlerTestCase):
                                  'PSAL-aggregated-timeseries',
                                  'CHLF-aggregated-timeseries',
                                  'hourly-timeseries',
-                                 'hourly-timeseries-including-non-QC'
+                                 'hourly-timeseries-including-non-QC',
+                                 'TEMP-gridded-timeseries'
                                  }
         expected_deleted_products = {'TEMP-aggregated-timeseries',
                                      'PSAL-aggregated-timeseries',
