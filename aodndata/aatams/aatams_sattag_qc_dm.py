@@ -19,7 +19,7 @@ class AatamsSattagQcDmHandler(HandlerBase):
         """Initialize the class by only accepting zip files."""
         super(AatamsSattagQcDmHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = [".zip"]
-        self.allowed_regexes = ["^.+_.+$"]
+        self.allowed_regexes = ["^.+_((?!nrt\\.)).+$"]
         self.allowed_archive_path_regexes = [AATAMS_SATTAG_QC_DM_BASE + ".+\\.zip"]
         self.allowed_dest_path_regexes = [AATAMS_SATTAG_QC_DM_BASE + ".+\\.csv"]
         self.dest_path_function = dest_path
@@ -34,13 +34,10 @@ class AatamsSattagQcDmHandler(HandlerBase):
 
     def preprocess(self):
         """Validate individual files within the zip."""
-        files_in_zip = self.file_collection.get_attribute_list('local_path')
+        files_in_zip = self.file_collection.get_attribute_list("local_path")
         self.validation_call(files_in_zip)
 
-        self.file_collection.add(self.input_file)
-        self.file_collection.filter_by_attribute_id(
-            "file_type", FileType.ZIP,
-        ).set_publish_types(PipelineFilePublishType.ARCHIVE_ONLY)
+        self.input_file_object.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
 
         self.file_collection.filter_by_attribute_value(
             "file_type", FileType.CSV,
