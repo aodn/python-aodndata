@@ -231,6 +231,12 @@ class MooringsProductsHandler(HandlerBase):
                 else:
                     self.excluded_files[f].update(e)
 
+    def _add_to_collection(self, product_url):
+        """Add a new product file to the file_collection to be harvested and uploaded."""
+        product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
+        product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+        self.file_collection.add(product_file)
+
     def _make_aggregated_timeseries(self):
         """For each variable, generate aggregated timeseries product and add to file_collection."""
 
@@ -246,12 +252,8 @@ class MooringsProductsHandler(HandlerBase):
             product_url, errors = main_aggregator(input_list, var, self.product_site_code,
                                                   **self.product_common_kwargs)
             self._log_excluded_files(errors)
-
-            product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
-            product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-            self.file_collection.add(product_file)
-
-            self._cleanup_previous_version(product_file.name)
+            self._add_to_collection(product_url)
+            self._cleanup_previous_version(os.path.basename(product_url))
 
     def _make_hourly_timeseries(self):
         """Generate hourly products for the site and add to file_collection."""
@@ -268,12 +270,8 @@ class MooringsProductsHandler(HandlerBase):
                                                     **self.product_common_kwargs)
 
             self._log_excluded_files(errors)
-
-            product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
-            product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-            self.file_collection.add(product_file)
-
-            self._cleanup_previous_version(product_file.name)
+            self._add_to_collection(product_url)
+            self._cleanup_previous_version(os.path.basename(product_url))
 
     def _make_gridded_timeseries(self):
         """Generage TEMP gridded product from the new hourly product file."""
@@ -298,11 +296,8 @@ class MooringsProductsHandler(HandlerBase):
         # create gridded file and add to collection for publication
         product_url = grid_variable(hourly_file.dest_path, 'TEMP', **self.product_common_kwargs)
 
-        product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
-        product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-        self.file_collection.add(product_file)
-
-        self._cleanup_previous_version(product_file.name)
+        self._add_to_collection(product_url)
+        self._cleanup_previous_version(os.path.basename(product_url))
 
     def _cleanup_previous_version(self, product_filename):
         """Identify any previously published version(s) of the given product file and mark them for deletion.
