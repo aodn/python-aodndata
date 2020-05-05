@@ -117,6 +117,7 @@ class MooringsProductsHandler(HandlerBase):
         self.input_file_collection = None
         self.input_file_variables = None
         self.excluded_files = dict()
+        self.product_common_kwargs = None
 
     def _read_manifest(self):
         """Read the manifest file and extract key parameters for product"""
@@ -138,6 +139,12 @@ class MooringsProductsHandler(HandlerBase):
                     "in manifest file '{self.input_file}'".format(invalid_products=invalid_products, self=self)
                 )
             self.products_to_create = set(manifest['products'])
+
+        self.product_common_kwargs = {'input_dir': self.temp_dir,
+                                      'output_dir': self.products_dir,
+                                      'download_url_prefix': DOWNLOAD_URL_PREFIX,
+                                      'opendap_url_prefix': OPENDAP_URL_PREFIX
+                                      }
 
     def get_wfs_features(self, filter_list, propertyname='*'):
         """Query the file index WFS layer with the given filters and return a list of features.
@@ -236,11 +243,8 @@ class MooringsProductsHandler(HandlerBase):
                 raise InvalidFileContentError("No files to aggregate for {var}".format(var=var))
             self.logger.info("Aggregating {var} ({n} files)".format(var=var, n=len(input_list)))
 
-            product_url, errors = main_aggregator(input_list, var, self.product_site_code, input_dir=self.temp_dir,
-                                                  output_dir=self.products_dir,
-                                                  download_url_prefix=DOWNLOAD_URL_PREFIX,
-                                                  opendap_url_prefix=OPENDAP_URL_PREFIX
-                                                  )
+            product_url, errors = main_aggregator(input_list, var, self.product_site_code,
+                                                  **self.product_common_kwargs)
             self._log_excluded_files(errors)
 
             product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
@@ -261,11 +265,7 @@ class MooringsProductsHandler(HandlerBase):
         for qc_flags in ((1, 2), (0, 1, 2)):
 
             product_url, errors = hourly_aggregator(input_list, self.product_site_code, qc_flags,
-                                                    input_dir=self.temp_dir,
-                                                    output_dir=self.products_dir,
-                                                    download_url_prefix=DOWNLOAD_URL_PREFIX,
-                                                    opendap_url_prefix=OPENDAP_URL_PREFIX
-                                                    )
+                                                    **self.product_common_kwargs)
 
             self._log_excluded_files(errors)
 
@@ -296,11 +296,7 @@ class MooringsProductsHandler(HandlerBase):
         os.symlink(hourly_file.local_path, hourly_temp_path)
 
         # create gridded file and add to collection for publication
-        product_url = grid_variable(hourly_file.dest_path, 'TEMP',
-                                    input_dir=self.temp_dir, output_dir=self.products_dir,
-                                    download_url_prefix=DOWNLOAD_URL_PREFIX,
-                                    opendap_url_prefix=OPENDAP_URL_PREFIX
-                                    )
+        product_url = grid_variable(hourly_file.dest_path, 'TEMP', **self.product_common_kwargs)
 
         product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
         product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
