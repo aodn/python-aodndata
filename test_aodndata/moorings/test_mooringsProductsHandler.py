@@ -16,6 +16,7 @@ from aodndata.moorings.products_handler import MooringsProductsHandler, Moorings
 TEST_ROOT = os.path.dirname(__file__)
 GOOD_MANIFEST = os.path.join(TEST_ROOT, 'test_product.json_manifest')
 AGGREGATED_ONLY_MANIFEST = os.path.join(TEST_ROOT, 'test_product_aggregated.json_manifest')
+VELOCITY_HOURLY_MANIFEST = os.path.join(TEST_ROOT, 'test_product_velocity_hourly.json_manifest')
 BAD_VAR_MANIFEST = os.path.join(TEST_ROOT, 'test_product_bad_var.json_manifest')
 PRODUCT_FILE = os.path.join(
     TEST_ROOT,
@@ -77,7 +78,8 @@ class TestMooringsProductsHandler(HandlerTestCase):
                                  }
         expected_deleted_products = {'TEMP-aggregated-timeseries',
                                      'PSAL-aggregated-timeseries',
-                                     'hourly-timeseries',
+                                     'velocity-aggregated-timeseries',
+                                     'hourly-timeseries'
                                      }
 
         self.assertEqual(len(handler.file_collection), len(expected_new_products) + len(expected_deleted_products))
@@ -125,6 +127,20 @@ class TestMooringsProductsHandler(HandlerTestCase):
             self.assertTrue(f.is_harvested and f.is_stored)
             self.assertIs(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
             self.assertIn(get_product_type(f.name), expected_new_products)
+
+    @patch('aodncore.util.wfs.WebFeatureService')
+    def test_velocity_hourly(self, mock_webfeatureservice):
+        mock_webfeatureservice().getfeature().getvalue.side_effect = [TEST_GETFEATURE_JSON,
+                                                                      TEST_GETFEATURE_OLD_PRODUCTS_JSON]
+
+        handler = self.run_handler(VELOCITY_HOURLY_MANIFEST)
+
+        expected_new_product = 'velocity-hourly-timeseries'
+        self.assertEqual(len(handler.file_collection), 1)
+        for f in handler.file_collection:
+            self.assertTrue(f.is_harvested and f.is_stored)
+            self.assertIs(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+            self.assertEqual(get_product_type(f.name), expected_new_product)
 
     @patch('aodncore.util.wfs.WebFeatureService')
     def test_bad_var(self, mock_webfeatureservice):
