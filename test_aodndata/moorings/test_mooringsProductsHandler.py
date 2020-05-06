@@ -69,8 +69,10 @@ class TestMooringsProductsHandler(HandlerTestCase):
         expected_new_products = {'TEMP-aggregated-timeseries',
                                  'PSAL-aggregated-timeseries',
                                  'CHLF-aggregated-timeseries',
+                                 'velocity-aggregated-timeseries',
                                  'hourly-timeseries',
                                  'hourly-timeseries-including-non-QC',
+                                 'velocity-hourly-timeseries',
                                  'TEMP-gridded-timeseries'
                                  }
         expected_deleted_products = {'TEMP-aggregated-timeseries',

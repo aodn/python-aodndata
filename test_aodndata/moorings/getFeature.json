@@ -36,11 +36,29 @@
                 "url":"IMOS/ANMN/NRS/NRSROT/Biogeochem_timeseries/IMOS_ANMN-NRS_BCKOSTUZ_20081120T081531Z_NRSROT_FV01_NRSROT-0811-WQM-21_END-20081120T171535Z_C-20190418T000000Z.nc",
                 "variables":"CHLF, CNDC, DEPTH, DOX, FLU2, LATITUDE, LONGITUDE, NOMINAL_DEPTH, PRES_REL, PSAL, TEMP, TIME, TIMESERIES, TURB"
             }
+        },
+        {
+            "type": "Feature",
+            "id": "moorings_all_map.fid-e5b1419_16dcdd1ac95_8000",
+            "geometry": null,
+            "properties": {
+                "url":"IMOS/ANMN/NRS/NRSROT/Velocity/IMOS_ANMN-NRS_AETVZ_20181213T080000Z_NRSROT-ADCP_FV01_NRSROT-ADCP-1812-Sentinel-or-Monitor-Workhorse-ADCP-44_END-20181215T100000Z_C-20200430T000000Z.nc",
+                "variables":"DEPTH, HEIGHT_ABOVE_SENSOR, LATITUDE, LONGITUDE, NOMINAL_DEPTH, PRES_REL, TIME, UCUR, VCUR, WCUR"
+            }
+        },
+        {
+            "type": "Feature",
+            "id": "moorings_all_map.fid-e5b1419_16dcdd1ac95_8001",
+            "geometry": null,
+            "properties": {
+                "url":"IMOS/ANMN/NRS/NRSROT/Velocity/IMOS_ANMN-NRS_AETVZ_20191016T080000Z_NRSROT-ADCP_FV01_NRSROT-ADCP-1910-Sentinel-or-Monitor-Workhorse-ADCP-44_END-20191018T100000Z_C-20200430T000000Z.nc",
+                "variables":"DEPTH, HEIGHT_ABOVE_SENSOR, LATITUDE, LONGITUDE, NOMINAL_DEPTH, PRES_REL, TIME, UCUR, VCUR, WCUR"
+            }
         }
     ],
-    "totalFeatures": 4,
-    "numberMatched": 4,
-    "numberReturned": 4,
+    "totalFeatures": 6,
+    "numberMatched": 6,
+    "numberReturned": 6,
     "timeStamp": "2019-09-05T06:33:53.380Z",
     "crs": null
 }
