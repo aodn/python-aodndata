@@ -54,7 +54,7 @@ ENTRY_POINTS = {
 
 INSTALL_REQUIRES = [
     'aodncore>=1.0.0',
-    'aodntools>=1.2.5',
+    'aodntools>=1.3.1',
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8',
     'matplotlib>=3.0.3',
