@@ -355,8 +355,7 @@ class MooringsProductsHandler(HandlerBase):
 
         # TODO: Include the list of excluded files as another table in the notification email (instead of the log)
         if self.excluded_files:
-            self.logger.warning("Files exluded from some of the products generated:")
             for f, e in self.excluded_files.items():
-                self.logger.warning("'{f}': {e}".format(f=f, e=list(e)))
+                self.logger.warning("Excluded file '{f}' for {e}".format(f=f, e=sorted(e)))
 
     dest_path = MooringsProductClassifier.dest_path
