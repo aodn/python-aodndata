@@ -267,9 +267,10 @@ class MooringsProductsHandler(HandlerBase):
     def _make_velocity_aggregated_timeseries(self):
         """Generate the velocity aggregated timeseries product and add to file_collection."""
 
-        # Filter input list to just the velocity files, all of which will have the variable 'VCUR'
+        # Filter input list to just the velocity files, i.e. files with the variables
+        # UCUR ("eastward_sea_water_velocity") or VCUR ("northward_sea_water_velocity")
         input_list = [f for f, f_vars in self.input_file_variables.items()
-                      if 'VCUR' in f_vars
+                      if 'UCUR' in f_vars or 'VCUR' in f_vars
                       ]
         if not input_list:
             raise InvalidFileContentError("No velocity files to aggregate")
@@ -302,9 +303,10 @@ class MooringsProductsHandler(HandlerBase):
     def _make_velocity_hourly_timeseries(self):
         """Generate velocity hourly product for the site and add to file_collection."""
 
-        # Filter input list to just the velocity files, all of which will have the variable 'VCUR'
+        # Filter input list to just the velocity files, i.e. files with the variables
+        # UCUR ("eastward_sea_water_velocity") or VCUR ("northward_sea_water_velocity")
         input_list = [f for f, f_vars in self.input_file_variables.items()
-                      if 'VCUR' in f_vars
+                      if 'UCUR' in f_vars or 'VCUR' in f_vars
                       ]
         if not input_list:
             raise InvalidFileContentError("No velocity files to aggregate")
