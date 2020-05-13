@@ -288,8 +288,8 @@ class MooringsProductsHandler(HandlerBase):
     def _make_hourly_timeseries(self):
         """Generate hourly products for the site and add to file_collection."""
 
-        # Filter input_list to the files relevant for this var
-        input_list = self.input_file_collection.get_attribute_list('local_path')
+        # All downloaded input files are potentially relevant for these products
+        input_list = self.input_file_collection.get_attribute_list('dest_path')
         self.logger.info("Creating hourly products from {n} input files".format(n=len(input_list)))
 
         # create two versions of the product, one with only good data (flags 1 & 2),
