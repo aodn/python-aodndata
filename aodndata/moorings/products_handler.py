@@ -246,14 +246,19 @@ class MooringsProductsHandler(HandlerBase):
         product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
         self.file_collection.add(product_file)
 
+    def _input_list_for_variables(self, *variables):
+        """Return a list of input files containing any of the given variables"""
+        input_list = [f for f, f_vars in self.input_file_variables.items()
+                      if any(v in f_vars for v in variables)
+                      ]
+        return input_list
+
     def _make_aggregated_timeseries(self):
         """For each variable, generate aggregated timeseries product and add to file_collection."""
 
         for var in self.product_variables:
             # Filter input_list to the files relevant for this var
-            input_list = [f for f, f_vars in self.input_file_variables.items()
-                          if var in f_vars
-                          ]
+            input_list = self._input_list_for_variables(var)
             if not input_list:
                 raise InvalidFileContentError("No files to aggregate for {var}".format(var=var))
             self.logger.info("Aggregating {var} ({n} files)".format(var=var, n=len(input_list)))
@@ -269,9 +274,7 @@ class MooringsProductsHandler(HandlerBase):
 
         # Filter input list to just the velocity files, i.e. files with the variables
         # UCUR ("eastward_sea_water_velocity") or VCUR ("northward_sea_water_velocity")
-        input_list = [f for f, f_vars in self.input_file_variables.items()
-                      if 'UCUR' in f_vars or 'VCUR' in f_vars
-                      ]
+        input_list = self._input_list_for_variables('UCUR', 'VCUR')
         if not input_list:
             raise InvalidFileContentError("No velocity files to aggregate")
         self.logger.info("Aggregating velocity ({n} files)".format(n=len(input_list)))
@@ -305,9 +308,7 @@ class MooringsProductsHandler(HandlerBase):
 
         # Filter input list to just the velocity files, i.e. files with the variables
         # UCUR ("eastward_sea_water_velocity") or VCUR ("northward_sea_water_velocity")
-        input_list = [f for f, f_vars in self.input_file_variables.items()
-                      if 'UCUR' in f_vars or 'VCUR' in f_vars
-                      ]
+        input_list = self._input_list_for_variables('UCUR', 'VCUR')
         if not input_list:
             raise InvalidFileContentError("No velocity files to aggregate")
         self.logger.info("Creating velocity hourly products from {n} input files".format(n=len(input_list)))
