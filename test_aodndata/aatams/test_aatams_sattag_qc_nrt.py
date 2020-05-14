@@ -40,54 +40,55 @@ class TestAatamsNRTHandler(HandlerTestCase):
                 )
                 self.assertTrue(file.is_archived)
 
-    def test_removal_of_old_file_is_triggered(self):
+    #TODO enable tests below when removal of old nrt is required
+    #def test_removal_of_old_file_is_triggered(self):
 
-        handler = self.run_handler(GOOD_ZIP)
-        for file in handler.file_collection:
-            if file.file_type is FileType.CSV:
-                self.assertEqual(
-                    AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.dest_path)
-                )
-                self.assertTrue(file.is_harvested and file.is_stored)
-            elif file.file_type is FileType.ZIP:
-                self.assertEqual(
-                    AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.archive_path),
-                )
-                self.assertTrue(file.is_archived)
+    #    handler = self.run_handler(GOOD_ZIP)
+    #    for file in handler.file_collection:
+    #        if file.file_type is FileType.CSV:
+    #            self.assertEqual(
+    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.dest_path)
+    #            )
+    #            self.assertTrue(file.is_harvested and file.is_stored)
+    #        elif file.file_type is FileType.ZIP:
+    #            self.assertEqual(
+    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.archive_path),
+    #            )
+    #            self.assertTrue(file.is_archived)
 
-        #overwrite the broker with NullStorageBroker
-        self.broker = NullStorageBroker(self.temp_dir)
-        handler = self.run_handler(NEXT_ZIP)
-        for file in handler.file_collection:
-            if file.file_type is FileType.CSV:
-                self.assertEqual(
-                    AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.dest_path)
-                )
-                self.assertTrue(file.is_harvested and file.is_stored)
-            elif file.file_type is FileType.ZIP:
-                self.assertEqual(
-                    AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.archive_path),
-                )
-                self.assertTrue(file.is_archived)
+    #    #overwrite the broker with NullStorageBroker
+    #    self.broker = NullStorageBroker(self.temp_dir)
+    #    handler = self.run_handler(NEXT_ZIP)
+    #    for file in handler.file_collection:
+    #        if file.file_type is FileType.CSV:
+    #            self.assertEqual(
+    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.dest_path)
+    #            )
+    #            self.assertTrue(file.is_harvested and file.is_stored)
+    #        elif file.file_type is FileType.ZIP:
+    #            self.assertEqual(
+    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.archive_path),
+    #            )
+    #            self.assertTrue(file.is_archived)
 
-    def test_removal_of_old_file_is_not_triggered(self):
+    #def test_removal_of_old_file_is_not_triggered(self):
 
-        handler = self.run_handler(GOOD_ZIP)
-        for file in handler.file_collection:
-            if file.file_type is FileType.CSV:
-                self.assertEqual(
-                    AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.dest_path)
-                )
-                self.assertTrue(file.is_harvested and file.is_stored)
-            elif file.file_type is FileType.ZIP:
-                self.assertEqual(
-                    AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.archive_path),
-                )
-                self.assertTrue(file.is_archived)
+    #    handler = self.run_handler(GOOD_ZIP)
+    #    for file in handler.file_collection:
+    #        if file.file_type is FileType.CSV:
+    #            self.assertEqual(
+    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.dest_path)
+    #            )
+    #            self.assertTrue(file.is_harvested and file.is_stored)
+    #        elif file.file_type is FileType.ZIP:
+    #            self.assertEqual(
+    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.archive_path),
+    #            )
+    #            self.assertTrue(file.is_archived)
 
-        #overwrite the broker with NullStorageBroker
-        self.broker = NullStorageBroker(self.temp_dir)
-        self.run_handler_with_exception(InvalidFileContentError, GOOD_ZIP)
+    #    #overwrite the broker with NullStorageBroker
+    #    self.broker = NullStorageBroker(self.temp_dir)
+    #    self.run_handler_with_exception(InvalidFileContentError, GOOD_ZIP)
 
 
 

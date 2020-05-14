@@ -7,7 +7,7 @@ from aodncore.pipeline import (
     FileType,
     PipelineFile,
 )
-from aodncore.pipeline.storage import get_storage_broker
+from aodncore.pipeline.files import RemotePipelineFileCollection
 from aodncore.pipeline.exceptions import InvalidFileContentError
 
 from .aatams_sattag_qc_dm_schema import (
@@ -50,9 +50,6 @@ class AatamsSattagQcNRTHandler(HandlerBase):
         # Use below to just validate the file names and csv headers
         # self.validation_call = self.SCHEMA.quick_validation
         self.previous_files = None
-        self.broker = get_storage_broker(
-            self.config.pipeline_config["global"]["upload_uri"],
-        )
 
     def is_update_required(self, old_metadata_file):
         """Check if updates to the dataset/archive are required by inspecting the most
@@ -75,37 +72,36 @@ class AatamsSattagQcNRTHandler(HandlerBase):
             "file_type", FileType.CSV,
         ).set_publish_types(PipelineFilePublishType.HARVEST_UPLOAD)
 
-    def process(self):
-        """Process NRT files, removing the previous files if content of new file is
-        updated."""
+    # TODO enable below and test for removal of old NRT files
+    # def process(self):
+    #     """Process NRT files, removing the previous files if content of new file is
+    #     updated."""
 
-        self.previous_files = self.state_query.query_storage(dest_path(""))
-        if self.previous_files:
-            old_metadata_file = self.previous_files[metadata_index(self.previous_files)]
-            new_metadata_file = self.file_collection[
-                metadata_index(self.file_collection)
-            ]
-            logger.info(
-                "NRT update requested: Comparing timestamps in the metadata files %s and %s"
-                % (old_metadata_file, new_metadata_file),
-            )
-            self.broker.download(old_metadata_file, self.temp_dir)
-            if self.is_update_required(old_metadata_file.local_path):
-                for remote_file in self.previous_files:
-                    filename = remote_file.name
-                    file_to_remove = PipelineFile(
-                        filename, is_deletion=True, dest_path=dest_path(filename),
-                    )
-                    file_to_remove.publish_type = (
-                        PipelineFilePublishType.DELETE_UNHARVEST
-                    )
-                    self.file_collection.add(file_to_remove)
-            else:
-                raise InvalidFileContentError(
-                    "File %s within %s contains older entries than current NRT state from %s"
-                    % (
-                        new_metadata_file.name,
-                        self.input_file_object.name,
-                        old_metadata_file.name,
-                    ),
-                )
+    #     self.previous_files = self.state_query.query_storage(dest_path(""))
+    #     if self.previous_files:
+    #         old_metadata_file = self.previous_files[metadata_index(self.previous_files)]
+    #         new_metadata_file = self.file_collection[
+    #             metadata_index(self.file_collection)
+    #         ]
+    #         logger.info("NRT update requested: Comparing timestamps in the metadata files %s and %s", old_metadata_file, new_metadata_file)
+    #         remote_collection = RemotePipelineFileCollection(old_metadata_file)
+    #         self.state_query.download(remote_collection)
+    #         if self.is_update_required(old_metadata_file.local_path):
+    #             for remote_file in self.previous_files:
+    #                 filename = remote_file.name
+    #                 file_to_remove = PipelineFile(
+    #                     filename, is_deletion=True, dest_path=dest_path(filename),
+    #                 )
+    #                 file_to_remove.publish_type = (
+    #                     PipelineFilePublishType.DELETE_UNHARVEST
+    #                 )
+    #                 self.file_collection.add(file_to_remove)
+    #         else:
+    #             raise InvalidFileContentError(
+    #                 "File %s within %s contains older entries than current NRT state from %s"
+    #                 % (
+    #                     new_metadata_file.name,
+    #                     self.input_file_object.name,
+    #                     old_metadata_file.name,
+    #                 ),
+    #             )
