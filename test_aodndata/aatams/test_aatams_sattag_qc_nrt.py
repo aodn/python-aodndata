@@ -4,7 +4,7 @@ import shutil
 
 from aodncore.pipeline import FileType
 from aodncore.testlib import HandlerTestCase
-from aodndata.aatams.aatams_sattag_nrt import AatamsSattagQcNRTHandler
+from aodndata.aatams.aatams_sattag_nrt import AatamsSattagQcNRTHandler,AATAMS_SATTAG_QC_NRT_BASE
 from aodncore.pipeline.exceptions import InvalidInputFileError,InvalidFileContentError
 from aodncore.testlib import NullStorageBroker
 
@@ -12,7 +12,6 @@ TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_ZIP = os.path.join(TEST_ROOT, "first_nrt.zip")
 NEXT_ZIP = os.path.join(TEST_ROOT, "second_nrt.zip")
 BAD_ZIP = os.path.join(TEST_ROOT, "simple_zip.zip")
-AATAMS_SATTAG_NRT_BASE = "IMOS/AATAMS/AATAMS_SATTAG_QC_NRT"
 
 
 class TestAatamsNRTHandler(HandlerTestCase):
@@ -31,12 +30,12 @@ class TestAatamsNRTHandler(HandlerTestCase):
         for file in handler.file_collection:
             if file.file_type is FileType.CSV:
                 self.assertEqual(
-                    AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.dest_path)
+                    AATAMS_SATTAG_QC_NRT_BASE, os.path.dirname(file.dest_path)
                 )
                 self.assertTrue(file.is_harvested and file.is_stored)
             elif file.file_type is FileType.ZIP:
                 self.assertEqual(
-                    AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.archive_path),
+                    AATAMS_SATTAG_QC_NRT_BASE, os.path.dirname(file.archive_path),
                 )
                 self.assertTrue(file.is_archived)
 
@@ -47,12 +46,12 @@ class TestAatamsNRTHandler(HandlerTestCase):
     #    for file in handler.file_collection:
     #        if file.file_type is FileType.CSV:
     #            self.assertEqual(
-    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.dest_path)
+    #                AATAMS_SATTAG_QC_NRT_BASE, os.path.dirname(file.dest_path)
     #            )
     #            self.assertTrue(file.is_harvested and file.is_stored)
     #        elif file.file_type is FileType.ZIP:
     #            self.assertEqual(
-    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.archive_path),
+    #                AATAMS_SATTAG_QC_NRT_BASE, os.path.dirname(file.archive_path),
     #            )
     #            self.assertTrue(file.is_archived)
 
@@ -62,12 +61,12 @@ class TestAatamsNRTHandler(HandlerTestCase):
     #    for file in handler.file_collection:
     #        if file.file_type is FileType.CSV:
     #            self.assertEqual(
-    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.dest_path)
+    #                AATAMS_SATTAG_QC_NRT_BASE, os.path.dirname(file.dest_path)
     #            )
     #            self.assertTrue(file.is_harvested and file.is_stored)
     #        elif file.file_type is FileType.ZIP:
     #            self.assertEqual(
-    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.archive_path),
+    #                AATAMS_SATTAG_QC_NRT_BASE, os.path.dirname(file.archive_path),
     #            )
     #            self.assertTrue(file.is_archived)
 
@@ -77,12 +76,12 @@ class TestAatamsNRTHandler(HandlerTestCase):
     #    for file in handler.file_collection:
     #        if file.file_type is FileType.CSV:
     #            self.assertEqual(
-    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.dest_path)
+    #                AATAMS_SATTAG_QC_NRT_BASE, os.path.dirname(file.dest_path)
     #            )
     #            self.assertTrue(file.is_harvested and file.is_stored)
     #        elif file.file_type is FileType.ZIP:
     #            self.assertEqual(
-    #                AATAMS_SATTAG_NRT_BASE, os.path.dirname(file.archive_path),
+    #                AATAMS_SATTAG_QC_NRT_BASE, os.path.dirname(file.archive_path),
     #            )
     #            self.assertTrue(file.is_archived)
 

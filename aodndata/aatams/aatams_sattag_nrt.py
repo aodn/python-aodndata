@@ -17,7 +17,7 @@ from .aatams_sattag_qc_dm_schema import (
 logger = logging.getLogger(__name__)
 
 # AATAMS NRT global constants
-AATAMS_SATTAG_QC_NRT_BASE = "IMOS/AATAMS/AATAMS_SATTAG_QC_NRT"
+AATAMS_SATTAG_QC_NRT_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_NRT"
 
 
 def metadata_index(file_list):
