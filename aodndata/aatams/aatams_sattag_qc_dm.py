@@ -5,7 +5,7 @@ from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType
 from .aatams_sattag_qc_dm_schema import AatamsSattagQcDmSchema
 
 # AATAMS DM global constants
-AATAMS_SATTAG_QC_DM_BASE = "IMOS/AATAMS/AATAMS_SATTAG_QC_DM"
+AATAMS_SATTAG_QC_DM_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM"
 
 
 def dest_path(filepath):
