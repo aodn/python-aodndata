@@ -305,6 +305,8 @@ METADATA_SCHEMA = {
     "length": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "estimated_mass": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "actual_mass": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
+    "dive_start": Or(CSV_DATE_ISO,CSV_DATE_US),
+    "dive_end": Or(CSV_DATE_ISO,CSV_DATE_US),
     "qc_start_date": Or(CSV_DATE_ISO, CSV_DATE_US),
     "qc_end_date": Or(CSV_DATE_ISO, CSV_DATE_US),
 }
