@@ -13,6 +13,8 @@ from aodncore.util.wfs import ogc_filter_to_string
 from aodntools.timeseries_products.aggregated_timeseries import main_aggregator
 from aodntools.timeseries_products.hourly_timeseries import hourly_aggregator
 from aodntools.timeseries_products.gridded_timeseries import grid_variable
+from aodntools.timeseries_products.velocity_aggregated_timeseries import velocity_aggregated
+from aodntools.timeseries_products.velocity_hourly_timeseries import velocity_hourly_aggregated
 
 from aodndata.moorings.classifiers import MooringsFileClassifier
 
@@ -106,7 +108,7 @@ class MooringsProductsHandler(HandlerBase):
     """
 
     FILE_INDEX_LAYER = 'imos:moorings_all_map'
-    VALID_PRODUCTS = {'aggregated', 'hourly', 'gridded'}
+    VALID_PRODUCTS = {'aggregated', 'hourly', 'gridded', 'velocity_aggregated', 'velocity_hourly'}
 
     def __init__(self, *args, **kwargs):
         super(MooringsProductsHandler, self).__init__(*args, **kwargs)
@@ -138,6 +140,20 @@ class MooringsProductsHandler(HandlerBase):
                     "in manifest file '{self.input_file}'".format(invalid_products=invalid_products, self=self)
                 )
             self.products_to_create = set(manifest['products'])
+
+        # Even if only the gridded product is explicitly requested, we need to re-generate and publish the hourly too,
+        # as it is the input file for the gridded.
+        if 'gridded' in self.products_to_create:
+            self.products_to_create.add('hourly')
+
+    @property
+    def product_common_kwargs(self):
+        """Shortcut dictionary for kwargs common to all product generating codes"""
+        return {'input_dir': self.temp_dir,
+                'output_dir': self.products_dir,
+                'download_url_prefix': DOWNLOAD_URL_PREFIX,
+                'opendap_url_prefix': OPENDAP_URL_PREFIX
+                }
 
     def get_wfs_features(self, filter_list, propertyname='*'):
         """Query the file index WFS layer with the given filters and return a list of features.
@@ -224,36 +240,56 @@ class MooringsProductsHandler(HandlerBase):
                 else:
                     self.excluded_files[f].update(e)
 
+    def _add_to_collection(self, product_url):
+        """Add a new product file to the file_collection to be harvested and uploaded."""
+        product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
+        product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+        self.file_collection.add(product_file)
+
+    def _input_list_for_variables(self, *variables):
+        """Return a list of input files containing any of the given variables"""
+        input_list = [f for f, f_vars in self.input_file_variables.items()
+                      if any(v in f_vars for v in variables)
+                      ]
+        return input_list
+
     def _make_aggregated_timeseries(self):
         """For each variable, generate aggregated timeseries product and add to file_collection."""
 
         for var in self.product_variables:
             # Filter input_list to the files relevant for this var
-            input_list = [f for f, f_vars in self.input_file_variables.items()
-                          if var in f_vars
-                          ]
+            input_list = self._input_list_for_variables(var)
             if not input_list:
                 raise InvalidFileContentError("No files to aggregate for {var}".format(var=var))
             self.logger.info("Aggregating {var} ({n} files)".format(var=var, n=len(input_list)))
 
-            product_url, errors = main_aggregator(input_list, var, self.product_site_code, input_dir=self.temp_dir,
-                                                  output_dir=self.products_dir,
-                                                  download_url_prefix=DOWNLOAD_URL_PREFIX,
-                                                  opendap_url_prefix=OPENDAP_URL_PREFIX
-                                                  )
+            product_url, errors = main_aggregator(input_list, var, self.product_site_code,
+                                                  **self.product_common_kwargs)
             self._log_excluded_files(errors)
+            self._add_to_collection(product_url)
+            self._cleanup_previous_version(os.path.basename(product_url))
 
-            product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
-            product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-            self.file_collection.add(product_file)
+    def _make_velocity_aggregated_timeseries(self):
+        """Generate the velocity aggregated timeseries product and add to file_collection."""
 
-            self._cleanup_previous_version(product_file.name)
+        # Filter input list to just the velocity files, i.e. files with the variables
+        # UCUR ("eastward_sea_water_velocity") or VCUR ("northward_sea_water_velocity")
+        input_list = self._input_list_for_variables('UCUR', 'VCUR')
+        if not input_list:
+            raise InvalidFileContentError("No velocity files to aggregate")
+        self.logger.info("Aggregating velocity ({n} files)".format(n=len(input_list)))
+
+        product_url, errors = velocity_aggregated(input_list, self.product_site_code, **self.product_common_kwargs)
+
+        self._log_excluded_files(errors)
+        self._add_to_collection(product_url)
+        self._cleanup_previous_version(os.path.basename(product_url))
 
     def _make_hourly_timeseries(self):
         """Generate hourly products for the site and add to file_collection."""
 
-        # Filter input_list to the files relevant for this var
-        input_list = [f.local_path for f in self.input_file_collection]
+        # All downloaded input files are potentially relevant for these products
+        input_list = self.input_file_collection.get_attribute_list('dest_path')
         self.logger.info("Creating hourly products from {n} input files".format(n=len(input_list)))
 
         # create two versions of the product, one with only good data (flags 1 & 2),
@@ -261,19 +297,28 @@ class MooringsProductsHandler(HandlerBase):
         for qc_flags in ((1, 2), (0, 1, 2)):
 
             product_url, errors = hourly_aggregator(input_list, self.product_site_code, qc_flags,
-                                                    input_dir=self.temp_dir,
-                                                    output_dir=self.products_dir,
-                                                    download_url_prefix=DOWNLOAD_URL_PREFIX,
-                                                    opendap_url_prefix=OPENDAP_URL_PREFIX
-                                                    )
+                                                    **self.product_common_kwargs)
 
             self._log_excluded_files(errors)
+            self._add_to_collection(product_url)
+            self._cleanup_previous_version(os.path.basename(product_url))
 
-            product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
-            product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-            self.file_collection.add(product_file)
+    def _make_velocity_hourly_timeseries(self):
+        """Generate velocity hourly product for the site and add to file_collection."""
 
-            self._cleanup_previous_version(product_file.name)
+        # Filter input list to just the velocity files, i.e. files with the variables
+        # UCUR ("eastward_sea_water_velocity") or VCUR ("northward_sea_water_velocity")
+        input_list = self._input_list_for_variables('UCUR', 'VCUR')
+        if not input_list:
+            raise InvalidFileContentError("No velocity files to aggregate")
+        self.logger.info("Creating velocity hourly products from {n} input files".format(n=len(input_list)))
+
+        product_url, errors = velocity_hourly_aggregated(input_list, self.product_site_code,
+                                                         **self.product_common_kwargs)
+
+        self._log_excluded_files(errors)
+        self._add_to_collection(product_url)
+        self._cleanup_previous_version(os.path.basename(product_url))
 
     def _make_gridded_timeseries(self):
         """Generage TEMP gridded product from the new hourly product file."""
@@ -296,17 +341,10 @@ class MooringsProductsHandler(HandlerBase):
         os.symlink(hourly_file.local_path, hourly_temp_path)
 
         # create gridded file and add to collection for publication
-        product_url = grid_variable(hourly_file.dest_path, 'TEMP',
-                                    input_dir=self.temp_dir, output_dir=self.products_dir,
-                                    download_url_prefix=DOWNLOAD_URL_PREFIX,
-                                    opendap_url_prefix=OPENDAP_URL_PREFIX
-                                    )
+        product_url = grid_variable(hourly_file.dest_path, 'TEMP', **self.product_common_kwargs)
 
-        product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
-        product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-        self.file_collection.add(product_file)
-
-        self._cleanup_previous_version(product_file.name)
+        self._add_to_collection(product_url)
+        self._cleanup_previous_version(os.path.basename(product_url))
 
     def _cleanup_previous_version(self, product_filename):
         """Identify any previously published version(s) of the given product file and mark them for deletion.
@@ -345,10 +383,14 @@ class MooringsProductsHandler(HandlerBase):
         if 'aggregated' in self.products_to_create:
             self._make_aggregated_timeseries()
 
-        # Even if only the gridded product is requested, we need to re-generate and publish the hourly too,
-        # as it is the input file for the gridded.
-        if 'hourly' in self.products_to_create or 'gridded' in self.products_to_create:
+        if 'velocity_aggregated' in self.products_to_create:
+            self._make_velocity_aggregated_timeseries()
+
+        if 'hourly' in self.products_to_create:
             self._make_hourly_timeseries()
+
+        if 'velocity_hourly' in self.products_to_create:
+            self._make_velocity_hourly_timeseries()
 
         if 'gridded' in self.products_to_create:
             self._make_gridded_timeseries()

@@ -32,11 +32,19 @@
             "properties": {
                 "url": "IMOS/ANMN/NRS/NRSROT/hourly_timeseries/IMOS_ANMN-NRS_STZ_20081120_NRSROT_FV02_hourly-timeseries_END-20190523_C-20191010.nc"
             }
+        },
+        {
+            "type": "Feature",
+            "id": "moorings_all_map.fid--44e8da32_16d0014d48c_7b21",
+            "geometry": null,
+            "properties": {
+                "url": "IMOS/ANMN/NRS/NRSROT/aggregated_timeseries/IMOS_ANMN-NRS_VZ_20081120_NRSROT_FV02_velocity-aggregated-timeseries_END-20190523_C-20191010.nc"
+            }
         }
     ],
-    "totalFeatures": 4,
-    "numberMatched": 4,
-    "numberReturned": 4,
+    "totalFeatures": 5,
+    "numberMatched": 5,
+    "numberReturned": 5,
     "timeStamp": "2019-12-05T06:33:53.380Z",
     "crs": null
 }
