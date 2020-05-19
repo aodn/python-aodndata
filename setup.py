@@ -3,7 +3,8 @@ from setuptools import setup, find_packages
 
 ENTRY_POINTS = {
     'pipeline.handlers': [
-        'AatamsSattagQcDmHandler = aodndata.aatams.aatams_sattag_qc_dm:AatamsSattagQcDm',
+        'AatamsSattagQcDmHandler = aodndata.aatams.aatams_sattag:AatamsSattagQcDmHandler',
+        'AatamsSattagNRTHandler = aodndata.aatams.aatams_sattag:AatamsSattagNRTHandler',
         'AbosHandler = aodndata.moorings.handlers:AbosHandler',
         'AnfogHandler = aodndata.anfog.handlers:AnfogHandler',
         'AcornHandler = aodndata.acorn.handler:AcornHandler',
@@ -63,7 +64,8 @@ INSTALL_REQUIRES = [
 
 TESTS_REQUIRE = [
     'httpretty',
-    'pytest'
+    'pytest',
+    'testfixtures'
 ]
 
 EXTRAS_REQUIRE = {
