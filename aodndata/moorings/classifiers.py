@@ -149,7 +149,7 @@ class MooringsFileClassifier(FileClassifier):
 class AbosFileClassifier(MooringsFileClassifier):
 
     FACILITY = 'ABOS'
-    SAZ_IMAGES_ZIP_PATTERN = re.compile(r"images_SAZ47-\d{2}-(?P<year>\d{4})\.zip$")
+    SOTS_IMAGES_ZIP_PATTERN = re.compile(r"images_[a-zA-Z0-9-]+-(?P<year>\d{4})\.zip$")
    
    #old pipeline stuff
     WAVE_VAR = {'VAVH', 'HMAX', 'HAV'}
@@ -293,7 +293,7 @@ class AbosFileClassifier(MooringsFileClassifier):
         input_file_basename = os.path.basename(input_file)
 
         # deal with image zip files first, as they're simpler
-        if cls.SAZ_IMAGES_ZIP_PATTERN.match(input_file_basename):
+        if cls.SOTS_IMAGES_ZIP_PATTERN.match(input_file_basename):
             dir_list.extend(['SOTS', 'images', input_file_basename])
             return cls._make_path(dir_list)
 
