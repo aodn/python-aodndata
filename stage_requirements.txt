@@ -1,5 +1,6 @@
---index-url http://imos-artifacts.s3-website-ap-southeast-2.amazonaws.com/repo/pypi/production/
+--index-url http://imos-artifacts.s3-website-ap-southeast-2.amazonaws.com/repo/pypi/${STAGE}/
 --extra-index-url https://pypi.python.org/simple/
 --trusted-host imos-artifacts.s3-website-ap-southeast-2.amazonaws.com
 -c constraints.txt
 -e .
+-e .[testing]

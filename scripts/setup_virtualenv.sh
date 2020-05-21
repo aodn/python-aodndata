@@ -9,7 +9,7 @@ HERE=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 echo "##### Creating/updating virtual environment #####"
 virtualenv -p /usr/bin/python3 ${VIRTUALENV_DIR}
 source ${VIRTUALENV_DIR}/bin/activate
-${HERE}/install_dependencies.sh
+pip install -r test_requirements.txt
 
 cat<<EOF
 Virtual environment successfully created at: ${VIRTUALENV_DIR}
