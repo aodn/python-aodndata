@@ -40,12 +40,22 @@ class TestAbosHandler(HandlerTestCase):
             self.assertTrue(f.is_stored)
             self.assertTrue(f.is_harvested)
 
-    def test_bad_name_image_zip(self):
-        bad_images_zip = os.path.join(self.temp_dir, 'NOT_matching_pattern.zip')
-        shutil.copy(IMAGES_ZIP, bad_images_zip)
-        handler = self.run_handler_with_exception(InvalidFileNameError, bad_images_zip,
-                                                  include_regexes=['.*\\.(jpe?g|JPE?G|tiff?|TIFF?)'])
-        self.assertRegex(handler.error.args[0], r"name does not match pattern for images zip file")
+    def test_images_zip_good_names(self):
+        for images_zip_name in ('images_SAZ46-19-2017.zip', 'images_OTHER-DEPLOYMENT-2021.zip'):
+            images_zip = os.path.join(self.temp_dir, images_zip_name)
+            shutil.copy(IMAGES_ZIP, images_zip)
+            handler = self.run_handler(images_zip, include_regexes=['.*\\.(jpe?g|JPE?G|tiff?|TIFF?)'])
+            self.assertEqual(4, len(handler.file_collection))
+            self.assertTrue(handler.input_file_object.is_stored)
+            self.assertTrue(handler.input_file_object.is_harvested)
+
+    def test_image_zip_bad_names(self):
+        for images_zip_name in ('NOT_matching_pattern.zip', 'SAZ47-15-2012-images.zip'):
+            bad_images_zip = os.path.join(self.temp_dir, images_zip_name)
+            shutil.copy(IMAGES_ZIP, bad_images_zip)
+            handler = self.run_handler_with_exception(InvalidFileNameError, bad_images_zip,
+                                                      include_regexes=['.*\\.(jpe?g|JPE?G|tiff?|TIFF?)'])
+            self.assertRegex(handler.error.args[0], r"name does not match pattern for images zip file")
 
     def test_mixed_zip(self):
         self.run_handler_with_exception(InvalidFileContentError, MIXED_ZIP)
