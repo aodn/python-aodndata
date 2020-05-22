@@ -2,7 +2,7 @@
 
 set -e
 
-STAGE=${STAGE:-production}
+export STAGE=${STAGE:-production}
 VIRTUALENV_DIR=${VIRTUALENV_DIR:-python-aodndata-virtualenv}
 
 HERE=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
