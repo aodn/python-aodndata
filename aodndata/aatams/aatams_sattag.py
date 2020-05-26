@@ -13,20 +13,11 @@ from aodncore.pipeline.exceptions import InvalidFileContentError
 
 from .aatams_sattag_schema import AatamsSattagQcSchema
 
-# AATAMS DM destination path
-AATAMS_SATTAG_QC_DM_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM"
-
-# AATAMS NRT destination path
-AATAMS_SATTAG_QC_NRT_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_NRT"
-
-# NRT messages
-NRT_FILE_REMOVAL_MSG = "NRT file %s schedule to %s"
+NRT_FILE_REMOVAL_MSG = "NRT file {file} schedule to {ptype}"
 NRT_TIMESTAMP_COMPARISON_MSG = (
-    "NRT update requested: Comparing timestamps in the metadata files %s and %s"
+    "NRT update requested: Comparing timestamps in the metadata files {0} and {1}"
 )
-NRT_TIMESTAMP_DIFFERS_MSG = (
-    "File %s within %s contains older entries than current NRT state from %s"
-)
+NRT_TIMESTAMP_DIFFERS_MSG = "Incoming file {incoming_file} containing {within_file} contains older entries than current NRT state from {archival_file}"
 
 
 logger = logging.getLogger(__name__)
@@ -88,12 +79,14 @@ class AatamsSattagHandler(HandlerBase):
         file_to_remove.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
         self.file_collection.add(file_to_remove)
         logger.info(
-            NRT_FILE_REMOVAL_MSG % (file_to_remove, file_to_remove.publish_type)
+            NRT_FILE_REMOVAL_MSG.format(
+                file=file_to_remove, ptype=file_to_remove.publish_type
+            )
         )
 
     def process_nrt(self):
-        """Process NRT files, only allowing updates to occur if the new file
-        is more recent."""
+        """Process NRT files, only allowing updates to occur if the new file is more
+        recent."""
         previous_files = self.state_query.query_storage(self.dest_path_function(""))
         if not previous_files:
             return
@@ -101,10 +94,11 @@ class AatamsSattagHandler(HandlerBase):
         old_metadata_file = self.get_metadata_file(previous_files)
         new_metadata_file = self.get_metadata_file(self.file_collection)
         logger.info(
-            NRT_TIMESTAMP_COMPARISON_MSG
-            % (old_metadata_file.dest_path, new_metadata_file.src_path)
+            NRT_TIMESTAMP_COMPARISON_MSG.format(
+                old_metadata_file.dest_path, new_metadata_file.src_path
+            )
         )
-        #TODO: remove this compatibility layer when aodncore is updated
+        # TODO: remove this compatibility layer when aodncore is updated
         try:
             self.state_query.download(
                 RemotePipelineFileCollection(old_metadata_file), self.temp_dir
@@ -116,11 +110,10 @@ class AatamsSattagHandler(HandlerBase):
 
         if not self.is_nrt_update_required(old_metadata_file.local_path):
             raise InvalidFileContentError(
-                NRT_TIMESTAMP_DIFFERS_MSG
-                % (
-                    new_metadata_file.src_path,
-                    self.input_file_object.src_path,
-                    old_metadata_file.dest_path,
+                NRT_TIMESTAMP_DIFFERS_MSG.format(
+                    incoming_file=self.input_file_object.src_path,
+                    within_file=new_metadata_file.src_path,
+                    archival_file=old_metadata_file.dest_path,
                 )
             )
         # TODO: Enable below to schedule files to be deleted, if required
@@ -128,7 +121,7 @@ class AatamsSattagHandler(HandlerBase):
         #     self.schedule_file_removal(remote_file)
 
     def preprocess(self):
-        """Validate the received file(s) and set publish types"""
+        """Validate the received file(s) and set publish types."""
         if self.input_file_object.extension == ".csv":
             self.schema.validate_file(self.input_file_object.src_path)
             self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
@@ -143,11 +136,13 @@ class AatamsSattagHandler(HandlerBase):
             ).set_publish_types(PipelineFilePublishType.HARVEST_UPLOAD)
 
     def process(self):
-        """ Process NRT files if this class is initialize as NRT pipeline """
+        """Process NRT files if this class is initialize as NRT pipeline."""
         if self.nrt_aware():
             self.process_nrt()
 
 
+# AATAMS DM destination path
+AATAMS_SATTAG_QC_DM_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM"
 AATAMS_SATTAG_QC_DM_OPTS = {
     "allowed_extensions": [".zip", ".csv"],
     "allowed_regexes": ["^.+_dm\\.(zip|csv)$"],
@@ -159,6 +154,8 @@ AATAMS_SATTAG_QC_DM_OPTS = {
 }
 AatamsSattagQcDmHandler = partial(AatamsSattagHandler, **AATAMS_SATTAG_QC_DM_OPTS)
 
+# AATAMS NRT destination path
+AATAMS_SATTAG_QC_NRT_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_NRT"
 AATAMS_SATTAG_QC_NRT_OPTS = {
     "allowed_extensions": [".zip", ".csv"],
     "allowed_regexes": ["^.+_nrt\\.(zip|csv)$"],

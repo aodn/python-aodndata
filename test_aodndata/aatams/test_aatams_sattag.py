@@ -36,7 +36,7 @@ def check_file(cls, file):
         )
         cls.assertTrue(file.is_archived)
     else:
-        raise ValueError("File %s not a Zip or CSV" % file)
+        raise ValueError("File {file} not a Zip or CSV", file=file)
 
 
 class TestAatamsQcDmHandler(HandlerTestCase):
@@ -110,7 +110,7 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
             new_metadata_file = handler.get_metadata_file(handler.file_collection)
 
             all_msgs = [x.getMessage() for x in log.records]
-            timestamp_msg = NRT_TIMESTAMP_COMPARISON_MSG % (
+            timestamp_msg = NRT_TIMESTAMP_COMPARISON_MSG.format(
                 old_metadata_file.dest_path,
                 new_metadata_file.src_path,
             )

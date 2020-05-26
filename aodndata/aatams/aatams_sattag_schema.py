@@ -1,5 +1,5 @@
-"""This module defines the Aatams Satellite Tag QC Schema class
-and their respective functions."""
+"""This module defines the Aatams Satellite Tag QC Schema class and their respective
+functions."""
 import os
 from datetime import datetime
 from functools import partial
@@ -11,6 +11,13 @@ from aodndata.common.csv_schema import CSVSchema
 
 
 logger = logging.getLogger(__name__)
+
+VALIDATION_MSG = "\tValidating cross columns references from {file0}[{field0}] against {file1}[{field1}]"
+CROSS_CONTENT_FAIL_MSG = "Cross content comparison failed for value: {setdiff}.\n\
+        {file0}[{field0}] = {value0}\n\
+        while \n\
+        {file1}[{field1}] = {value1}."
+
 
 AATAMS_QC_NUMBER_OF_FILES_IN_ZIP = 7
 AATAMS_QC_FILE_TYPE_NAMES = (
@@ -301,12 +308,12 @@ METADATA_SCHEMA = {
     "release_date": Or(CSV_DATE_ISO, CSV_DATE_US),
     "recovery_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
     "age_class": CSV_AGE_CLASS,
-    "sex": Or(CSV_EMPTY,CSV_SEX_CLASS),
+    "sex": Or(CSV_EMPTY, CSV_SEX_CLASS),
     "length": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "estimated_mass": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "actual_mass": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
-    "dive_start": Or(CSV_DATE_ISO,CSV_DATE_US),
-    "dive_end": Or(CSV_DATE_ISO,CSV_DATE_US),
+    "dive_start": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "dive_end": Or(CSV_DATE_ISO, CSV_DATE_US),
     "qc_start_date": Or(CSV_DATE_ISO, CSV_DATE_US),
     "qc_end_date": Or(CSV_DATE_ISO, CSV_DATE_US),
 }
@@ -383,7 +390,7 @@ DIAG_SCHEMA = {
     "pass.dur": CSV_INT,
     "freq": CSV_POSITIVE_FLOAT,
     "v.mask": CSV_FLOAT,
-    "alt": Or(CSV_EMPTY,CSV_FLOAT),
+    "alt": Or(CSV_EMPTY, CSV_FLOAT),
     "est.speed": Or(CSV_EMPTY, CSV_FLOAT),
     "km.from.home": Or(CSV_EMPTY, CSV_FLOAT),
     "iq": CSV_INT,
@@ -394,7 +401,7 @@ DIAG_SCHEMA = {
     "semi.major.axis": str,  # CSV_INT,
     "semi.minor.axis": str,  # CSV_INT,
     "ellipse.orientation": str,  # CSV_INT,
-    "hdop": str,  #CSV_INT,
+    "hdop": str,  # CSV_INT,
     "satellite": str,
     "diag.id": CSV_INT,
     "lon.y": Or(CSV_EMPTY, CSV_LONGITUDE),
@@ -703,18 +710,24 @@ class AatamsSattagQcSchema(CSVSchema):
 
             for filetype, dataname in zip(filetypes, datanames):
                 logger.info(
-                    "\tValidating cross columns references from %s[%s] against %s[%s]"
-                    % (filetype0, dataname0, filetype, dataname)
+                    VALIDATION_MSG.format(
+                        file0=filetype0,
+                        field0=dataname0,
+                        file1=filetype,
+                        field1=dataname,
+                    )
                 )
                 yset = set(getattr(self, filetype)[dataname])
                 isdiff = xset.symmetric_difference(yset)
                 if isdiff:
-                    errmsg = (
-                        "Cross content comparison failed for value: %s.\n\
-                                    %s[%s] = %s\n\
-                                    while \n\
-                                    %s[%s] = %s."
-                        % (isdiff, filetype, dataname, xset, filetype0, dataname0, yset)
+                    errmsg = CROSS_CONTENT_FAIL_MSG.format(
+                        setdiff=isdiff,
+                        file0=filetype,
+                        field0=dataname,
+                        value0=xset,
+                        file1=filetype0,
+                        field1=dataname0,
+                        value1=yset,
                     )
                     raise SchemaError(errmsg)
 
