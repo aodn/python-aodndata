@@ -1,4 +1,4 @@
-"""This module defines the Aatams Sattelite Tag Quality Control Delay Mode Schema class
+"""This module defines the Aatams Satellite Tag QC Schema class
 and their respective functions."""
 import os
 from datetime import datetime
@@ -12,8 +12,8 @@ from aodndata.common.csv_schema import CSVSchema
 
 logger = logging.getLogger(__name__)
 
-AATAMS_DM_NUMBER_OF_FILES_IN_ZIP = 7
-AATAMS_DM_FILE_TYPE_NAMES = (
+AATAMS_QC_NUMBER_OF_FILES_IN_ZIP = 7
+AATAMS_QC_FILE_TYPE_NAMES = (
     "metadata",
     "ctd",
     "diag",
@@ -255,9 +255,9 @@ def is_equal(x, y):
 
 
 check_number_of_files_is_correct = partial(
-    check_len_list, AATAMS_DM_NUMBER_OF_FILES_IN_ZIP
+    check_len_list, AATAMS_QC_NUMBER_OF_FILES_IN_ZIP
 )
-check_name_of_files_is_correct = partial(check_file_names, AATAMS_DM_FILE_TYPE_NAMES)
+check_name_of_files_is_correct = partial(check_file_names, AATAMS_QC_FILE_TYPE_NAMES)
 
 # Schema dicts & cases
 FILENAMES_IN_ZIP_SCHEMA = And(
@@ -556,8 +556,8 @@ SUMMARY_SCHEMA = {
 }
 
 
-class AatamsSattagQcDmSchema(CSVSchema):
-    """The AATAMS SATTAG QC DM SCHEMA class.
+class AatamsSattagQcSchema(CSVSchema):
+    """The AATAMS SATTAG QC SCHEMA class.
 
     This is a schema class for validation
     of AATAMS csv files.
@@ -735,7 +735,7 @@ class AatamsSattagQcDmSchema(CSVSchema):
         self.validate_headers_only(file_list)
 
     def extensive_validation(self, file_list):
-        """Extensive validation of files within a AATAMS_DM zip.
+        """Extensive validation of files within a AATAMS zip.
 
         1. Filename conventions
         2. Metadata headers

@@ -11,11 +11,15 @@ from aodncore.pipeline import (
 from aodncore.pipeline.files import RemotePipelineFileCollection
 from aodncore.pipeline.exceptions import InvalidFileContentError
 
-from .aatams_sattag_qc_dm_schema import (
-    AatamsSattagQcDmSchema,
-)  # schema is the same as dm
+from .aatams_sattag_schema import AatamsSattagQcSchema
 
+# AATAMS DM destination path
+AATAMS_SATTAG_QC_DM_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM"
 
+# AATAMS NRT destination path
+AATAMS_SATTAG_QC_NRT_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_NRT"
+
+# NRT messages
 NRT_FILE_REMOVAL_MSG = "NRT file %s schedule to %s"
 NRT_TIMESTAMP_COMPARISON_MSG = (
     "NRT update requested: Comparing timestamps in the metadata files %s and %s"
@@ -53,7 +57,7 @@ class AatamsSattagHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         """Initialize the class with schema validation."""
         super(AatamsSattagHandler, self).__init__(*args, **kwargs)
-        self.schema = AatamsSattagQcDmSchema()
+        self.schema = AatamsSattagQcSchema()
         self.validation_call = self.schema.extensive_validation
         # Use below to just validate the file names and csv headers
         # self.validation_call = self.schema.quick_validation
@@ -144,8 +148,6 @@ class AatamsSattagHandler(HandlerBase):
             self.process_nrt()
 
 
-# AATAMS DM global constants
-AATAMS_SATTAG_QC_DM_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM"
 AATAMS_SATTAG_QC_DM_OPTS = {
     "allowed_extensions": [".zip", ".csv"],
     "allowed_regexes": ["^.+_dm\\.(zip|csv)$"],
@@ -157,8 +159,6 @@ AATAMS_SATTAG_QC_DM_OPTS = {
 }
 AatamsSattagQcDmHandler = partial(AatamsSattagHandler, **AATAMS_SATTAG_QC_DM_OPTS)
 
-# AATAMS NRT global constants
-AATAMS_SATTAG_QC_NRT_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_NRT"
 AATAMS_SATTAG_QC_NRT_OPTS = {
     "allowed_extensions": [".zip", ".csv"],
     "allowed_regexes": ["^.+_nrt\\.(zip|csv)$"],
@@ -168,4 +168,4 @@ AATAMS_SATTAG_QC_NRT_OPTS = {
     "dest_path_function": aatams_sattag_qc_nrt_dest_path,
     "archive_path_function": aatams_sattag_qc_nrt_dest_path,
 }
-AatamsSattagQcNRTHandler = partial(AatamsSattagHandler, **AATAMS_SATTAG_QC_NRT_OPTS)
+AatamsSattagQcNrtHandler = partial(AatamsSattagHandler, **AATAMS_SATTAG_QC_NRT_OPTS)
