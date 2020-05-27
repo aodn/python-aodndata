@@ -34,7 +34,7 @@ pipeline {
                 }
                 stage('test') {
                     steps {
-                        sh 'scripts/install_dependencies.sh --user'
+                        sh 'pip install --user -r test_requirements.txt'
                         sh 'pytest'
                     }
                 }

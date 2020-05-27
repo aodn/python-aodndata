@@ -53,8 +53,8 @@ ENTRY_POINTS = {
 }
 
 INSTALL_REQUIRES = [
+    'aodntools>=1.3.1',  # installed before aodncore due to more specific jsonschema dependency
     'aodncore>=1.0.0',
-    'aodntools>=1.3.1',
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8',
     'matplotlib>=3.0.3',

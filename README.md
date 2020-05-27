@@ -44,7 +44,7 @@ Developing in a Python virtual environment is the best choice to isolate the pro
 1. Execute the **setup_virtualenv.sh** script:
 
     ```bash
-    $ ./setup_virtualenv.sh
+    $ scripts/setup_virtualenv.sh
     Downloading dependencies...
     Creating virtual environment...
     Installing dependencies into virtual environment...
@@ -56,6 +56,15 @@ Developing in a Python virtual environment is the best choice to isolate the pro
 
     ```
 
+    Note: by default, the virtual environment will source AODN dependencies (e.g. aodntools, aodncore) from the production repository.
+        If you want to test a package which is at a different promotion stage,  you can override this by setting the `STAGE` environment
+        to either `rc` or `build`:
+        
+       ```bash
+       $ export STAGE=rc
+       $ scripts/setup_virtualenv.sh
+       ```
+       
 1. Make note of the path to the Python interpreter output by the script (this is needed for the next step)
 
 ### IDE setup
