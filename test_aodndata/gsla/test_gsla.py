@@ -5,7 +5,8 @@ import unittest
 from unittest.mock import patch
 from datetime import datetime
 
-from aodncore.pipeline import PipelineFilePublishType, FileType, PipelineFile, PipelineFileCollection
+from aodncore.pipeline import PipelineFilePublishType, FileType, PipelineFile, PipelineFileCollection, \
+    PipelineFileCheckType
 from aodncore.pipeline.exceptions import InvalidFileFormatError, InvalidFileNameError, AttributeValidationError
 from aodncore.pipeline.storage import get_storage_broker
 from aodncore.testlib import HandlerTestCase
@@ -18,6 +19,8 @@ TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 GOOD_NC_DM00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_19930101T000000Z_GSLA_FV02_DM00_C-20130913T082343Z.nc.gz")
 GOOD_NC_NRT00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_NRT00_C-20180105T222006Z.nc.gz")
+GOOD_NC_DM01 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20000101T000000Z_GSLA_FV02_DM01_C-20200601T010724Z.nc.gz")
+
 GOOD_YEARLY_FILE_DM00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_2018_C-20180806T000000Z.nc.gz")
 GOOD_YEARLY_FILE_DM01 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_2018_C-20181025T000000Z.nc.gz")
 
@@ -44,11 +47,15 @@ class TestGslaHandler(HandlerTestCase):
         """ check various good dest_path """
         dest_path = GslaHandler.dest_path(GOOD_NC_DM00)
         expected_path = os.path.join(GSLA_PREFIX_PATH, "DM00/1993", os.path.basename(GOOD_NC_DM00))
-        self.assertEqual(dest_path, expected_path)
+        self.assertEqual(expected_path, dest_path)
 
         dest_path = GslaHandler.dest_path(GOOD_NC_NRT00)
         expected_path = os.path.join(GSLA_PREFIX_PATH, "NRT00/2018", os.path.basename(GOOD_NC_NRT00))
-        self.assertEqual(dest_path, expected_path)
+        self.assertEqual(expected_path, dest_path)
+
+        dest_path = GslaHandler.dest_path(GOOD_NC_DM01)
+        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM01/2000", os.path.basename(GOOD_NC_DM01))
+        self.assertEqual(expected_path, dest_path)
 
         # for YEARLY_FILES, the dest_path will need to read the global attributes to find the product_type. In this case
         # since we're only testing the dest_path function and not the hanlder. we're ungzipping the gz
@@ -95,6 +102,20 @@ class TestGslaHandler(HandlerTestCase):
 
         with self.assertRaises(InvalidFileNameError):
             _ = get_creation_date('not_a_real_path')
+
+    def test_good_dm01(self):
+        handler = self.run_handler(GOOD_NC_DM01,
+                                   check_params={'checks': ['cf', 'imos:1.4']}
+                                   )
+        self.assertEqual(len(handler.file_collection), 2)
+        f_nc = handler.file_collection.filter_by_attribute_value('file_type', FileType.NETCDF)[0]
+        f_gz = handler.file_collection.filter_by_attribute_value('file_type', FileType.GZIP)[0]
+
+        self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.NO_ACTION)
+        self.assertEqual(f_gz.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(f_gz.name, os.path.basename(GOOD_NC_DM01))
+        self.assertEqual('IMOS/OceanCurrent/GSLA/DM01/2000/IMOS_OceanCurrent_HV_20000101T000000Z_GSLA_FV02_DM01_C-20200601T010724Z.nc.gz', f_gz.dest_path)
 
     def test_setup_upload_location_push_newer_file(self):
         """
