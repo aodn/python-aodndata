@@ -115,7 +115,9 @@ class TestGslaHandler(HandlerTestCase):
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.NO_ACTION)
         self.assertEqual(f_gz.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertEqual(f_gz.name, os.path.basename(GOOD_NC_DM01))
-        self.assertEqual('IMOS/OceanCurrent/GSLA/DM01/2000/IMOS_OceanCurrent_HV_20000101T000000Z_GSLA_FV02_DM01_C-20200601T010724Z.nc.gz', f_gz.dest_path)
+
+        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM01/2000", os.path.basename(GOOD_NC_DM01))
+        self.assertEqual(expected_path, f_gz.dest_path)
 
     def test_setup_upload_location_push_newer_file(self):
         """
