@@ -12,6 +12,8 @@ from aodndata.common.csv_schema import CSVSchema
 
 logger = logging.getLogger(__name__)
 
+AATAMS_DIALECT_CSV = {"delimiter": ",", "strict": True}
+
 VALIDATION_MSG = "\tValidating cross columns references from {file0}[{field0}] against {file1}[{field1}]"
 CROSS_CONTENT_FAIL_MSG = "Cross content comparison failed for value: {setdiff}.\n\
         {file0}[{field0}] = {value0}\n\
@@ -35,20 +37,6 @@ DATE_FMT_STR_2 = "%m/%d/%y %H:%M:%S"
 
 
 # schema functions -> Return arg or False
-def valid_device(astr):
-    """Check if a valid device.
-
-    Args:
-      astr: a device string
-
-    Returns:
-      str: astr if valid
-      bool: False if invalid
-
-    """
-    return astr if len(astr.split("-")) == 3 else False
-
-
 def valid_wmo_device(astr):
     """Check if a valid wmo device.
 
@@ -107,6 +95,7 @@ def valid_latitude(afloat):
     return afloat if valid else False
 
 
+# Transform functions -> Return mutations
 def not_applicable(astr):
     """Check string for emptiness, not applicable or NaN string.
 
@@ -114,20 +103,18 @@ def not_applicable(astr):
       astr: a string
 
     Returns:
-      str: "" if valid
-      bool: False if invalid
+      str: "" if empty, not applicable or NaN
+
+    Raises:
+        ValueError if astr is valid input.
 
     """
     if astr.strip().lower() in ("", "na", "nan"):
         return ""
-    else:
-        return False
+    raise ValueError("entry {astr} is valid".format(astr=astr))
 
 
-# Transform functions -> Return mutations
-
-
-def str2list(astr, delimiter):
+def str2list(astr, delimiter=","):
     """Split string by a delimiter.
 
     Args:
@@ -231,7 +218,7 @@ def is_positive(anumber):
       bool: True or False
 
     """
-    return anumber > 0
+    return anumber >= 0
 
 
 def is_negative(anumber):
@@ -244,7 +231,7 @@ def is_negative(anumber):
       bool: True or False
 
     """
-    return anumber < 0
+    return anumber <= 0
 
 
 def is_equal(x, y):
@@ -261,14 +248,14 @@ def is_equal(x, y):
     return x == y
 
 
-check_number_of_files_is_correct = partial(
+CHECK_NUMBER_OF_FILES_IS_CORRECT = partial(
     check_len_list, AATAMS_QC_NUMBER_OF_FILES_IN_ZIP
 )
-check_name_of_files_is_correct = partial(check_file_names, AATAMS_QC_FILE_TYPE_NAMES)
+CHECK_NAME_OF_FILES_IS_CORRECT = partial(check_file_names, AATAMS_QC_FILE_TYPE_NAMES)
 
 # Schema dicts & cases
 FILENAMES_IN_ZIP_SCHEMA = And(
-    check_number_of_files_is_correct, check_name_of_files_is_correct,
+    CHECK_NUMBER_OF_FILES_IS_CORRECT, CHECK_NAME_OF_FILES_IS_CORRECT,
 )
 
 CSV_SEX_CLASS = str  # Or("f", "m", "female", "male")
@@ -281,13 +268,13 @@ CSV_EMPTY = Use(not_applicable)
 CSV_INT = Use(int)
 CSV_POSITIVE_INT = And(CSV_INT, is_positive)
 CSV_NEGATIVE_INT = And(CSV_INT, is_negative)
-CSV_LIST = Use(str2list)
-CSV_LIST_OF_INT = And(Use(str2list), iter_int)
+CSV_LIST = Use(partial(str2list, delimiter=AATAMS_DIALECT_CSV["delimiter"]))
+CSV_LIST_OF_INT = And(CSV_LIST, iter_int)
 
 CSV_FLOAT = Use(float)
 CSV_POSITIVE_FLOAT = And(CSV_FLOAT, is_positive)
 CSV_NEGATIVE_FLOAT = And(CSV_FLOAT, is_negative)
-CSV_LIST_OF_FLOAT = And(Use(str2list), iter_float)
+CSV_LIST_OF_FLOAT = And(CSV_LIST, iter_float)
 
 # match 0 otherwise schema fails since 0 is false
 CSV_LONGITUDE = And(CSV_FLOAT, Or(valid_longitude, 0))
@@ -295,7 +282,7 @@ CSV_LATITUDE = And(CSV_FLOAT, Or(valid_latitude, 0))  # as above
 
 METADATA_SCHEMA = {
     "sattag_program": str,
-    "device_id": valid_device,
+    "device_id": str,
     "ptt": CSV_INT,
     "body": CSV_INT,
     "device_wmo_ref": valid_wmo_device,
@@ -305,17 +292,16 @@ METADATA_SCHEMA = {
     "release_longitude": CSV_LONGITUDE,
     "release_latitude": CSV_LATITUDE,
     "release_site": str,
-    "release_date": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "release_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
     "recovery_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
     "age_class": CSV_AGE_CLASS,
     "sex": Or(CSV_EMPTY, CSV_SEX_CLASS),
     "length": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "estimated_mass": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "actual_mass": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
-    "dive_start": Or(CSV_DATE_ISO, CSV_DATE_US),
-    "dive_end": Or(CSV_DATE_ISO, CSV_DATE_US),
-    "qc_start_date": Or(CSV_DATE_ISO, CSV_DATE_US),
-    "qc_end_date": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "state_country": str,
+    "qc_start_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
+    "qc_end_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US)
 }
 
 COORD_SCHEMA = {
@@ -514,7 +500,7 @@ SUMMARY_SCHEMA = {
     "surf.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "dive.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "haul.tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
-    "n.cycles": And(CSV_INT, Or(0, is_positive)),
+    "n.cycles": CSV_POSITIVE_INT,
     "av.depth": CSV_FLOAT,
     "max.depth": CSV_FLOAT,
     "cruise.tm": str,  # ignore
@@ -595,14 +581,14 @@ class AatamsSattagQcSchema(CSVSchema):
         """
         return os.path.basename(file_str).split("_")[0]
 
-    def __init__(self, skip_every=0, bulk_load=True):
+    def __init__(self, skip_every=0, bulk_load=True, dialect_csv=None):
         """Initialize the class with CSV reading options.
 
         skip_every: integer to skip every n line in the csv
         bulk_load: boolean to read the entire csv in memory
 
         """
-        super().__init__(skip_every=skip_every, bulk_load=bulk_load)
+        super().__init__(skip_every=skip_every, bulk_load=bulk_load,dialect_csv=dialect_csv)
 
         # self.manifest_schema = ...
         self.zip_schema = FILENAMES_IN_ZIP_SCHEMA
