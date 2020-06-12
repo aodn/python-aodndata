@@ -1,7 +1,7 @@
 """A Class to validate/type convert CSV files based on a schema."""
 import csv
-from schema import And, Schema, SchemaError
 import logging
+from schema import And, Schema, SchemaError
 
 logger = logging.getLogger(__name__)
 
@@ -94,12 +94,12 @@ class CSVSchema:
                 raise SchemaError(errmsg)
 
     @staticmethod
-    def load_csv_header(fname, dialect=None):
+    def load_csv_header(fname, dialect_csv=None):
         """Load the csv header.
 
         Args:
           fname(str): File name
-          dialect(dict): The csv dialect
+          dialect_csv(dict): The csv.reader argument options
 
         Returns:
           list: A list of strings representing the csv header.
@@ -108,15 +108,15 @@ class CSVSchema:
           csv.Error: if invalid csv file.
 
         """
-        if dialect is None:
-            dialect = DIALECT_CSV
+        if dialect_csv is None:
+            dialect_csv = DIALECT_CSV
 
         with open(fname) as file:
-            reader = csv.reader(file, **dialect)
+            reader = csv.reader(file, **dialect_csv)
             return next(reader)
 
     @staticmethod
-    def load_csv(fname, dialect=None, bulk_load=True, skip_every=0):
+    def load_csv(fname, bulk_load=True, skip_every=0, dialect_csv=None):
         """Load a CSV file.
 
         This function can load the csv
@@ -125,9 +125,9 @@ class CSVSchema:
 
         Args:
           fname(str): File name
-          dialect(dict): The csv dialect
           bulk_load(bool): True for bulkload, False to read row by row
           skip_every(int): read row interval
+          dialect_csv(dict): The csv.reader argument options
 
         Returns:
           list: row_numbers - list of row number read
@@ -138,11 +138,11 @@ class CSVSchema:
           csv.Error: if invalid csv file.
 
         """
-        if dialect is None:
-            dialect = DIALECT_CSV
+        if dialect_csv is None:
+            dialect_csv = DIALECT_CSV
 
         with open(fname) as file:
-            reader = csv.reader(file, **dialect)
+            reader = csv.reader(file, **dialect_csv)
             header = next(reader)
             if bulk_load:
                 data_rows = list(reader)
@@ -203,7 +203,10 @@ class CSVSchema:
 
         logger.info("\tLoading data from %s" % file)
         _, header, data_list = self.load_csv(
-            file, bulk_load=self.bulk_load, skip_every=self.skip_every,
+            file,
+            bulk_load=self.bulk_load,
+            skip_every=self.skip_every,
+            dialect_csv=self.dialect_csv,
         )
 
         logger.info("\tValidating Header in %s" % file)
@@ -220,7 +223,15 @@ class CSVSchema:
 
         return valid_header, valid_dataset
 
-    def __init__(self, bulk_load=True, skip_every=0):
-        """Initialize the CSV schema Class."""
+    def __init__(self, bulk_load=True, skip_every=0, dialect_csv=None):
+        """Initialize the CSV schema Class.
+
+        init args:
+            bulk_load(boolean): switch to bulk load the entire csv or read by parts.
+            skip_every(int): skip N other lines when validating
+            dialect_csv(dict): the csv.reader argument options (e.g. delimiter)
+
+        """
         self.bulk_load = bulk_load
         self.skip_every = 0 if skip_every < 0 else skip_every
+        self.dialect_csv = DIALECT_CSV if dialect_csv is None else dialect_csv
