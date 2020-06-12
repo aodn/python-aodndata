@@ -57,10 +57,9 @@ class AatamsSattagHandler(HandlerBase):
         """Check if updates to the dataset/archive are required by inspecting the most
         recent dates between the new state and remote(current) metadata state."""
         new_valid_data = self.schema.metadata
-        new_recent_date = sorted(new_valid_data["qc_end_date"])[-1]
-
         _, old_valid_data = self.schema.validate_file(old_metadata_file)
-        old_recent_date = sorted(old_valid_data["qc_end_date"])[-1]
+        new_recent_date = sorted((x for x in new_valid_data["qc_end_date"] if x))[-1]
+        old_recent_date = sorted((x for x in old_valid_data["qc_end_date"] if x))[-1]
         return new_recent_date >= old_recent_date
 
     def nrt_aware(self):
