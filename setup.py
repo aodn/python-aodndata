@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 ENTRY_POINTS = {
     'pipeline.handlers': [
         'AatamsSattagQcDmHandler = aodndata.aatams.aatams_sattag:AatamsSattagQcDmHandler',
-        'AatamsSattagNrtHandler = aodndata.aatams.aatams_sattag:AatamsSattagNrtHandler',
+        'AatamsSattagQcNrtHandler = aodndata.aatams.aatams_sattag:AatamsSattagQcNrtHandler',
         'AbosHandler = aodndata.moorings.handlers:AbosHandler',
         'AnfogHandler = aodndata.anfog.handlers:AnfogHandler',
         'AcornHandler = aodndata.acorn.handler:AcornHandler',
