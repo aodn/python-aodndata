@@ -50,15 +50,17 @@ class TestAatamsQcDmHandler(HandlerTestCase):
         super(TestAatamsQcDmHandler, self).setUp()
 
     def test_avoid_nrt_pickup(self):
+        """Checking if handling NRT files as DM raises Error."""
         self.run_handler_with_exception(InvalidInputFileError, NRT_FIRST_ZIP)
         self.run_handler_with_exception(InvalidInputFileError, NRT_SINGLE_CSV)
 
     def test_single_dm_csv_input(self):
+        """Checking single DM csv ingestion."""
         handler = self.run_handler(DM_SINGLE_CSV)
         self.check_file(handler.file_collection[0])
 
     def test_harvest_dm_csvs_in_zip(self):
-        """Check normal ingestion of DM files."""
+        """Checking ingestion of valid DM zipfile."""
         handler = self.run_handler(DM_GOOD_ZIP)
         for file in handler.file_collection:
             if file.file_type is FileType.CSV:
@@ -84,20 +86,23 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
         super(TestAatamsQcNrtHandler, self).setUp()
 
     def test_avoid_dm_pickup(self):
+        """Checking if handling DM files as NRT raises Error."""
         self.run_handler_with_exception(InvalidInputFileError, DM_GOOD_ZIP)
         self.run_handler_with_exception(InvalidInputFileError, DM_SINGLE_CSV)
 
     def test_single_nrt_csv_input(self):
+        """Checking single NRT csv ingestion."""
         handler = self.run_handler(NRT_SINGLE_CSV)
         self.check_file(handler.file_collection[0])
 
     def test_harvest_csvs_in_zip(self):
+        """Checking ingestion of valid NRT zipfile."""
         handler = self.run_handler(NRT_FIRST_ZIP)
         for file in handler.file_collection:
             check_file(self, file)
 
     def test_update_with_recent_file(self):
-        """make sure we can update the NRT stream with more recent files."""
+        """Checking if we can update the NRT state/archive with a more recent file."""
         with LogCapture() as log:
             handler = self.run_handler(NRT_FIRST_ZIP)
             for file in handler.file_collection:
@@ -111,8 +116,7 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
 
             all_msgs = [x.getMessage() for x in log.records]
             timestamp_msg = NRT_TIMESTAMP_COMPARISON_MSG.format(
-                old_metadata_file.dest_path,
-                new_metadata_file.src_path,
+                old_metadata_file.dest_path, new_metadata_file.src_path,
             )
             got_timestamp_msg = [x for x in all_msgs if timestamp_msg == x]
             self.assertFalse(got_timestamp_msg == [])
@@ -126,7 +130,7 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
             )
 
     def test_block_old_files_replacing_new_ones(self):
-        """Make sure that when an older file comes in, it's not processed."""
+        """Checking if we fail/block an older NRT file to be ingested."""
         handler = self.run_handler(NRT_SECOND_ZIP)
         for file in handler.file_collection:
             self.check_file(file)
