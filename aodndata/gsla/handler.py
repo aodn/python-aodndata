@@ -18,6 +18,7 @@ GSLA_REGEX = re.compile(r"""
 
 GSLA_REGEX_YEARLY = re.compile(r"""
                                IMOS_OceanCurrent_HV_
+                               (?P<product_type>|DM01_)  # DM01 yearly file have their product code within the file.
                                (?P<nc_time_cov_start>[0-9]{4})_C-
                                (?P<creation_date>[0-9]{8}T[0-9]{6}Z)\.nc(\.gz)?$
                                """, re.VERBOSE)
