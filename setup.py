@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 
 ENTRY_POINTS = {
     'pipeline.handlers': [
-        'AatamsDmHandler = aodndata.aatams.aatams_dm:AatamsDmHandler',
-        'AatamsNrtHandler = aodndata.aatams.aatams_nrt:AatamsNrtHandler',
+        'AatamsSattagQcDmHandler = aodndata.aatams.aatams_sattag:AatamsSattagQcDmHandler',
+        'AatamsSattagQcNrtHandler = aodndata.aatams.aatams_sattag:AatamsSattagQcNrtHandler',
         'AbosHandler = aodndata.moorings.handlers:AbosHandler',
         'AnfogHandler = aodndata.anfog.handlers:AnfogHandler',
         'AcornHandler = aodndata.acorn.handler:AcornHandler',
@@ -58,12 +58,14 @@ INSTALL_REQUIRES = [
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8',
     'matplotlib>=3.0.3',
-    'pillow>=6.2.1,<7.0.0'  # provide additional image formats for matplotlib
+    'pillow>=6.2.1,<7.0.0',  # provide additional image formats for matplotlib
+    'schema>=0.7.0'
 ]
 
 TESTS_REQUIRE = [
     'httpretty',
-    'pytest'
+    'pytest',
+    'testfixtures'
 ]
 
 EXTRAS_REQUIRE = {
