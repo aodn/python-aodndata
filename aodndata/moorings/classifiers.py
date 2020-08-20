@@ -11,7 +11,7 @@ from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNa
 
 
 class MooringsFileClassifier(FileClassifier):
-    """Classifier for moorings (ABOS & ANMN) NetCDF files.
+    """Classifier for moorings (ABOS & DWM & ANMN) NetCDF files.
     """
 
     PROJECT = 'IMOS'
@@ -106,7 +106,7 @@ class MooringsFileClassifier(FileClassifier):
           'IMOS/<facility>/<subfacility>/<site_code>/<data_category>/<product_level>'
 
         where
-        <facility> = 'ANMN' or 'ABOS'
+        <facility> = 'ANMN' or 'ABOS' or 'DWM'
         <subfacility> is the sub-facility code ('NRS', 'NSW', 'SOTS', etc...)
         <site_code> is the value of the site_code global attribute
         <data_category> is a broad category like 'Temperature', 'CTD_profiles', etc...
@@ -317,6 +317,185 @@ class AbosFileClassifier(MooringsFileClassifier):
         else:
             raise InvalidFileNameError(
                 "Unknown ABOS sub-facility '{subfac}' for file '{input_file}'".format(subfac=subfac,
+                                                                                      input_file=input_file)
+            )
+
+        dir_list.append(input_file_basename)
+
+        return cls._make_path(dir_list)
+
+
+class DwmFileClassifier(MooringsFileClassifier):
+
+    FACILITY = 'DWM'
+    SOTS_IMAGES_ZIP_PATTERN = re.compile(r"images_[a-zA-Z0-9-]+-(?P<year>\d{4})\.zip$")
+   
+   #old pipeline stuff
+    WAVE_VAR = {'VAVH', 'HMAX', 'HAV'}
+    MET_VAR = {'UWND', 'VWND', 'WDIR', 'WSPD', 'ATMP', 'AIRT', 'RELH', 'RAIN', 'RAIN_AMOUNT'}
+    FLUX_VAR = {'H_RAIN', 'HEAT_NET', 'MASS_NET'}
+
+    @classmethod
+    def _get_old_data_category(cls, input_file):
+        """Determine the category a file belongs to."""
+
+        var_names = set(cls._get_variable_names(input_file))
+        if var_names.intersection(cls.WAVE_VAR):
+            return 'Surface_waves'
+
+        if var_names.intersection(cls.FLUX_VAR):
+            return 'Surface_fluxes'
+
+        if var_names.intersection(cls.MET_VAR):
+            return 'Surface_properties'
+
+        raise InvalidFileContentError("Could not determine data category for {input_file}".format(input_file=input_file))
+
+
+    @classmethod
+    def _get_data_category(cls, input_file):
+        """Determine the category a file belongs to (Temperature,
+        CTD_timeseires, Velocity, etc..)
+
+        """
+
+        var_names = set(cls._get_variable_names(input_file))
+
+        if var_names.intersection(cls.VELOCITY_VAR):
+            return 'Velocity'
+
+        if var_names.intersection(cls.BGC_VAR):
+            return 'Biogeochem_timeseries'
+
+        if var_names.intersection(cls.SALINITY_VAR):
+            return 'CTD_timeseries'
+
+        if var_names.intersection(cls.TEMP_VAR):
+            return 'Temperature'
+
+        raise InvalidFileContentError(
+            "Could not determine data category for '{name}'".format(name=input_file)
+        )
+
+    @classmethod
+    def _get_product_level(cls, input_file):
+        """Determine the product level of the file, i.e. either 'real-time', or
+        'non-QC' (delayed-mode FV00). Otherwise empty.
+
+        """
+        name_field = cls._get_file_name_fields(input_file)
+
+        if 'realtime' in input_file:
+            return 'real-time'
+
+        if name_field[5] == 'FV00':
+            return 'non-QC'
+
+        return ''
+
+    @classmethod
+    def _get_deployment_year(cls, input_file):
+        """
+        For the given moorings data file, determine the year in which the deployment started.
+        If the time_deployment_start attribute is missing, fall back on time_coverage_start.
+
+        :param str input_file: full path to the file
+        :return: Year of deployment
+        :rtype: str
+
+        """
+        start_date = cls._get_nc_att(input_file, 'time_deployment_start', time_format=True, default='')
+        if not start_date:
+            start_date = cls._get_nc_att(input_file, 'time_coverage_start', time_format=True)
+        year = start_date.year
+
+        return year
+
+    @classmethod
+    def _is_realtime(cls, input_file):
+        """
+        Determine whether the given file contains real-time data based on:
+        * the data_mode global attribute, if it exists;
+        * the file name, if it contains the word 'realtime' or 'real-time'
+          (case insensitive);
+        * the time_coverage_start/end range (if it's shorter than a day).
+
+        :param str input_file: name of the file
+        :return: Whether the input file contains real-time data
+        :rtype bool
+
+        """
+        data_mode = cls._get_nc_att(input_file, 'data_mode', default='')
+        if data_mode == 'R':
+            return True
+        # Any other valid data mode is NOT real-time
+        if data_mode in ('P', 'D', 'M'):
+            return False
+
+        file_name = os.path.basename(input_file)
+        if re.search(r'real-?time', file_name, re.IGNORECASE):
+            return True
+
+        time_start = cls._get_nc_att(input_file, 'time_coverage_start', time_format=True)
+        time_end = cls._get_nc_att(input_file, 'time_coverage_end', time_format=True)
+        if (time_end - time_start) <= timedelta(days=1):
+            return True
+
+        return False
+
+    @classmethod
+    def dest_path(cls, input_file):
+        """
+        Destination object path for an DWM file. Of the form:
+
+          'IMOS/DWM/DA/<platform_code>/<data_category>/<product_level>'
+          or
+          'IMOS/DWM/SOTS/<year_of_deployment>/<product_type>'
+          or
+          'IMOS/DWM/SOTS/images'
+
+        where
+        <platform_code> is the value of the platform_code global attribute
+        <data_category> is a broad category like 'Temperature', 'CTD_profiles', etc...
+        <product_level> is
+         - 'non-QC' for FV00 files
+         - empty for FV01 files
+        <year_of_deployment> is the year in which the deployment started
+        <product_type> is
+         - 'real-time';
+         - empty (for delayed mode data)
+
+        The basename of the input file is appended.
+
+        """
+        dir_list = [cls.PROJECT, cls.FACILITY]
+        input_file_basename = os.path.basename(input_file)
+
+        # deal with image zip files first, as they're simpler
+        if cls.SOTS_IMAGES_ZIP_PATTERN.match(input_file_basename):
+            dir_list.extend(['SOTS', 'images', input_file_basename])
+            return cls._make_path(dir_list)
+
+        fac, subfac = cls._get_facility(input_file)
+        is_asfs_and_rt = subfac == 'ASFS' and cls._is_realtime(input_file)
+        if subfac == 'DA':
+            dir_list.append(subfac)
+            dir_list.append(cls._get_nc_att(input_file, 'platform_code'))
+            dir_list.append(cls._get_data_category(input_file))
+            dir_list.append(cls._get_product_level(input_file))
+        elif is_asfs_and_rt: # rt files with old names not migrated yet
+            cat = cls._get_old_data_category(input_file)
+            start_time = cls._get_nc_att(input_file,'time_coverage_start',time_format=True)
+            rt_folder_name = '{}_daily'.format(start_time.year)
+            dir_list += ['ASFS', 'SOFS', cat, 'Real-time', rt_folder_name]
+        elif subfac in ('SOTS', 'ASFS'):
+            dir_list.append('SOTS')
+            dir_list.append(cls._get_deployment_year(input_file))
+            if cls._is_realtime(input_file):
+                dir_list.append('real-time')
+        else:
+            raise InvalidFileNameError(
+                "Unknown DWM sub-facility '{subfac}' for file '{input_file}'".format(subfac=subfac,
                                                                                       input_file=input_file)
             )
 

@@ -5,12 +5,12 @@ from netCDF4 import Dataset
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType, PipelineFileCollection, PipelineFile
 from aodncore.pipeline.exceptions import InvalidFileNameError, InvalidFileContentError
 
-from aodndata.moorings.classifiers import MooringsFileClassifier, AbosFileClassifier
+from aodndata.moorings.classifiers import MooringsFileClassifier, AbosFileClassifier, DwmFileClassifier
 from aodndata.moorings.burst_average import create_burst_average_netcdf
 
 
 class MooringsHandler(HandlerBase):
-    """Handler for data from the IMOS moorings facilities (ABOS, ANMN). It handles the following file types:
+    """Handler for data from the IMOS moorings facilities (ABOS, DWM, ANMN). It handles the following file types:
      * NetCDf (timeseries or profile);
      * PDF (field logsheet);
      * PNG (plots);
@@ -119,3 +119,46 @@ class AbosHandler(MooringsHandler):
             self.file_collection.add(self.input_file_object)
 
     dest_path = AbosFileClassifier.dest_path
+
+
+class DwmHandler(MooringsHandler):
+    """Handler for DWM files.
+
+    It does mostly the same as MooringsHandler, but there are a few DWM-specific tweaks, and the dest_path
+    method is different.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(DwmHandler, self).__init__(*args, **kwargs)
+        self.allowed_extensions = ['.nc', '.zip']
+
+    def process(self):
+        """Handle a zip file containing images and no NetCDF files. In this case we just want to publish the zip file
+        itself, not the individual images. If we encounter a "mixed" zip file with images and netCDF files,
+        we're just going to give up, for now.
+        """
+        images = PipelineFileCollection(f for f in self.file_collection if f.file_type.is_image_type)
+        netcdfs = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
+        is_zip = self.file_type is FileType.ZIP
+        have_images = len(images) > 0
+        have_netcdfs = len(netcdfs) > 0
+        if is_zip and have_images:
+            if have_netcdfs:
+                raise InvalidFileContentError(
+                    "Zip file contains both images and netCDFs. Don't know what to do!"
+                    " They are handled differently, so please upload only one at a time."
+                )
+            if not DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.match(self.file_basename):
+                raise InvalidFileNameError(
+                    "Zip file contains images, but its name does not match pattern for images zip file "
+                    "(regular expression '{p}')".format(p=DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.pattern)
+                )
+
+            self.logger.info("Zip file contains images and no netCDF files. "
+                             "Publishing original zip file instead of its contents.")
+
+            self.file_collection.set_publish_types(PipelineFilePublishType.NO_ACTION)
+            self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+            self.file_collection.add(self.input_file_object)
+
+    dest_path = DwmFileClassifier.dest_path
