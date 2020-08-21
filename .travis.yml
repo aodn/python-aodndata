@@ -6,9 +6,11 @@ python:
 addons:
   apt:
     packages:
+    - libhdf5-10
+    - libhdf5-cpp-11
     - libhdf5-dev
+    - libhdf5-serial-dev   
     - libudunits2-dev
-
 env:
   global:
     - MPLBACKEND=agg
