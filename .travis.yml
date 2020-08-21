@@ -5,8 +5,7 @@ python:
 
 addons:
   apt:
-    packages:
-    - libhdf5-10
+    packages:    
     - libudunits2-dev
 env:
   global:
@@ -23,6 +22,9 @@ matrix:
   allow_failures:
     - python: "3.6"
 
+before_install:
+  - sudo apt-get -y install libhdf5-10
+  
 install:
   - pip install -r stage_requirements.txt
   - pip install pytest-cov
