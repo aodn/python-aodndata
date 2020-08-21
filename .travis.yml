@@ -13,6 +13,8 @@ addons:
     - libudunits2-dev
 env:
   global:
+    - PKG_CONFIG_DIR=/usr/lib/x86_64-linux-gnu
+    - HDF5_DIR=/usr/lib/x86_64-linux-gnu/hdf5/serial
     - MPLBACKEND=agg
     - STAGE=production
 
