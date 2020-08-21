@@ -6,6 +6,7 @@ python:
 addons:
   apt:
     packages:
+    - libhdf5-dev
     - libudunits2-dev
 
 env:
