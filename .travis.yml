@@ -6,8 +6,8 @@ python:
 addons:
   apt:
     packages:
+    - libhdf5-10
     - libudunits2-dev
-
 env:
   global:
     - MPLBACKEND=agg
