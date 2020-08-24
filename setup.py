@@ -12,6 +12,7 @@ ENTRY_POINTS = {
         'AuvHandler = aodndata.auv.handler:AuvHandler',
         'ArgoHandler = aodndata.argo.handler:ArgoHandler',
         'AsyncUploadHandler = aodndata.common.asyncupload:AsyncUploadHandler',
+        'DwmHandler = aodndata.moorings.handlers:DwmHandler',
         'FaimmsHandler = aodndata.aims.faimms:FaimmsHandler',
         'GenericHandler = aodndata.common.generic:GenericHandler',
         'GslaHandler = aodndata.gsla.handler:GslaHandler',
