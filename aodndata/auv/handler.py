@@ -6,10 +6,12 @@ from aodncore.pipeline import HandlerBase, PipelineFilePublishType
 class AuvHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(AuvHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.nc', '.manifest', '.csv', '.dir_manifest']
+        self.allowed_extensions = ['.nc', '.manifest', '.csv']
         self.resolve_params = {'relative_path_root': os.path.join(self._config.pipeline_config['global']['wip_dir'])}
 
-        if self.input_file.endswith('.dir_manifest') or self.input_file.endswith('images.manifest'):
+        if self.input_file.endswith('.dive.manifest') or \
+                self.input_file.endswith('.pdfreports.manifest') or \
+                self.input_file.endswith('images.manifest'):
             self.default_addition_publish_type = PipelineFilePublishType.UPLOAD_ONLY
 
     # manifest filename gives us the following info [campaign_name]-[dive_name].[manifest_type].manifest
@@ -20,8 +22,8 @@ class AuvHandler(HandlerBase):
         return os.path.basename(self.input_file).split('-')[1].split('.')[0]
 
     def manifest_type(self):
-        # 0 is the main dive name, 1 the manifest type, 2 is manifest
-        return os.path.basename(self.input_file).split('.')[1]
+        # 0 is the main dive name, -2 the manifest type, -1 is manifest
+        return os.path.basename(self.input_file).split('.')[-2]
 
     def dest_path(self, filepath):
         """The dest_path has already been added to the PipelineFile by the MapManifestResolveRunner, so simply validate
