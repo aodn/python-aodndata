@@ -91,7 +91,7 @@ class TestAuvHandler(HandlerTestCase):
         shutil.copytree(os.path.join(TEST_ROOT, 'WA201705'),
                         os.path.join(self.temp_dir, 'AUV/AUV_DOWNLOAD_CAMPAIGN/WA201705'))
 
-        file_list = list_recursively_files_abs_path(os.path.join(test_report_path))
+        file_list = list_recursively_files_abs_path(test_report_path)
         with open(manifest_file, 'w') as f:
             for item in file_list:
                 f.write("%s\n" % item)
@@ -110,7 +110,7 @@ class TestAuvHandler(HandlerTestCase):
         shutil.copytree(os.path.join(TEST_ROOT, 'WA201705'),
                         os.path.join(self.temp_dir, 'AUV/AUV_DOWNLOAD_CAMPAIGN/WA201705'))
 
-        file_list = list_recursively_files_abs_path(os.path.join(test_dive_path))
+        file_list = list_recursively_files_abs_path(test_dive_path)
         with open(manifest_file, 'w') as f:
             for item in file_list:
                 f.write("%s\n" % item)
