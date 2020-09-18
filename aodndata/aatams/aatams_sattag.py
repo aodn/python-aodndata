@@ -18,6 +18,9 @@ NRT_TIMESTAMP_COMPARISON_MSG = (
     "NRT update requested: Comparing timestamps in the metadata files {0} and {1}"
 )
 NRT_TIMESTAMP_DIFFERS_MSG = "Incoming file {incoming_file} containing {within_file} contains older entries than current NRT state from {archival_file}"
+NRT_ZIPFILE_WITH_DIFF_CAMPAIGNS = (
+    "Incoming file {zip_file} contains more than 1 campaign: {campaigns}"
+)
 
 
 logger = logging.getLogger(__name__)
@@ -37,13 +40,23 @@ class AatamsSattagHandler(HandlerBase):
     """The class for aatams sattag zip/csv files."""
 
     @staticmethod
-    def get_metadata_file(file_list):
-        """Return metadata.csv PipelineFile object within a PipelineFileCollection."""
-        fname = [x for x in file_list if "metadata" in x.name]
+    def get_campaigns(file_list):
+        """Return all campaign ids from a PipelineFileCollection."""
+        return [x.name.split("_")[1] for x in file_list]
+
+    @staticmethod
+    def get_metadata_file(file_list, campaign=None):
+        """Return the metadata.csv PipelineFile object within a PipelineFileCollection
+        for a certain campaign."""
+        if campaign:
+            fname = [
+                x for x in file_list if "metadata" in x.name and campaign in x.name
+            ]
+        else:
+            fname = [x for x in file_list if "metadata" in x.name]
+
         if fname:
             return fname[0]
-        else:
-            return None
 
     def __init__(self, *args, **kwargs):
         """Initialize the class with schema validation."""
@@ -84,14 +97,28 @@ class AatamsSattagHandler(HandlerBase):
         )
 
     def process_nrt(self):
-        """Process NRT files, only allowing updates to occur if the new file is more
-        recent."""
+        """Process NRT files, only allowing updates to occur if the new files for certain
+        campaigns are more recent."""
         previous_files = self.state_query.query_storage(self.dest_path_function(""))
         if not previous_files:
             return
 
-        old_metadata_file = self.get_metadata_file(previous_files)
-        new_metadata_file = self.get_metadata_file(self.file_collection)
+        all_campaigns = set(self.get_campaigns(self.file_collection))
+        more_than_one_campaign = len(all_campaigns) > 1
+        if more_than_one_campaign:
+            raise InvalidFileContentError(
+                NRT_ZIPFILE_WITH_DIFF_CAMPAIGNS.format(
+                    self._file_basename, all_campaigns
+                )
+            )
+
+        campaign = all_campaigns.pop()
+        old_metadata_file = self.get_metadata_file(previous_files, campaign)
+        if not old_metadata_file:
+            return
+
+        new_metadata_file = self.get_metadata_file(self.file_collection, campaign)
+
         logger.info(
             NRT_TIMESTAMP_COMPARISON_MSG.format(
                 old_metadata_file.dest_path, new_metadata_file.src_path

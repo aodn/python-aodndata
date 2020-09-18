@@ -20,6 +20,7 @@ DM_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_dm.csv")
 
 NRT_FIRST_ZIP = os.path.join(TEST_ROOT, "first_nrt.zip")
 NRT_SECOND_ZIP = os.path.join(TEST_ROOT, "second_nrt.zip")
+NRT_NEW_CAMPAIGN = os.path.join(TEST_ROOT, "new_campaign_nrt.zip")
 NRT_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_nrt.csv")
 
 
@@ -135,6 +136,11 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
         for file in handler.file_collection:
             self.check_file(file)
         self.run_handler_with_exception(InvalidFileContentError, NRT_FIRST_ZIP)
+
+    def test_no_clobber_if_different_campaign(self):
+        """Only block nrt overwrite if it is the same campaign"""
+        self.run_handler(NRT_SECOND_ZIP)
+        self.run_handler(NRT_NEW_CAMPAIGN)  # older dates than above, but diff campaign
 
 
 if __name__ == "__main__":
