@@ -255,7 +255,9 @@ CHECK_NAME_OF_FILES_IS_CORRECT = partial(check_file_names, AATAMS_QC_FILE_TYPE_N
 
 # Schema dicts & cases
 FILENAMES_IN_ZIP_SCHEMA = And(
-    CHECK_NUMBER_OF_FILES_IS_CORRECT, CHECK_NAME_OF_FILES_IS_CORRECT,
+    CHECK_NUMBER_OF_FILES_IS_CORRECT,
+    CHECK_NAME_OF_FILES_IS_CORRECT,
+    error="Zip file is invalid. Check if the number of files and naming is correct",
 )
 
 CSV_SEX_CLASS = str  # Or("f", "m", "female", "male")
