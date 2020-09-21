@@ -9,19 +9,19 @@ from aodncore.pipeline import (
     PipelineFile,
 )
 from aodncore.pipeline.files import RemotePipelineFileCollection
-from aodncore.pipeline.exceptions import InvalidFileContentError
-
+from aodncore.pipeline.exceptions import InvalidFileContentError, InvalidFileFormatError
+from aodncore.util import extract_zip
 from .aatams_sattag_schema import AatamsSattagQcSchema
 
 NRT_FILE_REMOVAL_MSG = "NRT file {file} schedule to {ptype}"
 NRT_TIMESTAMP_COMPARISON_MSG = (
-    "NRT update requested: Comparing timestamps in the metadata files {0} and {1}"
+    "NRT update requested: Comparing timestamps of metadata file in {0} and {1}"
 )
 NRT_TIMESTAMP_DIFFERS_MSG = "Incoming file {incoming_file} containing {within_file} contains older entries than current NRT state from {archival_file}"
 NRT_ZIPFILE_WITH_DIFF_CAMPAIGNS = (
     "Incoming file {zip_file} contains more than 1 campaign: {campaigns}"
 )
-
+NRT_NO_CAMPAIGN = "Couldn't detect campaign within incoming file {incoming_file}."
 
 logger = logging.getLogger(__name__)
 
@@ -41,8 +41,13 @@ class AatamsSattagHandler(HandlerBase):
 
     @staticmethod
     def get_campaigns(file_list):
-        """Return all campaign ids from a PipelineFileCollection."""
-        return [x.name.split("_")[1] for x in file_list]
+        """Return the campaign id from AATAMS filenames present in
+        PipelineFileCollections."""
+        return [
+            x.name.split("_")[1]
+            for x in file_list
+            if x.file_type is FileType.ZIP and len(x.name.split("_")) > 1
+        ]
 
     @staticmethod
     def get_metadata_file(file_list, campaign=None):
@@ -57,6 +62,50 @@ class AatamsSattagHandler(HandlerBase):
 
         if fname:
             return fname[0]
+        return None
+
+    def get_current_campaign(self):
+        """Get a unique campaign from a file_collection."""
+        all_campaigns = set(self.get_campaigns(self.file_collection))
+        valid_collection = len(all_campaigns) == 1
+        if valid_collection:
+            return all_campaigns.pop()
+
+        no_campaign = len(all_campaigns) == 0
+        if no_campaign:
+            raise InvalidFileContentError(NRT_NO_CAMPAIGN.format(self._file_basename))
+
+        raise InvalidFileContentError(
+            NRT_ZIPFILE_WITH_DIFF_CAMPAIGNS.format(self._file_basename, all_campaigns)
+        )
+
+    def get_remote_metadata_from_zip(self, remote_pfile):
+        """Fetch the metdata.csv file from a RemotePipelineFile zip and wrapping it on a
+        PipelineFile."""
+        # TODO: remove the first try statement when pipeline
+        remote_collection = RemotePipelineFileCollection(remote_pfile)
+        try:
+            download = self.state_query.download
+        except AttributeError:
+            download = self.state_query._storage_broker.download
+
+        download(remote_collection, self.temp_dir)
+        dest_folder = os.path.join(
+            self.temp_dir, os.path.dirname(remote_pfile.dest_path)
+        )
+        local_zipfile = os.path.join(self.temp_dir, remote_pfile.dest_path)
+
+        extract_zip(local_zipfile, dest_folder)
+
+        local_metadata_file = [
+            os.path.join(dest_folder, x)
+            for x in os.listdir(dest_folder)
+            if "metadata" in x
+        ]
+        try:
+            return PipelineFile(local_metadata_file[0])
+        except IndexError:
+            return None
 
     def __init__(self, *args, **kwargs):
         """Initialize the class with schema validation."""
@@ -97,42 +146,34 @@ class AatamsSattagHandler(HandlerBase):
         )
 
     def process_nrt(self):
-        """Process NRT files, only allowing updates to occur if the new files for certain
-        campaigns are more recent."""
+        """Process NRT files, only allowing updates to occur if the new files for
+        certain campaigns are more recent."""
         previous_files = self.state_query.query_storage(self.dest_path_function(""))
         if not previous_files:
             return
 
-        all_campaigns = set(self.get_campaigns(self.file_collection))
-        more_than_one_campaign = len(all_campaigns) > 1
-        if more_than_one_campaign:
-            raise InvalidFileContentError(
-                NRT_ZIPFILE_WITH_DIFF_CAMPAIGNS.format(
-                    self._file_basename, all_campaigns
-                )
-            )
+        current_campaign = self.get_current_campaign()
+        if not current_campaign:
+            return
 
-        campaign = all_campaigns.pop()
-        old_metadata_file = self.get_metadata_file(previous_files, campaign)
+        try:
+            old_zip_file = [x for x in previous_files if current_campaign in x.name][0]
+        except IndexError:
+            return
+
+        old_metadata_file = self.get_remote_metadata_from_zip(old_zip_file)
         if not old_metadata_file:
             return
 
-        new_metadata_file = self.get_metadata_file(self.file_collection, campaign)
+        new_metadata_file = self.get_metadata_file(
+            self.file_collection, current_campaign
+        )
 
         logger.info(
             NRT_TIMESTAMP_COMPARISON_MSG.format(
-                old_metadata_file.dest_path, new_metadata_file.src_path
+                old_zip_file.dest_path, new_metadata_file.src_path
             )
         )
-        # TODO: remove this compatibility layer when aodncore is updated
-        try:
-            self.state_query.download(
-                RemotePipelineFileCollection(old_metadata_file), self.temp_dir
-            )
-        except AttributeError:
-            self.state_query._storage_broker.download(
-                RemotePipelineFileCollection(old_metadata_file), (self.temp_dir)
-            )
 
         if not self.is_nrt_update_required(old_metadata_file.local_path):
             raise InvalidFileContentError(
@@ -148,18 +189,25 @@ class AatamsSattagHandler(HandlerBase):
 
     def preprocess(self):
         """Validate the received file(s) and set publish types."""
-        if self.input_file_object.extension == ".csv":
-            self.schema.validate_file(self.input_file_object.src_path)
-            self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-        else:
-            files_in_zip = self.file_collection.get_attribute_list("local_path")
-            self.validation_call(files_in_zip)
+        not_a_zip = not FileType.ZIP.validator(self.input_file)
+        if not_a_zip:
+            raise InvalidFileFormatError(
+                "{input_file} is not a zip file.".format(input_file=self.input_file)
+            )
 
-            self.input_file_object.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
+        files_in_zip = self.file_collection.get_attribute_list("local_path")
+        self.validation_call(files_in_zip)
 
-            self.file_collection.filter_by_attribute_value(
-                "file_type", FileType.CSV,
-            ).set_publish_types(PipelineFilePublishType.HARVEST_UPLOAD)
+        self.input_file_object.publish_type = (
+            PipelineFilePublishType.HARVEST_ARCHIVE_UPLOAD
+        )
+        zip_filename = os.path.basename(self.input_file_object.src_path)
+        self.input_file_object.dest_path = self.dest_path_function(zip_filename)
+
+        self.file_collection.add(self.input_file_object)
+        self.file_collection.filter_by_attribute_value(
+            "file_type", FileType.CSV,
+        ).set_publish_types(PipelineFilePublishType.HARVEST_ONLY)
 
     def process(self):
         """Process NRT files if this class is initialize as NRT pipeline."""
@@ -172,8 +220,8 @@ AATAMS_SATTAG_QC_DM_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_DM"
 AATAMS_SATTAG_QC_DM_OPTS = {
     "allowed_extensions": [".zip", ".csv"],
     "allowed_regexes": ["^.+_dm\\.(zip|csv)$"],
-    "allowed_archive_path_regexes": [AATAMS_SATTAG_QC_DM_BASE + ".+\\.(zip|csv)"],
-    "allowed_dest_path_regexes": [AATAMS_SATTAG_QC_DM_BASE + ".+\\.(zip|csv)"],
+    "allowed_archive_path_regexes": [AATAMS_SATTAG_QC_DM_BASE + ".+\\.(zip|csv)$"],
+    "allowed_dest_path_regexes": [AATAMS_SATTAG_QC_DM_BASE + ".+\\.(zip|csv)$"],
     "archive_input_file": True,
     "dest_path_function": aatams_sattag_qc_dm_dest_path,
     "archive_path_function": aatams_sattag_qc_dm_dest_path,
@@ -185,8 +233,8 @@ AATAMS_SATTAG_QC_NRT_BASE = "IMOS/AATAMS/satellite_tagging/ATF_Location_QC_NRT"
 AATAMS_SATTAG_QC_NRT_OPTS = {
     "allowed_extensions": [".zip", ".csv"],
     "allowed_regexes": ["^.+_nrt\\.(zip|csv)$"],
-    "allowed_archive_path_regexes": [AATAMS_SATTAG_QC_NRT_BASE + ".+\\.(zip|csv)"],
-    "allowed_dest_path_regexes": [AATAMS_SATTAG_QC_NRT_BASE + ".+\\.(zip|csv)"],
+    "allowed_archive_path_regexes": [AATAMS_SATTAG_QC_NRT_BASE + ".+\\.(zip|csv)$"],
+    "allowed_dest_path_regexes": [AATAMS_SATTAG_QC_NRT_BASE + ".+\\.(zip|csv)$"],
     "archive_input_file": True,
     "dest_path_function": aatams_sattag_qc_nrt_dest_path,
     "archive_path_function": aatams_sattag_qc_nrt_dest_path,
