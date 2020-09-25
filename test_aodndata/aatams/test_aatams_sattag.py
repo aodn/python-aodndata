@@ -20,8 +20,8 @@ TEST_ROOT = os.path.join(os.path.dirname(__file__))
 DM_GOOD_ZIP = os.path.join(TEST_ROOT, "simple_dm.zip")
 DM_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_dm.csv")
 
-NRT_FIRST_ZIP = os.path.join(TEST_ROOT, "first_ct155_nrt.zip")
-NRT_SECOND_ZIP = os.path.join(TEST_ROOT, "second_ct155_nrt.zip")
+NRT_FIRST_ZIP = os.path.join(TEST_ROOT, "first_nrt_batch", "ct155_nrt.zip")
+NRT_SECOND_ZIP = os.path.join(TEST_ROOT, "second_nrt_batch", "ct155_nrt.zip")
 NRT_NEW_CAMPAIGN = os.path.join(TEST_ROOT, "new_ct156_nrt.zip")
 NRT_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_nrt.csv")
 
