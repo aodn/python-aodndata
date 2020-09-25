@@ -192,19 +192,49 @@ def check_len_list(alen, alist):
     return alen == len(alist)
 
 
-def check_file_names(file_names, flist):
-    """Check if filenames are present in a full path file list.
+def get_metadata_from_filename(filestr):
+    """Get the qc mode and campaign
+    from a aatams zip file.
 
     Args:
-      file_names: a list of file names
-      flist: a list of full path file names
+      filestr: the zipfile name/path
+
+    Returns:
+      mode[str]: 'dm' or 'nrt'
+      campaign[str]: campaign id
+
+    Raises:
+      ValueError: if file is not a aatams file
+    """
+    name, extension = os.path.splitext(filestr)
+    if extension != '.zip':
+        raise ValueError("{} is not a zip file.".format(filestr))
+
+    mode = name.split('_')[-1]
+    not_dm_or_nrt = mode != 'dm' and mode != 'nrt'
+    if not_dm_or_nrt:
+        raise ValueError("Invalid AATAMS file {}: qc mode is not 'dm' or 'nrt'.".format(filestr))
+    campaign = name.split('_' + mode)[0]
+    return mode, campaign
+
+
+def check_csv_filenames(csv_filenames, table_names):
+    """Check if a list of of AATAMS csv file names
+    contains the specific table strings in their
+    names.
+
+    [table_name]_[campaign]_[mode].csv
+
+    Args:
+      csv_filenames[list,set]: AATAMS csv file names
+      table_names[list,set]: names to match in csv_filenames
 
     Returns:
       bool: True or False
 
     """
-    ngroup0 = set(file_names)
-    ngroup1 = {os.path.basename(x).split("_")[0] for x in flist}
+    ngroup0 = set(csv_filenames)
+    ngroup1 = {os.path.basename(x).split("_")[0] for x in table_names}
     return ngroup0 == ngroup1
 
 
@@ -251,14 +281,14 @@ def is_equal(x, y):
 CHECK_NUMBER_OF_FILES_IS_CORRECT = partial(
     check_len_list, AATAMS_QC_NUMBER_OF_FILES_IN_ZIP
 )
-CHECK_NAME_OF_FILES_IS_CORRECT = partial(check_file_names, AATAMS_QC_FILE_TYPE_NAMES)
+
+CHECK_NAME_OF_CSV_FILES_IS_CORRECT = partial(check_csv_filenames, AATAMS_QC_FILE_TYPE_NAMES)
 
 # Schema dicts & cases
 FILENAMES_IN_ZIP_SCHEMA = And(
     CHECK_NUMBER_OF_FILES_IS_CORRECT,
-    CHECK_NAME_OF_FILES_IS_CORRECT,
-    error="Zip file is invalid. Check if the number of files and naming is correct",
-)
+    CHECK_NAME_OF_CSV_FILES_IS_CORRECT,
+    error="Zip file content is invalid. Check if the number and name of csv files are correct")
 
 CSV_SEX_CLASS = str  # Or("f", "m", "female", "male")
 CSV_AGE_CLASS = str  # Or("adult", "subadult", "juvenile")
@@ -568,7 +598,7 @@ class AatamsSattagQcSchema(CSVSchema):
 
     The workflow can be defined in three states:
 
-    1. Validation of the zip file (see zip_schema)
+    1. Validation of the zip file (see zip_content_schema)
     2. Validation of the metadata file - headers/fields (see file_schemas)
     3. Validation of all other files - headers/fields (see file_schemas)
     4. Validation of cross references among files (see cross_validation_scope_list)
@@ -598,7 +628,7 @@ class AatamsSattagQcSchema(CSVSchema):
         super().__init__(skip_every=skip_every, bulk_load=bulk_load,dialect_csv=dialect_csv)
 
         # self.manifest_schema = ...
-        self.zip_schema = FILENAMES_IN_ZIP_SCHEMA
+        self.zip_content_schema = FILENAMES_IN_ZIP_SCHEMA
 
         self.file_schemas = {
             "metadata": METADATA_SCHEMA,
@@ -630,6 +660,7 @@ class AatamsSattagQcSchema(CSVSchema):
         self.ssmoutputs = {}
         self.sumary = {}
 
+
     def validate_zip_names(self, file_list):
         """Validate the file names.
 
@@ -644,7 +675,7 @@ class AatamsSattagQcSchema(CSVSchema):
 
         """
         logger.info("Validating filename conventions")
-        return Schema(self.zip_schema).validate(file_list)
+        return Schema(self.zip_content_schema).validate(file_list)
 
     def validate_headers_only(self, file_list):
         """Validate the headers of a list of csv files.
@@ -725,7 +756,8 @@ class AatamsSattagQcSchema(CSVSchema):
                     raise SchemaError(errmsg)
 
     def quick_validation(self, file_list):
-        """Perform validation only in zip file names and headers.
+        """Perform validation for the csv files,
+        and their headers.
 
         Args:
           file_list: a list of csv files.
