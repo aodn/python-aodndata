@@ -169,7 +169,7 @@ class AatamsSattagHandler(HandlerBase):
         self.validation_call(files_in_zip)
 
         self.input_file_object.publish_type = (
-            PipelineFilePublishType.HARVEST_ARCHIVE_UPLOAD
+            PipelineFilePublishType.UPLOAD_ONLY
         )
         zip_filename = os.path.basename(self.input_file_object.src_path)
         self.input_file_object.dest_path = self.dest_path_function(zip_filename)

@@ -32,7 +32,7 @@ def check_file(cls, file):
         cls.assertFalse(file.should_store and file.should_archive and file.is_stored and file.is_archived)
         cls.assertTrue(file.is_harvested)
     elif file.file_type is FileType.ZIP:
-        cls.assertTrue(file.should_store and file.should_archive and file.is_archived)
+        cls.assertTrue(file.should_store)
         cls.assertEqual(cls.base_path, os.path.dirname(file.dest_path))
     else:
         raise ValueError("File {local_path} not a Zip or CSV".format(local_path=file.local_path))
