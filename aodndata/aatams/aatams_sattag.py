@@ -12,6 +12,7 @@ from aodncore.pipeline.files import RemotePipelineFileCollection
 from aodncore.pipeline.exceptions import InvalidFileContentError, InvalidFileFormatError
 from aodncore.util import extract_zip
 from .aatams_sattag_schema import AatamsSattagQcSchema,get_metadata_from_filename
+from pathlib import PurePath
 
 NRT_FILE_REMOVAL_MSG = "NRT file {file} schedule to {ptype}"
 NRT_TIMESTAMP_COMPARISON_MSG = (
@@ -126,9 +127,10 @@ class AatamsSattagHandler(HandlerBase):
         if not previous_files:
             return
 
-
         try:
-            old_zip_file = [x for x in previous_files if self.current_campaign in x.name][0]
+            old_zip_file = [x for x in previous_files
+                            if self.current_campaign in x.name
+                            and '.zip' in PurePath(x.name).suffix][0]
         except IndexError:
             return
 
