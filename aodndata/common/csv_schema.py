@@ -113,7 +113,10 @@ class CSVSchema:
 
         with open(fname) as file:
             reader = csv.reader(file, **dialect_csv)
-            return next(reader)
+            try:
+                return next(reader)
+            except StopIteration:
+                return []
 
     @staticmethod
     def load_csv(fname, bulk_load=True, skip_every=0, dialect_csv=None):
@@ -143,7 +146,11 @@ class CSVSchema:
 
         with open(fname) as file:
             reader = csv.reader(file, **dialect_csv)
-            header = next(reader)
+            try:
+                header = next(reader)
+            except StopIteration:
+                return range(0), [], []
+
             if bulk_load:
                 data_rows = list(reader)
                 row_numbers = range(1, len(data_rows))
