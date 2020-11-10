@@ -112,7 +112,7 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
             handler = self.run_handler(NRT_SECOND_ZIP)
             for file in handler.file_collection:
                 self.check_file(file)
-            new_metadata_file = handler.get_metadata_file(handler.file_collection)
+            new_metadata_file = handler.get_file(handler.file_collection, 'metadata')
 
             all_msgs = [x.getMessage() for x in log.records]
             timestamp_msg = NRT_TIMESTAMP_COMPARISON_MSG.format(
