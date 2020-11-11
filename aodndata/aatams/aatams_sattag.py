@@ -7,6 +7,7 @@ from pathlib import PurePath
 from aodncore.pipeline import (
     HandlerBase,
     PipelineFilePublishType,
+    PipelineFileCheckType,
     FileType,
     PipelineFile,
 )
@@ -175,9 +176,8 @@ class AatamsSattagHandler(HandlerBase):
             is_dive_csv_empty = not dive_file.file_type.validator(dive_file.local_path)
             if is_dive_csv_empty:
                 # skip harvesting, filetype/content/cross validations
-                dive_file.file_type = FileType.UNKNOWN
-                dive_file.file_type.validator = lambda x: True
                 dive_file.publish_type = PipelineFilePublishType.NO_ACTION
+                dive_file.check_type = PipelineFileCheckType.NO_ACTION
                 dive_schema_name = self.schema.file2schema(dive_file.name)
                 self.schema.file_schemas[dive_schema_name] = {}
                 self.schema.cross_validation_scope_list[0].pop(dive_schema_name)
