@@ -2,17 +2,19 @@
 import os
 import logging
 from functools import partial
+from pathlib import PurePath
+
 from aodncore.pipeline import (
     HandlerBase,
     PipelineFilePublishType,
+    PipelineFileCheckType,
     FileType,
     PipelineFile,
 )
 from aodncore.pipeline.files import RemotePipelineFileCollection
 from aodncore.pipeline.exceptions import InvalidFileContentError, InvalidFileFormatError
 from aodncore.util import extract_zip
-from .aatams_sattag_schema import AatamsSattagQcSchema,get_metadata_from_filename
-from pathlib import PurePath
+from .aatams_sattag_schema import AatamsSattagQcSchema, get_metadata_from_filename
 
 NRT_FILE_REMOVAL_MSG = "NRT file {file} schedule to {ptype}"
 NRT_TIMESTAMP_COMPARISON_MSG = (
@@ -37,15 +39,13 @@ class AatamsSattagHandler(HandlerBase):
     """The class for aatams sattag zip/csv files."""
 
     @staticmethod
-    def get_metadata_file(file_list, campaign=None):
-        """Return the metadata.csv PipelineFile object within a PipelineFileCollection
-        for a certain campaign."""
+    def get_file(file_list, moniker, campaign=None):
+        """Return the csv PipelineFile object containing moniker within a
+        PipelineFileCollection for a certain campaign."""
         if campaign:
-            fname = [
-                x for x in file_list if "metadata" in x.name and campaign in x.name
-            ]
+            fname = [x for x in file_list if moniker in x.name and campaign in x.name]
         else:
-            fname = [x for x in file_list if "metadata" in x.name]
+            fname = [x for x in file_list if moniker in x.name]
 
         if fname:
             return fname[0]
@@ -84,8 +84,8 @@ class AatamsSattagHandler(HandlerBase):
         super(AatamsSattagHandler, self).__init__(*args, **kwargs)
         self.schema = AatamsSattagQcSchema()
         self.validation_call = self.schema.extensive_validation
-        self.mode = ''
-        self.current_campaign = ''
+        self.mode = ""
+        self.current_campaign = ""
         # Use below to just validate the file names and csv headers
         # self.validation_call = self.schema.quick_validation
 
@@ -128,9 +128,11 @@ class AatamsSattagHandler(HandlerBase):
             return
 
         try:
-            old_zip_file = [x for x in previous_files
-                            if self.current_campaign in x.name
-                            and '.zip' in PurePath(x.name).suffix][0]
+            old_zip_file = [
+                x
+                for x in previous_files
+                if self.current_campaign in x.name and ".zip" in PurePath(x.name).suffix
+            ][0]
         except IndexError:
             return
 
@@ -138,8 +140,10 @@ class AatamsSattagHandler(HandlerBase):
         if not old_metadata_file:
             return
 
-        new_metadata_file = self.get_metadata_file(
-            self.file_collection, self.current_campaign
+        new_metadata_file = self.get_file(
+            self.file_collection,
+            'metadata',
+            campaign=self.current_campaign
         )
 
         logger.info(
@@ -167,7 +171,19 @@ class AatamsSattagHandler(HandlerBase):
         except ValueError as e:
             raise InvalidFileFormatError(''.join(e.args))
 
+        dive_file = self.get_file(self.file_collection, 'dive')
+        if dive_file:
+            is_dive_csv_empty = not dive_file.file_type.validator(dive_file.local_path)
+            if is_dive_csv_empty:
+                # skip harvesting, filetype/content/cross validations
+                dive_file.publish_type = PipelineFilePublishType.NO_ACTION
+                dive_file.check_type = PipelineFileCheckType.NO_ACTION
+                dive_schema_name = self.schema.file2schema(dive_file.name)
+                self.schema.file_schemas[dive_schema_name] = {}
+                self.schema.cross_validation_scope_list[0].pop(dive_schema_name)
+
         files_in_zip = self.file_collection.get_attribute_list("local_path")
+
         self.validation_call(files_in_zip)
 
         self.input_file_object.publish_type = (

@@ -24,6 +24,7 @@ NRT_FIRST_ZIP = os.path.join(TEST_ROOT, "first_nrt_batch", "ct155_nrt.zip")
 NRT_SECOND_ZIP = os.path.join(TEST_ROOT, "second_nrt_batch", "ct155_nrt.zip")
 NRT_NEW_CAMPAIGN = os.path.join(TEST_ROOT, "new_ct156_nrt.zip")
 NRT_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_nrt.csv")
+NRT_EMPTY_DIVE_ZIP = os.path.join(TEST_ROOT, "emptydive_ct999_nrt.zip")
 
 
 def check_file(cls, file):
@@ -112,7 +113,7 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
             handler = self.run_handler(NRT_SECOND_ZIP)
             for file in handler.file_collection:
                 self.check_file(file)
-            new_metadata_file = handler.get_metadata_file(handler.file_collection)
+            new_metadata_file = handler.get_file(handler.file_collection, 'metadata')
 
             all_msgs = [x.getMessage() for x in log.records]
             timestamp_msg = NRT_TIMESTAMP_COMPARISON_MSG.format(
@@ -140,6 +141,11 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
         """Only block nrt overwrite if it is the same campaign"""
         self.run_handler(NRT_SECOND_ZIP)
         self.run_handler(NRT_NEW_CAMPAIGN)  # older dates than above, but diff campaign
+
+    def test_empty_dive_csv(self):
+        """Allow an empty dive file to be ingested"""
+        handler = self.run_handler(NRT_EMPTY_DIVE_ZIP)
+
 
 
 if __name__ == "__main__":
