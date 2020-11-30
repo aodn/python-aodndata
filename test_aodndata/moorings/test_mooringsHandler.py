@@ -30,7 +30,7 @@ class TestMooringsHandler(HandlerTestCase):
         super(TestMooringsHandler, self).setUp()
 
     def test_bad_name_file(self):
-        self.run_handler_with_exception(InvalidFileNameError, BAD_NC, include_regexes=[r'IMOS_ABOS-DA_.*\.nc'])
+        self.run_handler_with_exception(InvalidFileNameError, BAD_NC, include_regexes=[r'IMOS_DWM-DA_.*\.nc'])
 
     # NetCDF tests
 

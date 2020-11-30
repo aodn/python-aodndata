@@ -221,9 +221,9 @@ class TestMooringProductClassifier(HandlerTestCase):
         self.assertEqual(dest_dir, expected_prefix)
         self.assertEqual(dest_filename, filename)
 
-    def test_abos_aggregated_timeseries(self):
-        expected_prefix = 'IMOS/ABOS/DA/aggregated_timeseries'
-        filename = 'IMOS_ABOS-DA_TZ_20150519_EAC4700_FV01_TEMP-aggregated-timeseries_END-20180422_C-20191216.nc'
+    def test_dwm_aggregated_timeseries(self):
+        expected_prefix = 'IMOS/DWM/DA/aggregated_timeseries'
+        filename = 'IMOS_DWM-DA_TZ_20150519_EAC4700_FV01_TEMP-aggregated-timeseries_END-20180422_C-20191216.nc'
         testfile = os.path.join(self.temp_dir, filename)
         make_test_file(
             testfile, {
@@ -236,9 +236,9 @@ class TestMooringProductClassifier(HandlerTestCase):
         self.assertEqual(dest_dir, expected_prefix)
         self.assertEqual(dest_filename, filename)
 
-    def test_abos_hourly_timeseries_qc(self):
-        expected_prefix = 'IMOS/ABOS/DA/hourly_timeseries'
-        filename = 'IMOS_ABOS-DA_STZ_20110613_ITFTSL_FV02_hourly-timeseries_END-20151024_C-20191010.nc'
+    def test_dwm_hourly_timeseries_qc(self):
+        expected_prefix = 'IMOS/DWM/DA/hourly_timeseries'
+        filename = 'IMOS_DWM-DA_STZ_20110613_ITFTSL_FV02_hourly-timeseries_END-20151024_C-20191010.nc'
         testfile = os.path.join(self.temp_dir, filename)
         make_test_file(
             testfile, {
@@ -251,9 +251,9 @@ class TestMooringProductClassifier(HandlerTestCase):
         self.assertEqual(dest_dir, expected_prefix)
         self.assertEqual(dest_filename, filename)
 
-    def test_abos_hourly_timeseries_nonqc(self):
-        expected_prefix = 'IMOS/ABOS/DA/hourly_timeseries'
-        filename = 'IMOS_ABOS-DA_STZ_20110613_ITFTSL_FV02_hourly-timeseries-including-non-QC_END-20151024_C-20191010.nc'
+    def test_dwm_hourly_timeseries_nonqc(self):
+        expected_prefix = 'IMOS/DWM/DA/hourly_timeseries'
+        filename = 'IMOS_DWM-DA_STZ_20110613_ITFTSL_FV02_hourly-timeseries-including-non-QC_END-20151024_C-20191010.nc'
         testfile = os.path.join(self.temp_dir, filename)
         make_test_file(
             testfile, {
@@ -266,9 +266,9 @@ class TestMooringProductClassifier(HandlerTestCase):
         self.assertEqual(dest_dir, expected_prefix)
         self.assertEqual(dest_filename, filename)
 
-    def test_abos_gridded_timeseries(self):
-        expected_prefix = 'IMOS/ABOS/DA/gridded_timeseries'
-        filename = 'IMOS_ABOS-DA_TZ_20150519_EAC4700_FV02_TEMP-gridded-timeseries_END-20180422_C-20191216.nc'
+    def test_dwm_gridded_timeseries(self):
+        expected_prefix = 'IMOS/DWM/DA/gridded_timeseries'
+        filename = 'IMOS_DWM-DA_TZ_20150519_EAC4700_FV02_TEMP-gridded-timeseries_END-20180422_C-20191216.nc'
         testfile = os.path.join(self.temp_dir, filename)
         make_test_file(
             testfile, {
@@ -281,9 +281,9 @@ class TestMooringProductClassifier(HandlerTestCase):
         self.assertEqual(dest_dir, expected_prefix)
         self.assertEqual(dest_filename, filename)
 
-    def test_abos_sots_aggregated_timeseries(self):
-        expected_prefix = 'IMOS/ABOS/SOTS/aggregated_timeseries'
-        filename = 'IMOS_ABOS-SOTS_OZ_20170319_SOTS_FV01_DOX2-aggregated-timeseries_END-20171101_C-20190819.nc'
+    def test_dwm_sots_aggregated_timeseries(self):
+        expected_prefix = 'IMOS/DWM/SOTS/aggregated_timeseries'
+        filename = 'IMOS_DWM-SOTS_OZ_20170319_SOTS_FV01_DOX2-aggregated-timeseries_END-20171101_C-20190819.nc'
         testfile = os.path.join(self.temp_dir, filename)
         make_test_file(
             testfile, {
