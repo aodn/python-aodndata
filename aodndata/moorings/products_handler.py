@@ -64,7 +64,7 @@ class MooringsProductClassifier(MooringsFileClassifier):
         Destination object path for a moorings product file. Of the form:
 
           'IMOS/ANMN/<subfacility>/<site_code>/<data_category>', or
-          'IMOS/ABOS/<subfacility>/<data_category>'
+          'IMOS/DWM/<subfacility>/<data_category>'
 
         where
         <subfacility> is the sub-facility code ('NRS', 'NSW', 'SOTS', etc...)
@@ -77,7 +77,7 @@ class MooringsProductClassifier(MooringsFileClassifier):
         dir_list.extend(cls._get_facility(input_file))
 
         if input_file.endswith('.nc'):
-            if 'ABOS' not in input_file:
+            if 'DWM' not in input_file:
                 dir_list.append(cls._get_site_code(input_file))
             dir_list.append(cls._get_data_category(input_file))
             dir_list.append(cls._get_product_level(input_file))
