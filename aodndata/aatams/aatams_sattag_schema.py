@@ -658,7 +658,7 @@ class AatamsSattagQcSchema(CSVSchema):
         self.dive = {}
         self.haulout = {}
         self.ssmoutputs = {}
-        self.sumary = {}
+        self.summary = {}
 
 
     def validate_zip_names(self, file_list):
