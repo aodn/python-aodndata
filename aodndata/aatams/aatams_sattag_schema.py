@@ -192,33 +192,7 @@ def check_len_list(alen, alist):
     return alen == len(alist)
 
 
-def get_metadata_from_filename(filestr):
-    """Get the qc mode and campaign
-    from a aatams zip file.
-
-    Args:
-      filestr: the zipfile name/path
-
-    Returns:
-      mode[str]: 'dm' or 'nrt'
-      campaign[str]: campaign id
-
-    Raises:
-      ValueError: if file is not a aatams file
-    """
-    name, extension = os.path.splitext(filestr)
-    if extension != '.zip':
-        raise ValueError("{} is not a zip file.".format(filestr))
-
-    mode = name.split('_')[-1]
-    not_dm_or_nrt = mode != 'dm' and mode != 'nrt'
-    if not_dm_or_nrt:
-        raise ValueError("Invalid AATAMS file {}: qc mode is not 'dm' or 'nrt'.".format(filestr))
-    campaign = name.split('_' + mode)[0]
-    return mode, campaign
-
-
-def check_csv_filenames(csv_filenames, table_names):
+def check_csv_tablename(table_names, csv_filenames):
     """Check if a list of of AATAMS csv file names
     contains the specific table strings in their
     names.
@@ -226,16 +200,34 @@ def check_csv_filenames(csv_filenames, table_names):
     [table_name]_[campaign]_[mode].csv
 
     Args:
-      csv_filenames[list,set]: AATAMS csv file names
       table_names[list,set]: names to match in csv_filenames
+      csv_filenames[list,set]: AATAMS csv file names
 
     Returns:
       bool: True or False
 
     """
-    ngroup0 = set(csv_filenames)
-    ngroup1 = {os.path.basename(x).split("_")[0] for x in table_names}
-    return ngroup0 == ngroup1
+    expected = set(table_names)
+    received = {os.path.basename(x).split("_")[0] for x in csv_filenames}
+    return expected == received
+
+
+def check_csv_campaign_name(csv_filenames):
+    """Check if a list of of AATAMS csv file names
+    contains the same campaign string in their
+    names.
+
+    [table_name]_[campaign]_[mode].csv
+
+    Args:
+      csv_filenames[list,set]: AATAMS csv file names
+
+    Returns:
+      bool: True or False
+
+    """
+    campaigns = (get_metadata_from_filename(x)[1] for x in csv_filenames)
+    return len(set(campaigns)) == 1
 
 
 def is_positive(anumber):
@@ -278,17 +270,45 @@ def is_equal(x, y):
     return x == y
 
 
+def get_metadata_from_filename(filestr):
+    """Get the qc mode and campaign
+    from a aatams zip file.
+
+    Args:
+      filestr: the zipfile name/path
+
+    Returns:
+      mode[str]: 'dm' or 'nrt'
+      campaign[str]: campaign id
+
+    Raises:
+      ValueError: if file is not a aatams file
+    """
+    name, extension = os.path.splitext(filestr)
+    if extension not in ('.zip', '.csv'):
+        raise ValueError("{} is not a zip or csv file.".format(filestr))
+
+    mode = name.split('_')[-1]
+    not_dm_or_nrt = mode not in ('dm', 'nrt')
+    if not_dm_or_nrt:
+        raise ValueError("Invalid AATAMS file {}: qc mode is not 'dm' or 'nrt'.".format(filestr))
+    campaign = name.split('_')[-2]
+    return mode, campaign
+
+
 CHECK_NUMBER_OF_FILES_IS_CORRECT = partial(
     check_len_list, AATAMS_QC_NUMBER_OF_FILES_IN_ZIP
 )
 
-CHECK_NAME_OF_CSV_FILES_IS_CORRECT = partial(check_csv_filenames, AATAMS_QC_FILE_TYPE_NAMES)
+CHECK_NAME_OF_CSV_FILES_IS_CORRECT = partial(check_csv_tablename, AATAMS_QC_FILE_TYPE_NAMES)
 
 # Schema dicts & cases
 FILENAMES_IN_ZIP_SCHEMA = And(
     CHECK_NUMBER_OF_FILES_IS_CORRECT,
     CHECK_NAME_OF_CSV_FILES_IS_CORRECT,
+    check_csv_campaign_name,
     error="Zip file content is invalid. Check if the number and name of csv files are correct")
+
 
 CSV_SEX_CLASS = str  # Or("f", "m", "female", "male")
 CSV_AGE_CLASS = str  # Or("adult", "subadult", "juvenile")
