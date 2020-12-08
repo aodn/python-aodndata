@@ -161,7 +161,7 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
         handler_dest_path = handler.dest_path_function("")
         expected = {os.path.basename(x) for x in [NRT_FIRST_ZIP, NRT_NEW_CAMPAIGN, NRT_EMPTY_DIVE_ZIP]}
         result = {os.path.basename(x.dest_path) for x in handler.state_query.query_storage(handler_dest_path)}
-        assert result == expected
+        self.assertEqual(result, expected)
 
     def test_mixmatch_campaign(self):
         """Test block of a bad zip with multiple campaigns csv filenames"""
