@@ -27,6 +27,8 @@ NRT_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_ct111_nrt.csv")
 NRT_EMPTY_DIVE_ZIP = os.path.join(TEST_ROOT, "emptydive_ct999_nrt.zip")
 NRT_MIXED_CAMPAIGN = os.path.join(TEST_ROOT, "mixcampaign_ct555_nrt.zip")
 NRT_CSV_CAMPAIGN_MISMATCH = os.path.join(TEST_ROOT, "csvcampaignmismatch_ct999_nrt.zip")
+NRT_CSV_CAMPAIGN_FILE_CONTENT_MISMATCH = os.path.join(TEST_ROOT, "csvfilecontentmismatch_ct156_nrt.zip")
+
 
 
 def check_file(cls, file):
@@ -164,12 +166,16 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
         self.assertEqual(result, expected)
 
     def test_mixmatch_campaign(self):
-        """Test block of a bad zip with multiple campaigns csv filenames"""
+        """Test a bad zip with multiple campaigns csv filenames"""
         self.run_handler_with_exception(SchemaError, NRT_MIXED_CAMPAIGN)
 
     def test_csvcampaignmismatch(self):
-        """Test block of a bad csv file with mismatch campaign filename and csv campaign content"""
+        """Test a bad zip file with consistent campaign filenames but inconsistent csv campaign content"""
         self.run_handler_with_exception(SchemaError, NRT_CSV_CAMPAIGN_MISMATCH)
+
+    def test_csvcampaignmismatch(self):
+        """Test a bad zip file with matching campaign names but unmatched csv campaign content"""
+        self.run_handler_with_exception(SchemaError, NRT_CSV_CAMPAIGN_FILE_CONTENT_MISMATCH)
 
 
 if __name__ == "__main__":
