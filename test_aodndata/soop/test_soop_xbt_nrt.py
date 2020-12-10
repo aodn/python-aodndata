@@ -1,18 +1,146 @@
+import datetime
+import os
 import unittest
+from unittest.mock import patch
 
-from aodndata.soop.soop_xbt_nrt import dest_path_soop_xbt_nrt
-from aodncore.pipeline.exceptions import InvalidFileNameError
+from netCDF4 import Dataset
+
+from aodncore.pipeline import PipelineFilePublishType, FileType, PipelineFileCheckType
+from aodncore.pipeline.exceptions import InvalidFileContentError
+from aodncore.testlib import HandlerTestCase
+from aodndata.soop.soop_xbt_nrt import SoopXbtNrtHandler, xbt_line_get_info, parse_bufr_file, \
+    fzf_vessel_get_info
+
+TEST_ROOT = os.path.join(os.path.dirname(__file__))
+GOOD_BUFR_CSV = os.path.join(TEST_ROOT,
+                       'IOSS01_AMMC_20201109215900_XEKXW9W.csv')
 
 
-class TestSoopXbtNrtHandler(unittest.TestCase):
+def mock_platform_altlabels_per_preflabel(category_name='Vessel'):
+    return {'VLHJ': 'Southern-Surveyor',
+            '9V2768': 'RTM-Wakmatha',
+            'FHZI': 'Astrolabe',
+            'FASB': 'Astrolabe',
+            '3FLZ': 'Tropical-Islander',
+            'VROJ8': 'Highland-Chief',
+            'VROB': 'Highland-Chief'
+            }
 
-    def test_dest_path_soop_xbt_nrt(self):
-        good_csv = '/mnt/ebs/wip/SOOP/XBT/sbddata/5BPB3_Patricia-Schulte/2015/IMOS_SOOP-XBT_T_20150813T063800Z_5BPB3_002301_FV00.csv'
-        self.assertEqual(dest_path_soop_xbt_nrt(good_csv), 'IMOS/SOOP/SOOP-XBT/REALTIME/5BPB3_Patricia-Schulte/2015/IMOS_SOOP-XBT_T_20150813T063800Z_5BPB3_002301_FV00.csv')
 
-        bad_csv = 'IMOS_SOOP-XBT_T_20150813T063800Z_5BPB3_002301_FV00.csv'
-        with self.assertRaises(InvalidFileNameError):
-            dest_path_soop_xbt_nrt(bad_csv)
+class TestSoopXbtNrtHandler(HandlerTestCase):
+    def setUp(self):
+        self.handler_class = SoopXbtNrtHandler
+        super(TestSoopXbtNrtHandler, self).setUp()
+        self.url = self.config.pipeline_config['global']['xbt_line_vocab_url']
+        self.good_profile = ({
+            'profile_metadata':  ({''
+                                   'XBT_line': "IX8",
+                                   'ship_name': "L'Astrolabe"
+                                   })
+        })
+        self.bad_profile = ({
+            'profile_metadata':  ({''
+                                   'XBT_line': "IX08",
+                                   'ship_name': "L\'Astrolab"
+                                   })
+        })
+
+    def test_bufr_parser(self):
+        """
+        test the bufr_parser function outputs
+        :return:
+        """
+        profiles = parse_bufr_file(GOOD_BUFR_CSV)
+        profile = profiles[0]  # check first profile data
+
+        self.assertEqual(-53.58368, profile['profile_geotime']['latitude'])
+        self.assertEqual(146.23137, profile['profile_geotime']['longitude'])
+        self.assertEqual(datetime.datetime(2020, 11, 9, 21, 59),
+                         profile['profile_geotime']['date_utc'])
+
+        self.assertAlmostEqual(36.26, profile['profile_data']['temp'].max())  # obviously not a quality controlled value
+        self.assertAlmostEqual(1.78, profile['profile_data']['temp'].min())
+        self.assertEqual(1110.39, profile['profile_data']['depth'].max())
+        self.assertEqual(0, profile['profile_data']['depth'].min())
+        self.assertEqual(1577, len(profile['profile_data']['depth']))
+        self.assertEqual(1577, len(profile['profile_data']['temp']))
+        self.assertEqual("1218367", profile['profile_metadata']['XBT_instrument_serialnumber'])
+        self.assertEqual("9797539", profile['profile_metadata']['imo_number'])
+
+        self.assertEqual("WMO Code table 4770 code \"72, TURO/CSIRO Quoll XBT acquisition system\"",
+                         profile['profile_metadata']['XBT_recorder_type'])
+
+        self.assertEqual("WMO Code Table 1770 \"probe=Sippican Deep Blue,code=052,a=6.691,b=6.691\"",
+                         profile['profile_metadata']['XBT_probetype_fallrate_equation'])
+
+    def test_xbt_line_get_info(self):
+        """
+        test the xbt_line_get_info function which reads the XBT ANDS vocabulary
+        :return:
+        """
+        # add RDF test file from pipeline_config['global']['xbt_line_vocab_url']
+        good_profile = xbt_line_get_info(self.good_profile, self.url)
+
+        self.assertEqual("IX08", good_profile['profile_metadata']['XBT_line'])
+        self.assertEqual("Mauritius - Bombay", good_profile['profile_metadata']['XBT_line_description'])
+
+        # check with a bad value of XBT line IX08 instead of IX8
+        with self.assertRaises(InvalidFileContentError):
+            xbt_line_get_info(self.bad_profile, self.url)
+
+    @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+           side_effect=mock_platform_altlabels_per_preflabel)
+    def test_fzf_vessel_info(self, mock_ship):
+        """
+        Check fuzzy find match for a vessel name and callsign between the value found in the BUFR file and the XBT line
+        ANDS vocabulary
+        :return:
+        """
+        # check fuzzy search match SUCCESS with a good enough vessel name
+        good_profile = fzf_vessel_get_info(self.good_profile)
+
+        self.assertEqual("Astrolabe", good_profile['profile_metadata']['ship_name'])
+        self.assertEqual("FASB", good_profile['profile_metadata']['Callsign'])
+
+        # check fuzzy search match FAIL with a NOT good enough vessel name
+        with self.assertRaises(InvalidFileContentError):
+            fzf_vessel_get_info(self.bad_profile)
+
+    @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+           side_effect=mock_platform_altlabels_per_preflabel)
+    def test_handler(self, mock_ship):
+        handler = self.run_handler(GOOD_BUFR_CSV,
+                                   check_params={'checks': ['cf', 'imos:1.4']})
+
+        f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        f_csv = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)[0]
+
+        self.assertEqual(f_csv.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(os.path.join("IMOS/SOOP/SOOP-XBT/REALTIME_BUFR/2020/",
+                                      os.path.basename(GOOD_BUFR_CSV)),
+                         f_csv.archive_path)
+
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(os.path.join("IMOS/SOOP/SOOP-XBT/REALTIME/FASB_Astrolabe/2020/",
+                                      'IMOS_SOOP-XBT_T_20201109T215900Z_IX28_FV00_ID_9797539.nc'),
+                         f_nc.dest_path)
+        self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+
+        nc_path = os.path.join(self.config.pipeline_config['global']['upload_uri'], f_nc.dest_path).replace("file://", "")
+        with Dataset(nc_path, mode='r') as nc_obj:
+            self.assertEqual("Hobart - Dumont d'Urville", nc_obj.XBT_line_description)
+            self.assertEqual("Upper Ocean Thermal Data collected on the high density line IX28 "
+                             "(Dumont d Urville-Hobart) using XBT (expendable bathythermographs)", nc_obj.title)
+
+            self.assertEqual(6.691, nc_obj['DEPTH'].fallrate_equation_coefficient_a)
+            self.assertEqual(-2.25, nc_obj['DEPTH'].fallrate_equation_coefficient_b)
+            self.assertEqual(1110.39, nc_obj.geospatial_vertical_max)
+
+        # test the handler by pushing this newly created NetCDF file back into the handler
+        handler = self.run_handler(nc_path,
+                                   check_params={'checks': ['cf', 'imos:1.4']})
+        f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
 
 
 if __name__ == '__main__':
