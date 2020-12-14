@@ -1,3 +1,4 @@
+import glob
 import os
 import shutil
 import unittest
@@ -10,6 +11,19 @@ TEST_ROOT = os.path.join(os.path.dirname(__file__))
 THUMBNAIL = os.path.join(TEST_ROOT, 'PR_20170526_080852_065_LC16.jpg')
 CSV_PRODUCT = os.path.join(TEST_ROOT, 'DATA_WA201705_r20170526_080319_SS14_geebank_36m_out.csv')
 NETCDF_B = os.path.join(TEST_ROOT, 'IMOS_AUV_B_20170526T080325Z_SIRIUS_FV00.nc')
+
+
+def list_recursively_files_abs_path(path):
+    """
+    return a list of absolute filepath of files recursively under a path
+    :param path:
+    :return:
+    """
+    filelist = []
+    for filename in glob.glob('{path}/**'.format(path=path), recursive=True):
+        if os.path.isfile(filename):
+            filelist.append(os.path.abspath(filename))
+    return filelist
 
 
 class TestAuvHandler(HandlerTestCase):
@@ -70,15 +84,17 @@ class TestAuvHandler(HandlerTestCase):
                          os.path.join('IMOS/AUV/WA201705/r20170526_080319_SS14_geebank_36m_out/hydro_netcdf',
                                       os.path.basename(NETCDF_B)))
 
-    def test_pdf_dir_manifest_file(self):
+    def test_pdf_manifest_file(self):
         manifest_file = os.path.join(self.temp_dir,
-                                     'WA201705-r20170526_080319_SS14_geebank_36m_out.pdfreports.dir_manifest')
+                                     'WA201705-r20170526_080319_SS14_geebank_36m_out.pdfreports.manifest')
         test_report_path = os.path.join(self.temp_dir, 'AUV/AUV_DOWNLOAD_CAMPAIGN/WA201705/all_reports')
         shutil.copytree(os.path.join(TEST_ROOT, 'WA201705'),
                         os.path.join(self.temp_dir, 'AUV/AUV_DOWNLOAD_CAMPAIGN/WA201705'))
 
+        file_list = list_recursively_files_abs_path(test_report_path)
         with open(manifest_file, 'w') as f:
-            f.write(test_report_path)
+            for item in file_list:
+                f.write("%s\n" % item)
 
         handler = self.handler_class(manifest_file, include_regexes=[r'.*\.pdf'])
         handler.relative_path_root = self.temp_dir
@@ -88,14 +104,16 @@ class TestAuvHandler(HandlerTestCase):
         self.assertEqual(f.dest_path, 'IMOS/AUV/WA201705/all_reports/r20170526_080319_SS14_geebank_36m_out_report.pdf')
 
     def test_dive_dir_manifest_file(self):
-        manifest_file = os.path.join(self.temp_dir, 'WA201705-r20170526_080319_SS14_geebank_36m_out.dive.dir_manifest')
+        manifest_file = os.path.join(self.temp_dir, 'WA201705-r20170526_080319_SS14_geebank_36m_out.1.dive.manifest')
         test_dive_path = os.path.join(self.temp_dir,
                                       'AUV/AUV_DOWNLOAD_CAMPAIGN/WA201705/r20170526_080319_SS14_geebank_36m_out')
         shutil.copytree(os.path.join(TEST_ROOT, 'WA201705'),
                         os.path.join(self.temp_dir, 'AUV/AUV_DOWNLOAD_CAMPAIGN/WA201705'))
 
+        file_list = list_recursively_files_abs_path(test_dive_path)
         with open(manifest_file, 'w') as f:
-            f.write(test_dive_path)
+            for item in file_list:
+                f.write("%s\n" % item)
 
         handler = self.handler_class(manifest_file)
         handler.relative_path_root = self.temp_dir

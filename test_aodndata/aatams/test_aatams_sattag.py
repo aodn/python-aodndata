@@ -2,9 +2,11 @@
 import os
 import unittest
 from testfixtures import LogCapture
+from schema import SchemaError
 from aodncore.pipeline import FileType, PipelineFilePublishType
 from aodncore.pipeline.exceptions import InvalidInputFileError, InvalidFileContentError
-from aodncore.testlib import HandlerTestCase
+from aodncore.util import TemporaryDirectory
+from aodncore.testlib import make_zip, HandlerTestCase
 from aodndata.aatams.aatams_sattag import (
     AatamsSattagQcNrtHandler,
     AatamsSattagQcDmHandler,
@@ -16,32 +18,31 @@ from aodndata.aatams.aatams_sattag import (
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 DM_GOOD_ZIP = os.path.join(TEST_ROOT, "simple_dm.zip")
-DM_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_dm.csv")
+DM_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_ct111_dm.csv")
 
-NRT_FIRST_ZIP = os.path.join(TEST_ROOT, "first_nrt.zip")
-NRT_SECOND_ZIP = os.path.join(TEST_ROOT, "second_nrt.zip")
-NRT_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_nrt.csv")
+NRT_FIRST_ZIP = os.path.join(TEST_ROOT, "first_nrt_batch", "ct155_nrt.zip")
+NRT_SECOND_ZIP = os.path.join(TEST_ROOT, "second_nrt_batch", "ct155_nrt.zip")
+NRT_NEW_CAMPAIGN = os.path.join(TEST_ROOT, "new_ct156_nrt.zip")
+NRT_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_ct111_nrt.csv")
+NRT_EMPTY_DIVE_ZIP = os.path.join(TEST_ROOT, "emptydive_ct999_nrt.zip")
+NRT_MIXED_CAMPAIGN = os.path.join(TEST_ROOT, "mixcampaign_ct555_nrt.zip")
+NRT_CSV_CAMPAIGN_MISMATCH = os.path.join(TEST_ROOT, "csvcampaignmismatch_ct999_nrt.zip")
 
 
 def check_file(cls, file):
     """Check if a file is a valid AATAMS file with correct storage options."""
     if file.file_type is FileType.CSV:
-        cls.assertEqual(
-            cls.base_path, os.path.dirname(file.dest_path),
-        )
-        cls.assertTrue(file.is_harvested and file.is_stored)
+        cls.assertFalse(file.should_store and file.should_archive and file.is_stored and file.is_archived)
+        cls.assertTrue(file.is_harvested)
     elif file.file_type is FileType.ZIP:
-        cls.assertEqual(
-            cls.base_path, os.path.dirname(file.archive_path),
-        )
-        cls.assertTrue(file.is_archived)
+        cls.assertTrue(file.should_store)
+        cls.assertEqual(cls.base_path, os.path.dirname(file.dest_path))
     else:
-        raise ValueError("File {file} not a Zip or CSV", file=file)
+        raise ValueError("File {local_path} not a Zip or CSV".format(local_path=file.local_path))
 
 
 class TestAatamsQcDmHandler(HandlerTestCase):
     """Tests for the DM pipeline."""
-
     base_path = AATAMS_SATTAG_QC_DM_BASE
     check_file = check_file
 
@@ -54,25 +55,26 @@ class TestAatamsQcDmHandler(HandlerTestCase):
         self.run_handler_with_exception(InvalidInputFileError, NRT_FIRST_ZIP)
         self.run_handler_with_exception(InvalidInputFileError, NRT_SINGLE_CSV)
 
-    def test_single_dm_csv_input(self):
+    def test_fail_single_dm_csv_input(self):
         """Checking single DM csv ingestion."""
-        handler = self.run_handler(DM_SINGLE_CSV)
-        self.check_file(handler.file_collection[0])
+        handler = self.run_handler_with_exception(SchemaError, DM_SINGLE_CSV)
+        self.assertEqual(handler.file_collection[0].dest_path, None)
+
+    def test_fail_zip_with_single_csv_input(self):
+        """Single csv in zip should fail."""
+        valid_zip_name = 'xxx_dm.zip'
+        with TemporaryDirectory() as tmpdir:
+            zipfile = make_zip(tmpdir, [DM_SINGLE_CSV])
+            valid_zip_name = os.path.join(os.path.dirname(zipfile), 'xxx_dm.zip')
+            os.rename(zipfile, valid_zip_name)
+            self.run_handler_with_exception(SchemaError, valid_zip_name)
 
     def test_harvest_dm_csvs_in_zip(self):
         """Checking ingestion of valid DM zipfile."""
         handler = self.run_handler(DM_GOOD_ZIP)
+        check_file(self, handler.input_file_object)
         for file in handler.file_collection:
-            if file.file_type is FileType.CSV:
-                self.assertEqual(
-                    AATAMS_SATTAG_QC_DM_BASE, os.path.dirname(file.dest_path)
-                )
-                self.assertTrue(file.is_harvested and file.is_stored)
-            elif file.file_type is FileType.ZIP:
-                self.assertEqual(
-                    AATAMS_SATTAG_QC_DM_BASE, os.path.dirname(file.archive_path),
-                )
-                self.assertTrue(file.is_archived)
+            check_file(self, file)
 
 
 class TestAatamsQcNrtHandler(HandlerTestCase):
@@ -90,10 +92,10 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
         self.run_handler_with_exception(InvalidInputFileError, DM_GOOD_ZIP)
         self.run_handler_with_exception(InvalidInputFileError, DM_SINGLE_CSV)
 
-    def test_single_nrt_csv_input(self):
+    def test_fail_single_nrt_csv_input(self):
         """Checking single NRT csv ingestion."""
-        handler = self.run_handler(NRT_SINGLE_CSV)
-        self.check_file(handler.file_collection[0])
+        handler = self.run_handler_with_exception(SchemaError, NRT_SINGLE_CSV)
+        self.assertEqual(handler.file_collection[0].dest_path, None)
 
     def test_harvest_csvs_in_zip(self):
         """Checking ingestion of valid NRT zipfile."""
@@ -107,16 +109,16 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
             handler = self.run_handler(NRT_FIRST_ZIP)
             for file in handler.file_collection:
                 self.check_file(file)
-            old_metadata_file = handler.get_metadata_file(handler.file_collection)
+            old_zip_file = [x for x in handler.file_collection if NRT_FIRST_ZIP in x.src_path][0]
 
             handler = self.run_handler(NRT_SECOND_ZIP)
             for file in handler.file_collection:
                 self.check_file(file)
-            new_metadata_file = handler.get_metadata_file(handler.file_collection)
+            new_metadata_file = handler.get_file(handler.file_collection, 'metadata')
 
             all_msgs = [x.getMessage() for x in log.records]
             timestamp_msg = NRT_TIMESTAMP_COMPARISON_MSG.format(
-                old_metadata_file.dest_path, new_metadata_file.src_path,
+                old_zip_file.dest_path, new_metadata_file.src_path,
             )
             got_timestamp_msg = [x for x in all_msgs if timestamp_msg == x]
             self.assertFalse(got_timestamp_msg == [])
@@ -135,6 +137,39 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
         for file in handler.file_collection:
             self.check_file(file)
         self.run_handler_with_exception(InvalidFileContentError, NRT_FIRST_ZIP)
+
+    def test_no_clobber_if_different_campaign(self):
+        """Only block nrt overwrite if it is the same campaign"""
+        self.run_handler(NRT_SECOND_ZIP)
+        self.run_handler(NRT_NEW_CAMPAIGN)  # older dates than above, but diff campaign
+
+    def test_empty_dive_csv(self):
+        """Allow an empty dive file case to be ingested and updated"""
+        self.run_handler(NRT_EMPTY_DIVE_ZIP)
+
+    def test_stream_update(self):
+        """Test stream of sequential updates for different campaigns
+        and storage state afterwards"""
+        self.run_handler(NRT_FIRST_ZIP)
+        self.run_handler(NRT_FIRST_ZIP)
+        self.run_handler(NRT_SECOND_ZIP)
+        self.run_handler(NRT_SECOND_ZIP)
+        self.run_handler(NRT_NEW_CAMPAIGN)
+        self.run_handler(NRT_NEW_CAMPAIGN)
+        self.run_handler(NRT_EMPTY_DIVE_ZIP)
+        handler = self.run_handler(NRT_EMPTY_DIVE_ZIP)
+        handler_dest_path = handler.dest_path_function("")
+        expected = {os.path.basename(x) for x in [NRT_FIRST_ZIP, NRT_NEW_CAMPAIGN, NRT_EMPTY_DIVE_ZIP]}
+        result = {os.path.basename(x.dest_path) for x in handler.state_query.query_storage(handler_dest_path)}
+        self.assertEqual(result, expected)
+
+    def test_mixmatch_campaign(self):
+        """Test block of a bad zip with multiple campaigns csv filenames"""
+        self.run_handler_with_exception(SchemaError, NRT_MIXED_CAMPAIGN)
+
+    def test_csvcampaignmismatch(self):
+        """Test block of a bad csv file with mismatch campaign filename and csv campaign content"""
+        self.run_handler_with_exception(SchemaError, NRT_CSV_CAMPAIGN_MISMATCH)
 
 
 if __name__ == "__main__":

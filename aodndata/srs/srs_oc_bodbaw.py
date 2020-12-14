@@ -1,6 +1,5 @@
 import os
 import re
-from datetime import datetime
 
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType
 
@@ -33,8 +32,7 @@ class SrsOcBodBawHandler(HandlerBase):
         if 'absorption' in product_type:
             product_type = 'absorption'
 
-        cruise_id = m.group(2)
-        year = datetime.strptime(m.group(1), '%Y%m%dT%H%M%SZ').strftime("%Y")
+        cruise_id = m.group(2).split('-')[0]  # split to get rid of the station_code within the cruise_id if exists
 
-        return os.path.join(bodbaw_dir, '{year}_cruise-{cruise}'.format(year=year, cruise=cruise_id),
+        return os.path.join(bodbaw_dir, '{cruise}'.format(cruise=cruise_id),
                             product_type, filename)

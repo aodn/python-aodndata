@@ -13,6 +13,7 @@ SRS_S3_PREFIX = 'IMOS/SRS/OC/gridded'
 SRS_GOOD = 'A.P1D.20151201T000000Z.aust.chl_gsm.nc'
 SRS_VARIOUS = {'A.P1D.20151201T000000Z.aust.chl_gsm.nc': 'aqua/P1D/2015/12',
                'A.P1D.20151201T000000Z.aust.chl_oc3.nc': 'aqua/P1D/2015/12',
+               'A.P1D.20151201T000000Z.aust.chl_oci.nc': 'aqua/P1D/2015/12',
                'A.P1D.20151201T000000Z.aust.dt.nc': 'aqua/P1D/2015/12',
                'A.P1D.20151201T000000Z.aust.ipar.nc': 'aqua/P1D/2015/12',
                'A.P1D.20151201T000000Z.aust.K_490.nc': 'aqua/P1D/2015/12',
