@@ -30,7 +30,6 @@ NRT_CSV_CAMPAIGN_MISMATCH = os.path.join(TEST_ROOT, "csvcampaignmismatch_ct999_n
 NRT_CSV_CAMPAIGN_FILE_CONTENT_MISMATCH = os.path.join(TEST_ROOT, "csvfilecontentmismatch_ct156_nrt.zip")
 
 
-
 def check_file(cls, file):
     """Check if a file is a valid AATAMS file with correct storage options."""
     if file.file_type is FileType.CSV:
@@ -169,11 +168,11 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
         """Test a bad zip with multiple campaigns csv filenames"""
         self.run_handler_with_exception(SchemaError, NRT_MIXED_CAMPAIGN)
 
-    def test_csvcampaignmismatch(self):
+    def test_csv_campaign_mismatch(self):
         """Test a bad zip file with consistent campaign filenames but inconsistent csv campaign content"""
         self.run_handler_with_exception(SchemaError, NRT_CSV_CAMPAIGN_MISMATCH)
 
-    def test_csvcampaignmismatch(self):
+    def test_csv_campaign_mismatch_in_content(self):
         """Test a bad zip file with matching campaign names but unmatched csv campaign content"""
         self.run_handler_with_exception(SchemaError, NRT_CSV_CAMPAIGN_FILE_CONTENT_MISMATCH)
 
