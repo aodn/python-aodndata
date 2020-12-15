@@ -19,6 +19,7 @@ CROSS_CONTENT_FAIL_MSG = "Cross content comparison failed for value: {setdiff}.\
         {file0}[{field0}] = {value0}\n\
         while \n\
         {file1}[{field1}] = {value1}."
+INCONSISTENT_CAMPAIGNS = "Filename campaign id {file_cid} is inconsistent with CSV ids: {csv_cids}"
 
 
 AATAMS_QC_NUMBER_OF_FILES_IN_ZIP = 7
@@ -226,7 +227,7 @@ def check_csv_campaign_name(csv_filenames):
       bool: True or False
 
     """
-    campaigns = (get_metadata_from_filename(x)[1] for x in csv_filenames)
+    campaigns = (get_campaign(x) for x in csv_filenames)
     return len(set(campaigns)) == 1
 
 
@@ -296,6 +297,10 @@ def get_metadata_from_filename(filestr):
     return mode, campaign
 
 
+def get_campaign(filestr):
+    return get_metadata_from_filename(filestr)[1]
+
+
 CHECK_NUMBER_OF_FILES_IS_CORRECT = partial(
     check_len_list, AATAMS_QC_NUMBER_OF_FILES_IN_ZIP
 )
@@ -307,7 +312,7 @@ FILENAMES_IN_ZIP_SCHEMA = And(
     CHECK_NUMBER_OF_FILES_IS_CORRECT,
     CHECK_NAME_OF_CSV_FILES_IS_CORRECT,
     check_csv_campaign_name,
-    error="Zip file content is invalid. Check if the number and name of csv files are correct")
+    error="Zip file content is invalid. Check if the number, name, and campaign of csv files are correct.")
 
 
 CSV_SEX_CLASS = str  # Or("f", "m", "female", "male")
@@ -622,6 +627,7 @@ class AatamsSattagQcSchema(CSVSchema):
     2. Validation of the metadata file - headers/fields (see file_schemas)
     3. Validation of all other files - headers/fields (see file_schemas)
     4. Validation of cross references among files (see cross_validation_scope_list)
+    5. Validation of the CID/Sattag_program/Campaign ids
 
     """
 
@@ -733,7 +739,7 @@ class AatamsSattagQcSchema(CSVSchema):
           scope_dict: A list of cross validation dict scopes
 
         Returns:
-          None: if all valid
+          column_set_generator: a generator with column sets.
 
         Raises:
           SchemaError: if cross validatiton fails.
@@ -774,6 +780,8 @@ class AatamsSattagQcSchema(CSVSchema):
                         value1=yset,
                     )
                     raise SchemaError(errmsg)
+                else:
+                    yield xset
 
     def quick_validation(self, file_list):
         """Perform validation for the csv files,
@@ -800,6 +808,7 @@ class AatamsSattagQcSchema(CSVSchema):
         3. Data rows types
         4. Data rows relationships
         5. Data rows cross relationships with the metadata
+        6. SATTAG_PROGRAM/CIDs are unique and match Campaign in filenames.
 
         Args:
           file_list: a list of csv files.
@@ -823,4 +832,13 @@ class AatamsSattagQcSchema(CSVSchema):
             logger.info("Validation ended for %s" % file)
             self.headers[schema_name] = header
             setattr(self, schema_name, valid_data)
-        self.cross_set_validation(self.cross_validation_scope_list)
+
+        #Since we validate/cross-check cid/sattag_programs, reuse the computations
+        content_sets = list(self.cross_set_validation(self.cross_validation_scope_list))
+        campaigns_from_content = content_sets[0]
+        campaigns_from_filenames = {get_campaign(x) for x in file_list}
+        inconsistent_campaigns = campaigns_from_content != campaigns_from_filenames
+        if inconsistent_campaigns:
+            errmsg = INCONSISTENT_CAMPAIGNS.format(file_cid=campaigns_from_filenames,
+                    csv_cids=campaigns_from_content)
+            raise SchemaError(errmsg)
