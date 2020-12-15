@@ -687,7 +687,6 @@ class AatamsSattagQcSchema(CSVSchema):
         self.summary = {}
 
 
-
     def validate_zip_names(self, file_list):
         """Validate the file names.
 
