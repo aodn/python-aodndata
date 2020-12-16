@@ -18,6 +18,7 @@ ENTRY_POINTS = {
         'GslaHandler = aodndata.gsla.handler:GslaHandler',
         'MooringsHandler = aodndata.moorings.handlers:MooringsHandler',
         'MooringsProductsHandler = aodndata.moorings.products_handler:MooringsProductsHandler',
+        'NrmnHandler = aodndata.nrmn.handler:NrmnHandler',
         'NswOehHandler = aodndata.nsw_oeh.handler:NswOehHandler',
         'SoopAsfSstHandler = aodndata.soop.soop_asf_sst:SoopAsfSstHandler',
         'SoopBaHandler = aodndata.soop.soop_ba:SoopBaHandler',
