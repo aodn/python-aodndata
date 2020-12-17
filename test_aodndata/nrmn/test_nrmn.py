@@ -17,8 +17,8 @@ from aodncore.testlib import HandlerTestCase
 from aodndata.nrmn.handler import NrmnHandler
 >>>>>>> 2f4b75aba13bf0b67c37644161756015067e86c5
 
-TEST_ROOT = "/home/anaberger/aodn/chef/src/tmp/NRMN"
-# TEST_ROOT = os.path.join(os.path.dirname(__file__))
+
+TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 <<<<<<< HEAD
 =======
