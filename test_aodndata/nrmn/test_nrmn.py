@@ -11,6 +11,7 @@ from aodncore.pipeline import FileType, PipelineFilePublishType, PipelineFileChe
 from aodncore.testlib import HandlerTestCase
 from aodndata.nrmn.handler import NrmnHandler
 
+
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 NRMN_GOOD_ZIP_BASENAME = "NRMN_public_endpoints.zip"
