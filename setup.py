@@ -5,7 +5,6 @@ ENTRY_POINTS = {
     'pipeline.handlers': [
         'AatamsSattagQcDmHandler = aodndata.aatams.aatams_sattag:AatamsSattagQcDmHandler',
         'AatamsSattagQcNrtHandler = aodndata.aatams.aatams_sattag:AatamsSattagQcNrtHandler',
-        'AbosHandler = aodndata.moorings.handlers:AbosHandler',
         'AnfogHandler = aodndata.anfog.handlers:AnfogHandler',
         'AcornHandler = aodndata.acorn.handler:AcornHandler',
         'AnmnNrsAimsHandler = aodndata.aims.anmn_nrs:AnmnNrsAimsHandler',
