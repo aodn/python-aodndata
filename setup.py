@@ -23,6 +23,7 @@ ENTRY_POINTS = {
         'SoopBaHandler = aodndata.soop.soop_ba:SoopBaHandler',
         'SoopTrvHandler = aodndata.soop.soop_trv:SoopTrvHandler',
         'SoopXbtDmHandler = aodndata.soop.soop_xbt_dm:SoopXbtDmHandler',
+        'SoopXbtNrtHandler = aodndata.soop.soop_xbt_dm:SoopXbtNrtHandler',
         'SrsAltHandler = aodndata.srs.srs_altimetry:SrsAltHandler',
         'SrsGhrsstHandler = aodndata.srs.srs_ghrsst:SrsGhrsstHandler',
         'SrsOcBodBawHandler = aodndata.srs.srs_oc_bodbaw:SrsOcBodBawHandler',
@@ -41,7 +42,6 @@ ENTRY_POINTS = {
         'dest_path_deakin_bathymetry = aodndata.deakin.deakin_bathymetry:dest_path_deakin_bathymetry',
         'dest_path_soop_rad_aodn = aodndata.curtin.soop_rad_aodn:dest_path_soop_rad_aodn',
         'dest_path_oa = aodndata.csiro.ocean_acidification:dest_path_oa',
-        'dest_path_soop_xbt_nrt = aodndata.soop.soop_xbt_nrt:dest_path_soop_xbt_nrt',
         'dest_path_srs_oc_ljco_aeronet = aodndata.srs.srs_oc_ljco_aeronet:dest_path_srs_oc_ljco_aeronet',
         'dest_path_srs_surface_waves = aodndata.srs.srs_surface_waves:dest_path_srs_surface_waves',
         'dest_path_srs_surface_waves_sar = aodndata.srs.srs_surface_waves:dest_path_srs_surface_waves_sar'
@@ -58,6 +58,7 @@ INSTALL_REQUIRES = [
     'aodncore>=1.0.0',
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8',
+    'fuzzywuzzy>=0.18.0',  # most used python fuzzy search finder
     'matplotlib>=3.0.3',
     'pillow>=6.2.1,<7.0.0',  # provide additional image formats for matplotlib
     'schema>=0.7.0'
@@ -98,7 +99,8 @@ setup(
     test_suite='test_aodndata',
     entry_points=ENTRY_POINTS,
     include_package_data=True,
-    package_data={'aodndata': ['templates/*.json']},
+    package_data={'aodndata': ['templates/*.json',
+                               'configurations/*.ini']},
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',

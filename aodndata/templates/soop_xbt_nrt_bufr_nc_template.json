@@ -1,0 +1,105 @@
+{
+  "_dimensions": {
+    "DEPTH": null,
+    "TIME": 1,
+    "LATITUDE": 1,
+    "LONGITUDE": 1
+  },
+  "_variables": {
+    "TIME": {
+      "_datatype": "float64",
+      "units": "days since 1950-01-01 00:00:00 UTC",
+      "calendar": "gregorian",
+      "standard_name": "time",
+      "long_name": "time",
+      "axis": "T",
+      "valid_min": 0.0,
+      "valid_max": 90000.0
+    },
+    "LATITUDE": {
+      "_FillValue": 999999.0,
+      "_datatype": "float64",
+      "standard_name": "latitude",
+      "long_name": "latitude",
+      "units": "degrees_north",
+      "axis": "Y",
+      "valid_min": -90.0,
+      "valid_max": 90.0,
+      "reference_datum": "WGS84 coordinate reference system"
+    },
+    "LONGITUDE": {
+      "_FillValue": 999999.0,
+      "_datatype": "float64",
+      "standard_name": "longitude",
+      "long_name": "longitude",
+      "units": "degrees_east",
+      "axis": "X",
+      "valid_min": -180.0,
+      "valid_max": 180.0,
+      "reference_datum": "WGS84 coordinate reference system"
+    },
+    "DEPTH":{
+      "_datatype": "float64",
+      "_dimensions": ["DEPTH"],
+      "axis": "Z",
+      "long_name": "depth",
+      "positive": "down",
+      "reference_datum": "sea surface",
+      "standard_name": "depth",
+      "units": "m",
+      "ancillary_variables": "DEPTH_quality_control",
+      "valid_max": 12000.0,
+      "valid_min": -5.0,
+      "_data": 0.6
+    },
+    "DEPTH_quality_control": {
+      "_dimensions": ["DEPTH"],
+      "_datatype": "b",
+      "standard_name": "depth status_flag",
+      "long_name": "quality flag for sea_water_temperature",
+      "quality_control_conventions": "IMOS standard flags",
+      "_FillValue": 63,
+      "valid_min": 0,
+      "valid_max": 9,
+      "flag_values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "flag_meanings": "No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value"
+    },
+    "TEMP": {
+      "_dimensions": ["DEPTH"],
+      "_datatype": "float64",
+      "standard_name": "sea_water_temperature",
+      "long_name": "sea_water_temperature",
+      "units": "Celsius",
+      "ancillary_variables": "TEMP_quality_control",
+      "_FillValue": 999999.0,
+      "valid_min": 5.0,
+      "valid_max": 30.0,
+      "coordinates": "TIME LATITUDE LONGITUDE DEPTH"
+    },
+    "TEMP_quality_control": {
+      "_dimensions": ["DEPTH"],
+      "_datatype": "b",
+      "standard_name": "sea_water_temperature status_flag",
+      "long_name": "quality flag for depth",
+      "quality_control_conventions": "IMOS standard flags",
+      "_FillValue": 63,
+      "valid_min": 0,
+      "valid_max": 9,
+      "flag_values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+      "flag_meanings": "No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value"
+    }
+  },
+  "Conventions": "CF-1.6,IMOS-1.4",
+  "institution": "CSIRO Oceans and Atmosphere",
+  "abstract": "The data are obtained from XBTs (expendable bathythermographs)",
+  "source": "Expendable Bathythermograph (XBT)",
+  "keywords": "Oceans>Ocean Temperature>Sea Water Temperature ;Oceans>Bathymetry/Seafloor Topography>Water Depth ;Bathythermographs>Expendable Bathythermographs (XBT)",
+  "references": "http://www.imos.org.au; 24 references                   = http://www.meds-sdmm.dfo-mpo.gc.ca/meds/Databases/OCEAN/wmocodes_e.htm; http://www.meds-sdmm.dfo-mpo.gc.ca/meds/Databases/OCEAN/GTSPPcodes_e.htm;  http://woce.nodc.noaa.gov/woce_v3/wocedata_1/woce-uot/overview.htm; https://www.nodc.noaa.gov/GTSPP/document/codetbls/gtsppcode.htm",
+  "file_version": "Level 0 - Raw data",
+  "author": "Besnard, Laurent; Cowley, Rebecca",
+  "author_email": "info@aodn.org.au; rebecca.cowley@csiro.au",
+  "geospatial_vertical_positive": "down",
+  "principal_investigator": "Cowley, Rebecca",
+  "principal_investigator_email": "rebecca.cowley@csiro.au",
+  "standard_name_vocabulary": "NetCDF Climate and Forecast (CF) Metadata Convention Standard Name Table 60"
+}
