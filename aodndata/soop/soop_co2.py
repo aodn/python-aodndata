@@ -175,7 +175,7 @@ class SoopCo2Handler(HandlerBase):
         year = int(fields[1][:4])
         dir_list.append(year)
         jday = int(fields[1][5:8])
-        if not (jday in range(0, 366)) or year < 2017:
+        if not (jday in range(0, 367)) or year < 2017:
             raise InvalidFileNameError(
                 "Failed extracting valid [year, day] from file {file}".format(file=os.path.basename(src_file))
             )
