@@ -10,6 +10,7 @@ from aodncore.pipeline.exceptions import InvalidFileContentError
 from aodncore.testlib import HandlerTestCase
 from aodndata.soop.soop_xbt_nrt import SoopXbtNrtHandler, xbt_line_get_info, parse_bufr_file, \
     fzf_vessel_get_info
+from aodndata.soop.ship_callsign import ship_callsign_list
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_BUFR_CSV = os.path.join(TEST_ROOT,
@@ -35,6 +36,10 @@ def mock_platform_altlabels_per_preflabel(category_name='Vessel'):
 
 class TestSoopXbtNrtHandler(HandlerTestCase):
     def setUp(self):
+        ship_callsign_list.cache_clear()  # ship_callsign is called in previous test_ship_callsign unittest which is
+        # not including all mocked values in mock_platform_altlabels_per_preflabel function above. ship_callsign_list()
+        # is using the lru_cache decorator. We're forcing in this unittest the clearing of all cached values.
+
         self.handler_class = SoopXbtNrtHandler
         super(TestSoopXbtNrtHandler, self).setUp()
         self.url = self.config.pipeline_config['global']['xbt_line_vocab_url']
