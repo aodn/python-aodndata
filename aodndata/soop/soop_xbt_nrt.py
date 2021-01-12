@@ -92,8 +92,9 @@ class SoopXbtNrtHandler(HandlerBase):
                 netcdf_filepath = netcdf_writer(profile, self.temp_dir)  # convert BUFR to NetCDF
 
                 # publish
-                nc_file = PipelineFile(netcdf_filepath)
+                nc_file = PipelineFile(netcdf_filepath, file_update_callback=self._file_update_callback)
                 nc_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+
                 self.file_collection.add(nc_file)
 
     @staticmethod
@@ -196,9 +197,7 @@ def parse_bufr_file(csv_path):
                 df["id"] == key_val].astype(float)
         del(j, key_id, key_val)
 
-        # convert temperature to celsius
-        if 'temp' in profile_data:
-            profile_data['temp'] = round(profile_data['temp'] - KELVIN_TO_CELSIUS, 2)
+        profile_data['temp'] = round(profile_data['temp'], 2)
 
         # glob_gtspp are qc flags for both depth and temp variable in this order. Need to separate them ...
         profile_data['glob_gtspp_depth'] = profile_data['glob_gtspp'][0::2].values
@@ -276,6 +275,22 @@ def xbt_line_get_info(profile, url):
     xbt_lines_info = helper.xbt_line_info()
     xbt_line = profile['profile_metadata']['XBT_line']
 
+    # another weird case with missing line info
+    if not xbt_line.strip():
+        xbt_line = 'NOLINE'
+
+        profile['profile_metadata']['XBT_line'] = xbt_line
+        profile['profile_metadata']['XBT_line_description'] = xbt_line
+        return profile
+
+    # In some cases, the CSV file has the "pref_lab" value of the XBT_line. This complicated discovery as in our dict,
+    # the pref_value is a value of our dict and not the key. In the next few lines, the search logic is reversed, looking
+    # for the key according to the value
+    for key, value in xbt_lines_info.items():
+         if xbt_line == value['xbt_pref_label']:
+             xbt_line = key
+             break
+
     # look for xbt line value from BUFR file available in ANDS XBT line vocabulary
     if xbt_line not in xbt_lines_info:
         raise InvalidFileContentError(
@@ -284,6 +299,10 @@ def xbt_line_get_info(profile, url):
 
     xbt_line_description = xbt_lines_info[xbt_line]['xbt_line_description']
     xbt_line = xbt_lines_info[xbt_line]['xbt_pref_label']
+
+    # dealing with vocabulary inconsistencies between vocab/XBT_DM/XBT_NRT, forcing consistency ... somewhat
+    if xbt_line == 'PX30':
+        xbt_line = 'PX30-31'
 
     profile['profile_metadata']['XBT_line'] = xbt_line
     profile['profile_metadata']['XBT_line_description'] = xbt_line_description
@@ -307,7 +326,7 @@ def fzf_vessel_get_info(profile):
     try:
         ship_name = ship_name_fuzzy_search[0]
     except:
-        raise InvalidFileContentError('{ship_name} is not a valid enough value to fuzzy match it with an existing AODN'
+        raise InvalidFileContentError('{ship_name} is not a valid enough value to fuzzy match it with an existing AODN '
                                       'vessel name'.format(ship_name=ship_name))
 
     callsign = next(k for k, v in callsign_list.items() if v == ship_name)  # find callsign from key value
@@ -363,8 +382,14 @@ def netcdf_writer(profile_data, output_dir):
     template.add_extent_attributes()
     template.add_date_created_attribute()
 
-    abstract = get_info_xbt_config(profile_data['profile_metadata']['XBT_line'])['abstract']
-    title = get_info_xbt_config(profile_data['profile_metadata']['XBT_line'])['title']
+    if get_info_xbt_config(profile_data['profile_metadata']['XBT_line'].replace('-', '/')):
+        info_xbt_config = get_info_xbt_config(profile_data['profile_metadata']['XBT_line'].replace('-', '/'))
+        abstract = info_xbt_config.get('abstract', 'No abstract')
+        title = info_xbt_config.get('title', 'No title')
+    else:
+        raise MissingConfigParameterError('No XBT line info found for {line} from {config}'.
+                                          format(config=XBT_CONFIG,
+                                                 line=profile_data['profile_metadata']['XBT_line']))
 
     template.global_attributes.update({
         'abstract': abstract,
@@ -374,11 +399,18 @@ def netcdf_writer(profile_data, output_dir):
             date_created=datetime.datetime.utcnow().strftime('%Y-%m-%dT%H:%M:%SZ'))
     })
 
-    nc_filename = 'IMOS_SOOP-XBT_T_{date_start}_{xbt_line}_FV00_ID_{imo_number}.nc'.format(
-        date_start=datetime.datetime.strftime(profile_data['profile_geotime']['date_utc'], '%Y%m%dT%H%M%SZ'),
-        xbt_line=profile_data['profile_metadata']['XBT_line'],
-        imo_number=profile_data['profile_metadata']['imo_number']
-    )
+    # dealing with dirty files missing info
+    if not 'imo_number' in profile_data['profile_metadata']:
+        nc_filename = 'IMOS_SOOP-XBT_T_{date_start}_{xbt_line}_FV00.nc'.format(
+            date_start=datetime.datetime.strftime(profile_data['profile_geotime']['date_utc'], '%Y%m%dT%H%M%SZ'),
+            xbt_line=profile_data['profile_metadata']['XBT_line']
+        )
+    else:
+        nc_filename = 'IMOS_SOOP-XBT_T_{date_start}_{xbt_line}_FV00_ID_{imo_number}.nc'.format(
+            date_start=datetime.datetime.strftime(profile_data['profile_geotime']['date_utc'], '%Y%m%dT%H%M%SZ'),
+            xbt_line=profile_data['profile_metadata']['XBT_line'],
+            imo_number=profile_data['profile_metadata']['imo_number']
+        )
 
     netcdf_path = os.path.join(output_dir, nc_filename)
     template.to_netcdf(netcdf_path)
