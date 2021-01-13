@@ -10,10 +10,15 @@ from aodncore.pipeline.exceptions import InvalidFileContentError
 from aodncore.testlib import HandlerTestCase
 from aodndata.soop.soop_xbt_nrt import SoopXbtNrtHandler, xbt_line_get_info, parse_bufr_file, \
     fzf_vessel_get_info
+from aodndata.soop.ship_callsign import ship_callsign_list
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_BUFR_CSV = os.path.join(TEST_ROOT,
                        'IOSS01_AMMC_20201109215900_XEKXW9W.csv')
+GOOD_BUFR_CSV_PX30 = os.path.join(TEST_ROOT,
+                                  'IOSS01_AMMC_20201214180200_5VULUEH.csv')
+BUFR_CSV_NO_LINE = os.path.join(TEST_ROOT,
+                                  'IOSS01_AMMC_20200908051000_VLMJ.csv')
 
 
 def mock_platform_altlabels_per_preflabel(category_name='Vessel'):
@@ -23,12 +28,18 @@ def mock_platform_altlabels_per_preflabel(category_name='Vessel'):
             'FASB': 'Astrolabe',
             '3FLZ': 'Tropical-Islander',
             'VROJ8': 'Highland-Chief',
-            'VROB': 'Highland-Chief'
+            'VROB': 'Highland-Chief',
+            'D5LR9': 'Seatrade Red',
+            'VLMJ': 'Investigator'
             }
 
 
 class TestSoopXbtNrtHandler(HandlerTestCase):
     def setUp(self):
+        ship_callsign_list.cache_clear()  # ship_callsign is called in previous test_ship_callsign unittest which is
+        # not including all mocked values in mock_platform_altlabels_per_preflabel function above. ship_callsign_list()
+        # is using the lru_cache decorator. We're forcing in this unittest the clearing of all cached values.
+
         self.handler_class = SoopXbtNrtHandler
         super(TestSoopXbtNrtHandler, self).setUp()
         self.url = self.config.pipeline_config['global']['xbt_line_vocab_url']
@@ -40,8 +51,14 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
         })
         self.bad_profile = ({
             'profile_metadata':  ({''
-                                   'XBT_line': "IX08",
+                                   'XBT_line': "XXXX",
                                    'ship_name': "L\'Astrolab"
+                                   })
+        })
+        self.px30_31 = ({
+            'profile_metadata':  ({''
+                                   'XBT_line': "PX30",
+                                   'ship_name': "Seatrade Red"
                                    })
         })
 
@@ -84,7 +101,12 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
         self.assertEqual("IX08", good_profile['profile_metadata']['XBT_line'])
         self.assertEqual("Mauritius - Bombay", good_profile['profile_metadata']['XBT_line_description'])
 
-        # check with a bad value of XBT line IX08 instead of IX8
+        # the xbt_line_get_info forces in some case the vocabulary inconsistencies
+        px30_31_line = xbt_line_get_info(self.px30_31, self.url)
+        self.assertEqual("PX30-31", px30_31_line['profile_metadata']['XBT_line'])
+        self.assertEqual("Brisbane - Noumea - Suva", px30_31_line['profile_metadata']['XBT_line_description'])
+
+        # check with a bad value of XBT line
         with self.assertRaises(InvalidFileContentError):
             xbt_line_get_info(self.bad_profile, self.url)
 
@@ -116,17 +138,18 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
         f_csv = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)[0]
 
         self.assertEqual(f_csv.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
-        self.assertEqual(os.path.join("IMOS/SOOP/SOOP-XBT/REALTIME_BUFR/2020/",
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME_BUFR/2020/',
                                       os.path.basename(GOOD_BUFR_CSV)),
                          f_csv.archive_path)
 
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
-        self.assertEqual(os.path.join("IMOS/SOOP/SOOP-XBT/REALTIME/FASB_Astrolabe/2020/",
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME/FASB_Astrolabe/2020/',
                                       'IMOS_SOOP-XBT_T_20201109T215900Z_IX28_FV00_ID_9797539.nc'),
                          f_nc.dest_path)
         self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
 
-        nc_path = os.path.join(self.config.pipeline_config['global']['upload_uri'], f_nc.dest_path).replace("file://", "")
+        nc_path = os.path.join(self.config.pipeline_config['global']['upload_uri'], f_nc.dest_path).replace("file://",
+                                                                                                            "")
         with Dataset(nc_path, mode='r') as nc_obj:
             self.assertEqual("Hobart - Dumont d'Urville", nc_obj.XBT_line_description)
             self.assertEqual("Upper Ocean Thermal Data collected on the high density line IX28 "
@@ -141,6 +164,34 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
                                    check_params={'checks': ['cf', 'imos:1.4']})
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+
+
+    @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+           side_effect=mock_platform_altlabels_per_preflabel)
+    def test_handler_px30(self, mock_ship):
+        handler = self.run_handler(GOOD_BUFR_CSV_PX30,
+                                   check_params={'checks': ['cf', 'imos:1.4']})
+
+        f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME/D5LR9_Seatrade-Red/2020/',
+                                      'IMOS_SOOP-XBT_T_20201214T180200Z_PX30-31_FV00_ID_9690107.nc'),
+                         f_nc.dest_path)
+        self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+
+
+    @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+           side_effect=mock_platform_altlabels_per_preflabel)
+    def test_handler_noline(self, mock_ship):
+        handler = self.run_handler(BUFR_CSV_NO_LINE,
+                                   check_params={'checks': ['cf', 'imos:1.4']})
+
+        f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME/VLMJ_Investigator/2020/',
+                                      'IMOS_SOOP-XBT_T_20200908T051000Z_NOLINE_FV00.nc'),
+                         f_nc.dest_path)
+        self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
 
 
 if __name__ == '__main__':
