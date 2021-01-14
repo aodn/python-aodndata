@@ -59,9 +59,8 @@ class MooringsHandler(HandlerBase):
 
             self.logger.info("Burst-processing {f.name}".format(f=f))
             product_path = create_burst_average_netcdf(f.src_path, self.products_dir)
-            product_file = PipelineFile(product_path, file_update_callback=self._file_update_callback)
-            product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-            self.file_collection.add(product_file)
+            product_file = PipelineFile(product_path, publish_type=PipelineFilePublishType.HARVEST_UPLOAD)
+            self.add_pipelinefile(product_file)
 
     def postprocess(self):
         """Set error_cleanup_regexes so that if the same file was uploaded previously and failed, it can now be
@@ -116,6 +115,6 @@ class DwmHandler(MooringsHandler):
 
             self.file_collection.set_publish_types(PipelineFilePublishType.NO_ACTION)
             self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-            self.file_collection.add(self.input_file_object)
+            self.add_pipelinefile(self.input_file_object)
 
     dest_path = DwmFileClassifier.dest_path
