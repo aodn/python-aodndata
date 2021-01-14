@@ -201,7 +201,7 @@ class MooringsProductsHandler(HandlerBase):
 
         # Download input files to local cache.
         self.logger.info("Downloading {n} input files".format(n=len(self.input_file_collection)))
-        self.input_file_collection.download(self._upload_store_runner.broker, self.temp_dir)
+        self.state_query.download(self.input_file_collection, self.temp_dir)
         # TODO: Replace temp_dir above with cache_dir?
 
     def _get_old_product_files(self):
@@ -242,9 +242,8 @@ class MooringsProductsHandler(HandlerBase):
 
     def _add_to_collection(self, product_url):
         """Add a new product file to the file_collection to be harvested and uploaded."""
-        product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
-        product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-        self.file_collection.add(product_file)
+        product_file = PipelineFile(product_url, publish_type = PipelineFilePublishType.HARVEST_UPLOAD)
+        self.add_pipelinefile(product_file)
 
     def _input_list_for_variables(self, *variables):
         """Return a list of input files containing any of the given variables"""
@@ -357,10 +356,10 @@ class MooringsProductsHandler(HandlerBase):
             if os.path.basename(old_product_url) != product_filename:
                 # Add the previous version as a "late deletion". It will be deleted during the handler's `publish`
                 # step after (and only if) all new files have been successfully published.
-                old_file = PipelineFile(old_product_url, dest_path=old_product_url, is_deletion=True,
-                                        late_deletion=True, file_update_callback=self._file_update_callback)
-                old_file.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
-                self.file_collection.add(old_file)
+                old_file = PipelineFile(old_product_url, dest_path=old_product_url,
+                                        is_deletion=True, late_deletion=True,
+                                        publish_type=PipelineFilePublishType.DELETE_UNHARVEST)
+                self.add_pipelinefile(old_file)
 
     def preprocess(self):
         """If the input is a manifest file, collect available input files and
