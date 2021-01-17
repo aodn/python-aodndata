@@ -12,7 +12,7 @@ from pkg_resources import resource_filename
 
 from aodncore.pipeline import FileType, HandlerBase, PipelineFilePublishType, PipelineFile
 from aodncore.pipeline.exceptions import InvalidFileContentError, MissingConfigParameterError
-from aodncore.vocab.xbt_line_vocab import XbtLineVocabHelper
+from aodndata.vocab.xbt_line_vocab import XbtLineVocabHelper, DEFAULT_XBT_LINE_VOCAB_URL
 from .ship_callsign import ship_callsign_list
 
 BUFR_VAR = ({
@@ -66,12 +66,10 @@ class SoopXbtNrtHandler(HandlerBase):
         super(SoopXbtNrtHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.nc', '.csv']
 
-        try:
-            self.xbt_line_vocab_url = self.config.pipeline_config['global']['xbt_line_vocab_url']
-        except KeyError:
-            raise MissingConfigParameterError(
-                "missing required config item 'xbt_line_vocab_url' in the pipeline config"
-            )
+        if self.custom_params is None or not self.custom_params.get('xbt_line_vocab_url'):
+            self.xbt_line_vocab_url = DEFAULT_XBT_LINE_VOCAB_URL
+        else:
+            self.xbt_line_vocab_url = self.custom_params['xbt_line_vocab_url']
 
     def preprocess(self):
         """

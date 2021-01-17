@@ -12,6 +12,8 @@ from aodndata.soop.soop_xbt_nrt import SoopXbtNrtHandler, xbt_line_get_info, par
     fzf_vessel_get_info
 from aodndata.soop.ship_callsign import ship_callsign_list
 
+from test_aodndata.vocab import TEST_XBT_LINE_VOCAB_URL
+
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_BUFR_CSV = os.path.join(TEST_ROOT,
                        'IOSS01_AMMC_20201109215900_XEKXW9W.csv')
@@ -42,7 +44,7 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
 
         self.handler_class = SoopXbtNrtHandler
         super(TestSoopXbtNrtHandler, self).setUp()
-        self.url = self.config.pipeline_config['global']['xbt_line_vocab_url']
+        self.url = TEST_XBT_LINE_VOCAB_URL
         self.good_profile = ({
             'profile_metadata':  ({''
                                    'XBT_line': "IX8",
@@ -132,7 +134,8 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
            side_effect=mock_platform_altlabels_per_preflabel)
     def test_handler(self, mock_ship):
         handler = self.run_handler(GOOD_BUFR_CSV,
-                                   check_params={'checks': ['cf', 'imos:1.4']})
+                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         f_csv = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)[0]
@@ -161,7 +164,8 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
 
         # test the handler by pushing this newly created NetCDF file back into the handler
         handler = self.run_handler(nc_path,
-                                   check_params={'checks': ['cf', 'imos:1.4']})
+                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
 
@@ -170,7 +174,8 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
            side_effect=mock_platform_altlabels_per_preflabel)
     def test_handler_px30(self, mock_ship):
         handler = self.run_handler(GOOD_BUFR_CSV_PX30,
-                                   check_params={'checks': ['cf', 'imos:1.4']})
+                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
@@ -184,7 +189,8 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
            side_effect=mock_platform_altlabels_per_preflabel)
     def test_handler_noline(self, mock_ship):
         handler = self.run_handler(BUFR_CSV_NO_LINE,
-                                   check_params={'checks': ['cf', 'imos:1.4']})
+                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)

@@ -13,7 +13,7 @@ How to use:
 author : Besnard, Laurent
 """
 
-from aodncore.vocab.platform_code_vocab import platform_altlabels_per_preflabel
+from aodndata.vocab.platform_code_vocab import platform_altlabels_per_preflabel
 
 try:
     from functools import lru_cache
