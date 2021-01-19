@@ -79,7 +79,7 @@ class TestSoopTrvHandler(HandlerTestCase):
 
         broker = WfsBroker(self.config.pipeline_config['global']['wfs_url'])
 
-        files_for_layer = broker.query_urls_for_layer('soop_trv_duplicate_url')
+        files_for_layer = broker.query_files('soop_trv_duplicate_url')
         self.assertEqual(files_for_layer[0],
                          'IMOS/SOOP/SOOP-TRV/VMQ9273_Solander/By_Cruise/Cruise_START-20181205T035932Z_END-20181206T045722Z/temperature/IMOS_SOOP-TRV_T_20181205T035932Z_VMQ9273_FV01_END-20181206T045722Z.nc')
 

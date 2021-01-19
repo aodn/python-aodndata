@@ -19,16 +19,12 @@ class SoopTrvHandler(HandlerBase):
         """
         Files to be deleted as found in 'soop_trv_duplicate_url' wfs layer
         """
-        files_to_delete = self.state_query.query_wfs_urls_for_layer('soop_trv_duplicate_url')
-
-        for f in files_to_delete:
-            file_to_delete = PipelineFile(os.path.basename(f),
-                                          is_deletion=True,
-                                          dest_path=f,
-                                          file_update_callback=self._file_update_callback
-                                          )
-            file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
-            self.file_collection.add(file_to_delete)
+        duplicate_files = self.state_query.query_wfs_files('soop_trv_duplicate_url')
+        for duplicate in duplicate_files:
+            deletion = PipelineFile.from_remotepipelinefile(duplicate,
+                                                            is_deletion=True,
+                                                            publish_type=PipelineFilePublishType.DELETE_UNHARVEST)
+            self.add_to_collection(deletion)
 
     def get_main_soop_trv_var(self, filepath):
         with Dataset(filepath, mode='r') as netcdf_file_obj:
