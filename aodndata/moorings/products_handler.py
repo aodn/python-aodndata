@@ -2,9 +2,11 @@ import json
 import os
 import re
 
+from typing import Union, List
+
 from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And, Or
 
-from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFile, FileType
+from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType
 from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNameError, InvalidFileFormatError,
                                           MissingFileError, PipelineSystemError)
 from aodncore.pipeline.files import RemotePipelineFileCollection
@@ -155,7 +157,7 @@ class MooringsProductsHandler(HandlerBase):
                 'opendap_url_prefix': OPENDAP_URL_PREFIX
                 }
 
-    def get_wfs_features(self, filter_list, propertyname='*'):
+    def get_wfs_features(self, filter_list, propertyname: Union[str, List[str]] = '*'):
         """Query the file index WFS layer with the given filters and return a list of features.
 
         :param filter_list: list of filters to apply (owslib.fes.OgcExpression instances)
