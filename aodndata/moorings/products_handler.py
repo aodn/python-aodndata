@@ -166,7 +166,7 @@ class MooringsProductsHandler(HandlerBase):
         """
 
         ogc_filter = ogc_filter_to_string(And(filter_list))
-        wfs_response = self.state_query.query_wfs_getfeature_dict(typename=[self.FILE_INDEX_LAYER],
+        wfs_response = self.state_query.query_wfs_getfeature_dict(self.FILE_INDEX_LAYER,
                                                                   filter=ogc_filter,
                                                                   propertyname=propertyname
                                                                   )
