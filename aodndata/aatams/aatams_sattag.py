@@ -54,9 +54,7 @@ class AatamsSattagHandler(HandlerBase):
     def get_remote_metadata_from_zip(self, remote_pfile):
         """Fetch the metdata.csv file from a RemotePipelineFile zip and wrapping it on a
         PipelineFile."""
-        remote_collection = RemotePipelineFileCollection(remote_pfile)
-
-        self.state_query.download(remote_collection, self.temp_dir)
+        self.state_query.download(remote_pfile, self.temp_dir)
         dest_folder = os.path.join(
             self.temp_dir, os.path.dirname(remote_pfile.dest_path)
         )
