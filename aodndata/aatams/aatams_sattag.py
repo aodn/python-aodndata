@@ -54,14 +54,7 @@ class AatamsSattagHandler(HandlerBase):
     def get_remote_metadata_from_zip(self, remote_pfile):
         """Fetch the metdata.csv file from a RemotePipelineFile zip and wrapping it on a
         PipelineFile."""
-        # TODO: remove the first try statement when pipeline
-        remote_collection = RemotePipelineFileCollection(remote_pfile)
-        try:
-            download = self.state_query.download
-        except AttributeError:
-            download = self.state_query._storage_broker.download
-
-        download(remote_collection, self.temp_dir)
+        self.state_query.download(remote_pfile, self.temp_dir)
         dest_folder = os.path.join(
             self.temp_dir, os.path.dirname(remote_pfile.dest_path)
         )

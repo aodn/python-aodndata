@@ -2,9 +2,11 @@ import json
 import os
 import re
 
+from typing import Union, List
+
 from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And, Or
 
-from aodncore.pipeline import HandlerBase, PipelineFilePublishType, PipelineFile, FileType
+from aodncore.pipeline import HandlerBase, PipelineFilePublishType, FileType
 from aodncore.pipeline.exceptions import (InvalidFileContentError, InvalidFileNameError, InvalidFileFormatError,
                                           MissingFileError, PipelineSystemError)
 from aodncore.pipeline.files import RemotePipelineFileCollection
@@ -155,7 +157,7 @@ class MooringsProductsHandler(HandlerBase):
                 'opendap_url_prefix': OPENDAP_URL_PREFIX
                 }
 
-    def get_wfs_features(self, filter_list, propertyname='*'):
+    def get_wfs_features(self, filter_list, propertyname: Union[str, List[str]] = '*'):
         """Query the file index WFS layer with the given filters and return a list of features.
 
         :param filter_list: list of filters to apply (owslib.fes.OgcExpression instances)
@@ -164,7 +166,7 @@ class MooringsProductsHandler(HandlerBase):
         """
 
         ogc_filter = ogc_filter_to_string(And(filter_list))
-        wfs_response = self.state_query.query_wfs_getfeature_dict(typename=[self.FILE_INDEX_LAYER],
+        wfs_response = self.state_query.query_wfs_getfeature_dict(self.FILE_INDEX_LAYER,
                                                                   filter=ogc_filter,
                                                                   propertyname=propertyname
                                                                   )
@@ -201,7 +203,7 @@ class MooringsProductsHandler(HandlerBase):
 
         # Download input files to local cache.
         self.logger.info("Downloading {n} input files".format(n=len(self.input_file_collection)))
-        self.input_file_collection.download(self._upload_store_runner.broker, self.temp_dir)
+        self.state_query.download(self.input_file_collection, self.temp_dir)
         # TODO: Replace temp_dir above with cache_dir?
 
     def _get_old_product_files(self):
@@ -242,9 +244,7 @@ class MooringsProductsHandler(HandlerBase):
 
     def _add_to_collection(self, product_url):
         """Add a new product file to the file_collection to be harvested and uploaded."""
-        product_file = PipelineFile(product_url, file_update_callback=self._file_update_callback)
-        product_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-        self.file_collection.add(product_file)
+        self.add_to_collection(product_url, publish_type=PipelineFilePublishType.HARVEST_UPLOAD)
 
     def _input_list_for_variables(self, *variables):
         """Return a list of input files containing any of the given variables"""
@@ -295,7 +295,6 @@ class MooringsProductsHandler(HandlerBase):
         # create two versions of the product, one with only good data (flags 1 & 2),
         # and one also including non-QC'd data (flag 0)
         for qc_flags in ((1, 2), (0, 1, 2)):
-
             product_url, errors = hourly_aggregator(input_list, self.product_site_code, qc_flags,
                                                     **self.product_common_kwargs)
 
@@ -357,10 +356,9 @@ class MooringsProductsHandler(HandlerBase):
             if os.path.basename(old_product_url) != product_filename:
                 # Add the previous version as a "late deletion". It will be deleted during the handler's `publish`
                 # step after (and only if) all new files have been successfully published.
-                old_file = PipelineFile(old_product_url, dest_path=old_product_url, is_deletion=True,
-                                        late_deletion=True, file_update_callback=self._file_update_callback)
-                old_file.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
-                self.file_collection.add(old_file)
+                self.add_to_collection(old_product_url, dest_path=old_product_url,
+                                       is_deletion=True, late_deletion=True,
+                                       publish_type=PipelineFilePublishType.DELETE_UNHARVEST)
 
     def preprocess(self):
         """If the input is a manifest file, collect available input files and
