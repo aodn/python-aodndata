@@ -96,6 +96,24 @@ class TestAodnWaveDmHandler(unittest.TestCase):
                              'Southern_Ocean',
                              os.path.basename(good_nc)))
 
+        good_nc = os.path.join(TEST_ROOT, 'IMOS_NTP-WAVE_TW_20200113T215850Z_TOR01_WAVERIDER_FV01_timeseries_END-20200319T015105Z.nc')
+        self.assertEqual(dest_path_aodn_wave_dm(good_nc),
+                         os.path.join(
+                             'University_of_Western_Australia',
+                             'Waverider_Buoys',
+                             'DELAYED',
+                             'Torbay01',
+                             os.path.basename(good_nc)))
+
+        good_nc = os.path.join(TEST_ROOT, 'IMOS_NTP-WAVE_W_20200113T215850Z_TOR01_WAVERIDER_FV01_timeseries_END-20200319T015105Z.nc')
+        self.assertEqual(dest_path_aodn_wave_dm(good_nc),
+                         os.path.join(
+                             'University_of_Western_Australia',
+                             'Waverider_Buoys',
+                             'DELAYED',
+                             'Torbay01',
+                             os.path.basename(good_nc)))
+
         bad = os.path.join(TEST_ROOT, 'bad.nc')
         with self.assertRaises(InvalidFileNameError):
             dest_path_aodn_wave_dm(bad)
@@ -105,6 +123,14 @@ class TestAodnWaveDmHandler(unittest.TestCase):
             dest_path_aodn_wave_dm(bad)
 
         bad = os.path.join(TEST_ROOT, 'DTA_20170530T030000Z_WRONG-SITE-CODE_WAVERIDER_FV01_END-20170530T210000Z.nc')
+        with self.assertRaises(InvalidFileContentError):
+            dest_path_aodn_wave_dm(bad)
+
+        bad = os.path.join(TEST_ROOT, 'IMOS_NPT-WAVE_TW_20200113T215850Z_TOR01_WAVERIDER_FV01_timeseries_END-20200319T015105Z.nc')
+        with self.assertRaises(InvalidFileNameError):
+            dest_path_aodn_wave_dm(bad)
+
+        bad = os.path.join(TEST_ROOT, 'IMOS_NTP-WAVE_TW_20200113T215850Z_WRONG-SITE-CODE_WAVERIDER_FV01_timeseries_END-20200319T015105Z.nc')
         with self.assertRaises(InvalidFileContentError):
             dest_path_aodn_wave_dm(bad)
 
