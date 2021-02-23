@@ -99,7 +99,7 @@ class TestAodnWaveDmHandler(unittest.TestCase):
         good_nc = os.path.join(TEST_ROOT, 'IMOS_NTP-WAVE_TW_20200113T215850Z_TOR01_WAVERIDER_FV01_timeseries_END-20200319T015105Z.nc')
         self.assertEqual(dest_path_aodn_wave_dm(good_nc),
                          os.path.join(
-                             'University_of_Western_Australia',
+                             'UWA',
                              'Waverider_Buoys',
                              'DELAYED',
                              'Torbay01',
@@ -108,7 +108,7 @@ class TestAodnWaveDmHandler(unittest.TestCase):
         good_nc = os.path.join(TEST_ROOT, 'IMOS_NTP-WAVE_W_20200113T215850Z_TOR01_WAVERIDER_FV01_timeseries_END-20200319T015105Z.nc')
         self.assertEqual(dest_path_aodn_wave_dm(good_nc),
                          os.path.join(
-                             'University_of_Western_Australia',
+                             'UWA',
                              'Waverider_Buoys',
                              'DELAYED',
                              'Torbay01',
