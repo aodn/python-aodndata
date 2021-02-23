@@ -109,7 +109,7 @@ def dest_path_aodn_wave_dm(filepath):
         if 'Wave Rider Buoy' not in site_name:
             raise InvalidFileContentError(
                 "file name: \"{filename}\"; global attribute site_code does not contain 'Wave Rider Buoy' string to " \
-                "to deduce path".format(filename=file_basename))
+                "deduce path".format(filename=file_basename))
         product_dir = site_name.replace('Wave Rider Buoy', '').strip().replace(' ', '_')
 
     elif NTP_WA_WAVERIDER_TW.match(file_basename):
@@ -117,7 +117,7 @@ def dest_path_aodn_wave_dm(filepath):
         if 'Torbay01' not in site_name:
             raise InvalidFileContentError(
                 "file name: \"{filename}\"; global attribute site_name does not contain 'Torbay01' string to " \
-                "to deduce path".format(filename=file_basename))
+                "deduce path".format(filename=file_basename))
         product_dir = site_name.replace('TOR01', '').strip().replace(' ', '_')
 
     elif NTP_WA_WAVERIDER_W.match(file_basename):
