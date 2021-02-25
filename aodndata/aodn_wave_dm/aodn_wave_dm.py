@@ -9,7 +9,7 @@ BOM_DIR = 'Bureau_of_Meteorology'
 DOT_WA_DIR = 'Department_of_Transport-Western_Australia'
 DTA_NZ_DIR = 'Defence_Technology_Agency-New_Zealand'
 DES_QLD_DIR = 'Department_of_Environment_and_Science-Queensland'
-NTP_WA_DIR = 'UWA'
+NTP_WAVE_DIR = 'IMOS/NTP/Low_Cost_Wave_Buoy_Technology'
 MHL_DIR_BASE = 'NSW-OEH'
 MHL_DIR = 'Manly_Hydraulics_Laboratory'
 MHL_WAVERIDER_DIR = 'Wave'
@@ -61,14 +61,14 @@ MHL_WAVERIDER = re.compile(r"""
                                (?P<nc_time_cov_end>[0-9]{8}T[0-9]{6}Z)\.nc$
                                """, re.VERBOSE)
 
-NTP_WA_WAVERIDER_TW = re.compile(r"""
+NTP_WAVE_WAVERIDER_TW = re.compile(r"""
                                IMOS_NTP-WAVE_TW_
                                (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)_
                                (?P<site_code>(.*))_WAVERIDER_FV01_timeseries_END-
                                (?P<nc_time_cov_end>[0-9]{8}T[0-9]{6}Z)\.nc$
                                """, re.VERBOSE)
 
-NTP_WA_WAVERIDER_W = re.compile(r"""
+NTP_WAVE_WAVERIDER_W = re.compile(r"""
                                IMOS_NTP-WAVE_W_
                                (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)_
                                (?P<site_code>(.*))_WAVERIDER_FV01_timeseries_END-
@@ -112,16 +112,16 @@ def dest_path_aodn_wave_dm(filepath):
                 "deduce path".format(filename=file_basename))
         product_dir = site_name.replace('Wave Rider Buoy', '').strip().replace(' ', '_')
 
-    elif NTP_WA_WAVERIDER_TW.match(file_basename):
-        data_base_dir = os.path.join(NTP_WA_DIR, WAVERIDER_DIR, DELAYED_DIR)
+    elif NTP_WAVE_WAVERIDER_TW.match(file_basename):
+        data_base_dir = os.path.join(NTP_WAVE_DIR, DELAYED_DIR)
         if 'Torbay01' not in site_name:
             raise InvalidFileContentError(
                 "file name: \"{filename}\"; global attribute site_name does not contain 'Torbay01' string to " \
                 "deduce path".format(filename=file_basename))
         product_dir = site_name.replace('TOR01', '').strip().replace(' ', '_')
 
-    elif NTP_WA_WAVERIDER_W.match(file_basename):
-        data_base_dir = os.path.join(NTP_WA_DIR, WAVERIDER_DIR, DELAYED_DIR)
+    elif NTP_WAVE_WAVERIDER_W.match(file_basename):
+        data_base_dir = os.path.join(NTP_WAVE_DIR, DELAYED_DIR)
         product_dir = site_name.replace(' ', '_')
 
     else:
