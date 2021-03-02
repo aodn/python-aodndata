@@ -65,7 +65,7 @@ def create_plot(netcdfFilePath, output_dir):
         depth_fillvalue = getattr(depth, '_FillValue', None)
 
     # Load only the data which does not have a quality control value equal to qcFlag and greater than good_flag
-    bad_flag = 4
+    bad_flag = 3
     good_flag = 1
     i_good_data = (temp_qc != bad_flag) & (temp_qc >= good_flag)
 
