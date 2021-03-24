@@ -57,12 +57,12 @@
       "_datatype": "b",
       "standard_name": "depth status_flag",
       "long_name": "quality flag for sea_water_temperature",
-      "quality_control_conventions": "IMOS standard flags",
+      "quality_control_conventions": "BUFR GTSPP standard flags",
       "_FillValue": 63,
       "valid_min": 0,
       "valid_max": 9,
-      "flag_values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      "flag_meanings": "No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value"
+      "flag_values": [0, 1, 2, 3, 4, 5, 8, 9, 15],
+      "flag_meanings": "Unqualified Correct_value_all_checks_passed Probably_good_but_value_inconsistent_with_statistics_differ_from_climatology Probably_bad_spike_gradient_etc_if_other_tests_passed Bad_value_impossible_value_out_of_scale_vertical_instability_constant_profile Value_modified_during_quality_control Interpolated_value Good_for_operational_use_caution_check_literature_for_other_uses Missing_value"
     },
     "TEMP": {
       "_dimensions": ["DEPTH"],
@@ -81,20 +81,20 @@
       "_datatype": "b",
       "standard_name": "sea_water_temperature status_flag",
       "long_name": "quality flag for depth",
-      "quality_control_conventions": "IMOS standard flags",
+      "quality_control_conventions": "BUFR GTSPP standard flags",
       "_FillValue": 63,
       "valid_min": 0,
       "valid_max": 9,
-      "flag_values": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
-      "flag_meanings": "No_QC_performed Good_data Probably_good_data Bad_data_that_are_potentially_correctable Bad_data Value_changed Not_used Not_used Not_used Missing_value"
+      "flag_values": [0, 1, 2, 3, 4, 5, 8, 9, 15],
+      "flag_meanings": "Unqualified Correct_value_all_checks_passed Probably_good_but_value_inconsistent_with_statistics_differ_from_climatology Probably_bad_spike_gradient_etc_if_other_tests_passed Bad_value_impossible_value_out_of_scale_vertical_instability_constant_profile Value_modified_during_quality_control Interpolated_value Good_for_operational_use_caution_check_literature_for_other_uses Missing_value"
     }
   },
-  "Conventions": "CF-1.6,IMOS-1.4",
+  "Conventions": "CF-1.6",
   "institution": "CSIRO Oceans and Atmosphere",
   "abstract": "The data are obtained from XBTs (expendable bathythermographs)",
   "source": "Expendable Bathythermograph (XBT)",
   "keywords": "Oceans>Ocean Temperature>Sea Water Temperature ;Oceans>Bathymetry/Seafloor Topography>Water Depth ;Bathythermographs>Expendable Bathythermographs (XBT)",
-  "references": "http://www.imos.org.au; 24 references                   = http://www.meds-sdmm.dfo-mpo.gc.ca/meds/Databases/OCEAN/wmocodes_e.htm; http://www.meds-sdmm.dfo-mpo.gc.ca/meds/Databases/OCEAN/GTSPPcodes_e.htm;  http://woce.nodc.noaa.gov/woce_v3/wocedata_1/woce-uot/overview.htm; https://www.nodc.noaa.gov/GTSPP/document/codetbls/gtsppcode.htm",
+  "references": "http://www.imos.org.au; 24 references = http://www.meds-sdmm.dfo-mpo.gc.ca/meds/Databases/OCEAN/wmocodes_e.htm; http://www.meds-sdmm.dfo-mpo.gc.ca/meds/Databases/OCEAN/GTSPPcodes_e.htm;  http://woce.nodc.noaa.gov/woce_v3/wocedata_1/woce-uot/overview.htm; https://www.nodc.noaa.gov/GTSPP/document/codetbls/gtsppcode.htm",
   "file_version": "Level 0 - Raw data",
   "author": "Besnard, Laurent; Cowley, Rebecca",
   "author_email": "info@aodn.org.au; rebecca.cowley@csiro.au",
