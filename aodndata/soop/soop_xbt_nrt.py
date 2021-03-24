@@ -42,7 +42,6 @@ BUFR_VAR = ({
         'XBT_line': 1080,
         'ship_transect_number': 5036,
         'agency_in_charge': 1036,
-        'Height_of_XBT_launcher': 22177,
         'XBT_probetype_fallrate_equation': 22067,
         'XBT_height_launch_above_water_in_meters': 22177,
         'speed_of_motion_of_moving_observing_platform': 1013,
