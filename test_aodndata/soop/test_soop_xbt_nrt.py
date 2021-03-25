@@ -89,7 +89,7 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
         self.assertEqual("WMO Code table 4770 code \"72, TURO/CSIRO Quoll XBT acquisition system\"",
                          profile['profile_metadata']['XBT_recorder_type'])
 
-        self.assertEqual("WMO Code Table 1770 \"probe=Sippican Deep Blue,code=052,a=6.691,b=6.691\"",
+        self.assertEqual("WMO Code Table 1770 \"probe=Sippican Deep Blue,code=052,a=6.691,b=-2.25\"",
                          profile['profile_metadata']['XBT_probetype_fallrate_equation'])
 
     def test_xbt_line_get_info(self):
