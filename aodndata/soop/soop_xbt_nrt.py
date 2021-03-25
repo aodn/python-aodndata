@@ -252,7 +252,7 @@ def parse_bufr_file(csv_path):
 
         [probe, code, coef_a, coef_b] = get_fallrate_eq_coef(profiles_data[i-1])
         profile_metadata['XBT_probetype_fallrate_equation'] = \
-            'WMO Code Table 1770 \"probe={probe},code={code},a={coef_a},b={coef_a}\"'.format(probe=probe,
+            'WMO Code Table 1770 \"probe={probe},code={code},a={coef_a},b={coef_b}\"'.format(probe=probe,
                                                                                    code=code,
                                                                                    coef_a=coef_a,
                                                                                    coef_b=coef_b)
