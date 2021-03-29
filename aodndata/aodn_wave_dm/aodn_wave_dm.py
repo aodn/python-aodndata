@@ -64,7 +64,7 @@ MHL_WAVERIDER = re.compile(r"""
 NTP_WAVE = re.compile(r"""
                                IMOS_NTP-WAVE_(TW|W)_
                                (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)_
-                               (?P<site_code>(.*))_(WAVERIDER|SPOTTER)_FV01_timeseries_END-
+                               (?P<site_name>(.*))_WAVERIDER_FV01_timeseries_END-
                                (?P<nc_time_cov_end>[0-9]{8}T[0-9]{6}Z)\.nc$
                                """, re.VERBOSE)
 
@@ -106,12 +106,12 @@ def dest_path_aodn_wave_dm(filepath):
         product_dir = site_name.replace('Wave Rider Buoy', '').strip().replace(' ', '_')
 
     elif NTP_WAVE.match(file_basename):
-        data_base_dir = os.path.join(NTP_WAVE_DIR, DELAYED_DIR)
+        data_base_dir = os.path.join(NTP_WAVE_DIR, WAVERIDER_DIR, DELAYED_DIR)
         fields = get_pattern_subgroups_from_string(file_basename, NTP_WAVE)
         if len(site_name) == 0:
             raise InvalidFileContentError(
                 "file name: \"{filename}\"; global attribute site_name is empty".format(filename=file_basename))
-        product_dir = fields['site_code']
+        product_dir = site_name
 
     else:
         raise InvalidFileNameError(
