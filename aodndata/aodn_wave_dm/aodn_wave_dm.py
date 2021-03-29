@@ -107,7 +107,6 @@ def dest_path_aodn_wave_dm(filepath):
 
     elif NTP_WAVE.match(file_basename):
         data_base_dir = os.path.join(NTP_WAVE_DIR, WAVERIDER_DIR, DELAYED_DIR)
-        fields = get_pattern_subgroups_from_string(file_basename, NTP_WAVE)
         if len(site_name) == 0:
             raise InvalidFileContentError(
                 "file name: \"{filename}\"; global attribute site_name is empty".format(filename=file_basename))
