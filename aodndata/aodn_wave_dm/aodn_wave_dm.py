@@ -64,7 +64,7 @@ MHL_WAVERIDER = re.compile(r"""
 NTP_WAVE = re.compile(r"""
                                IMOS_NTP-WAVE_(TW|W)_
                                (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)_
-                               (?P<site_name>(.*))_WAVERIDER_FV01_timeseries_END-
+                               (?P<site_code>(.*))_WAVERIDER_FV01_timeseries_END-
                                (?P<nc_time_cov_end>[0-9]{8}T[0-9]{6}Z)\.nc$
                                """, re.VERBOSE)
 

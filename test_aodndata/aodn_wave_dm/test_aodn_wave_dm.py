@@ -105,15 +105,6 @@ class TestAodnWaveDmHandler(unittest.TestCase):
                              'Torbay01',
                              os.path.basename(good_nc)))
 
-        good_nc = os.path.join(TEST_ROOT, 'IMOS_NTP-WAVE_W_20200113T215850Z_TOR01_WAVERIDER_FV01_timeseries_END-20200319T015105Z.nc')
-        self.assertEqual(dest_path_aodn_wave_dm(good_nc),
-                         os.path.join(
-                             'IMOS/NTP/Low_Cost_Wave_Buoy_Technology',
-                             'Waverider_Buoys',
-                             'DELAYED',
-                             'Torbay01',
-                             os.path.basename(good_nc)))
-
         bad = os.path.join(TEST_ROOT, 'bad.nc')
         with self.assertRaises(InvalidFileNameError):
             dest_path_aodn_wave_dm(bad)
