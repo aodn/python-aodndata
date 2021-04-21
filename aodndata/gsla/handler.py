@@ -79,19 +79,14 @@ class GslaHandler(HandlerBase):
         # historically, files were always sent as *.nc.gz. But as of April 2021, files might be pushed as *.nc.
         # to be consistent, we transform this .nc into a .nz.gz
         if self.file_type is FileType.NETCDF:
-            netcdf_collection = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
-            netcdf_file = netcdf_collection[0]
-            netcdf_file.publish_type = PipelineFilePublishType.NO_ACTION
+            self.file_collection.set_publish_types(PipelineFilePublishType.NO_ACTION)
 
-            gzip_path = os.path.join(self.temp_dir,  os.path.basename(self.input_file + '.gz'))
+            gzip_path = os.path.join(self.temp_dir,  self.file_basename + '.gz')
             with open(self.input_file, 'rb') as f_in, gzip.open(gzip_path, 'wb') as gz_out:
                 gz_out.writelines(f_in)
 
             # publish
-            netcdf_file_gz = PipelineFile(gzip_path, file_update_callback=self._file_update_callback)
-            netcdf_file_gz.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-
-            self.file_collection.add(netcdf_file_gz)
+            self.add_to_collection(gzip_path, publish_type=PipelineFilePublishType.HARVEST_UPLOAD)
 
         if self.file_type is FileType.GZIP:
             # add nc_gz file to collection (not by default)
@@ -108,6 +103,7 @@ class GslaHandler(HandlerBase):
                     "Expecting one netCDF file in GZIP archive '{gzip}'".format(gzip=os.path.basename(self.input_file))
                 )
 
+        netcdf_file_gz = self.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)[0]
         netcdf_file = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         # setting the path of the gz file with the gunzipped file
         netcdf_file_gz.dest_path = self.dest_path(netcdf_file.src_path)
