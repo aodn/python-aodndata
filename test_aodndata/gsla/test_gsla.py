@@ -4,6 +4,7 @@ import shutil
 import unittest
 from unittest.mock import patch
 from datetime import datetime
+from aodncore.util import TemporaryDirectory
 
 from aodncore.pipeline import PipelineFilePublishType, FileType, PipelineFile, PipelineFileCollection, \
     PipelineFileCheckType
@@ -17,17 +18,17 @@ from aodndata.gsla.handler import GslaHandler, GSLA_PREFIX_PATH, GSLA_REGEX, get
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 
-GOOD_NC_DM00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_19930101T000000Z_GSLA_FV02_DM00_C-20130913T082343Z.nc.gz")
-GOOD_NC_NRT00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_NRT00_C-20180105T222006Z.nc.gz")
-GOOD_NC_DM01 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20000101T000000Z_GSLA_FV02_DM01_C-20200601T010724Z.nc.gz")
+GOOD_NC_GZ_DM00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_19930101T000000Z_GSLA_FV02_DM00_C-20130913T082343Z.nc.gz")
+GOOD_NC_GZ_NRT00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_NRT00_C-20180105T222006Z.nc.gz")
+GOOD_NC_GZ_DM01 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20000101T000000Z_GSLA_FV02_DM01_C-20200601T010724Z.nc.gz")
 
 GOOD_YEARLY_FILE_DM00 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_2018_C-20180806T000000Z.nc.gz")
 GOOD_YEARLY_FILE_DM01 = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_DM01_2019_C-20200616T160523Z.nc.gz")
 
-PREV_YEARLY_NC_STORAGE = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_2018_C-20180801T000000Z.nc.gz')
-PREV_NC_STORAGE = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20180130T224000Z.nc.gz')
-NEWER_CREATION_DATE_NC = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20181231T225959Z.nc.gz')
-OLDER_CREATION_DATE_NC = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20100101T000000Z.nc.gz')
+PREV_YEARLY_NC_GZ_STORAGE = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_2018_C-20180801T000000Z.nc.gz')
+PREV_NC_GZ_STORAGE = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20180130T224000Z.nc.gz')
+NEWER_CREATION_DATE_NC_GZ = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20181231T225959Z.nc.gz')
+OLDER_CREATION_DATE_NC_GZ = os.path.join(TEST_ROOT, 'IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20100101T000000Z.nc.gz')
 
 NC_FILE = os.path.join(TEST_ROOT, "IMOS_OceanCurrent_HV_20180101T000000Z_GSLA_FV02_DM00_C-20181231T225959Z.nc")
 
@@ -41,20 +42,40 @@ class TestGslaHandler(HandlerTestCase):
 
     def test_push_unzipped_nc(self):
         """ check on pushing *.nc rather than *.nc.gz """
-        self.run_handler_with_exception(InvalidFileFormatError, NC_FILE)
+
+        with TemporaryDirectory() as tmpdir:
+            with gzip.open(GOOD_NC_GZ_DM01, 'rb') as f_in:
+                good_nc_dm01 = os.path.join(tmpdir, os.path.basename(GOOD_NC_GZ_DM01.replace('.gz', '')))
+                with open(good_nc_dm01, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
+
+            handler = self.run_handler(good_nc_dm01,
+                                       check_params={'checks': ['cf', 'imos:1.4']}
+                                       )
+            self.assertEqual(len(handler.file_collection), 2)
+            f_nc = handler.file_collection.filter_by_attribute_value('file_type', FileType.NETCDF)[0]
+            f_gz = handler.file_collection.filter_by_attribute_value('file_type', FileType.GZIP)[0]
+
+            self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+            self.assertEqual(f_nc.publish_type, PipelineFilePublishType.NO_ACTION)
+            self.assertEqual(f_gz.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+
+            expected_path = os.path.join(GSLA_PREFIX_PATH, "DM01/2000", os.path.basename(GOOD_NC_GZ_DM01))
+            self.assertEqual(expected_path, f_gz.dest_path)
+
 
     def test_good_nc(self):
         """ check various good dest_path """
-        dest_path = GslaHandler.dest_path(GOOD_NC_DM00)
-        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM00/1993", os.path.basename(GOOD_NC_DM00))
+        dest_path = GslaHandler.dest_path(GOOD_NC_GZ_DM00)
+        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM00/1993", os.path.basename(GOOD_NC_GZ_DM00))
         self.assertEqual(expected_path, dest_path)
 
-        dest_path = GslaHandler.dest_path(GOOD_NC_NRT00)
-        expected_path = os.path.join(GSLA_PREFIX_PATH, "NRT00/2018", os.path.basename(GOOD_NC_NRT00))
+        dest_path = GslaHandler.dest_path(GOOD_NC_GZ_NRT00)
+        expected_path = os.path.join(GSLA_PREFIX_PATH, "NRT00/2018", os.path.basename(GOOD_NC_GZ_NRT00))
         self.assertEqual(expected_path, dest_path)
 
-        dest_path = GslaHandler.dest_path(GOOD_NC_DM01)
-        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM01/2000", os.path.basename(GOOD_NC_DM01))
+        dest_path = GslaHandler.dest_path(GOOD_NC_GZ_DM01)
+        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM01/2000", os.path.basename(GOOD_NC_GZ_DM01))
         self.assertEqual(expected_path, dest_path)
 
         # for YEARLY_FILES, the dest_path will need to read the global attributes to find the product_type. In this case
@@ -81,12 +102,12 @@ class TestGslaHandler(HandlerTestCase):
     def test_bad_prefix(self):
         """ test case to add allowed_dest_path_regexes to json"""
         self.run_handler_with_exception(AttributeValidationError,
-                                        PREV_NC_STORAGE,
+                                        PREV_NC_GZ_STORAGE,
                                         allowed_dest_path_regexes=["IMOS/OceanCurrent/GSLA"])
 
     def test_get_fields(self):
         """ test basic function outputs"""
-        fields = get_pattern_subgroups_from_string(os.path.basename(GOOD_NC_DM00), GSLA_REGEX)
+        fields = get_pattern_subgroups_from_string(os.path.basename(GOOD_NC_GZ_DM00), GSLA_REGEX)
 
         self.assertEqual(fields['nc_time_cov_start'], '19930101T000000Z')
         self.assertEqual(fields['creation_date'], '20130913T082343Z')
@@ -94,7 +115,7 @@ class TestGslaHandler(HandlerTestCase):
 
     def test_get_creation_date(self):
         """ test basic function outputs"""
-        creation_date = get_creation_date(GOOD_NC_DM00)
+        creation_date = get_creation_date(GOOD_NC_GZ_DM00)
         self.assertEqual(creation_date, datetime(2013, 9, 13, 8, 23, 43))
 
         yearly_creation_date = get_creation_date(GOOD_YEARLY_FILE_DM00)
@@ -104,7 +125,7 @@ class TestGslaHandler(HandlerTestCase):
             _ = get_creation_date('not_a_real_path')
 
     def test_good_dm01(self):
-        handler = self.run_handler(GOOD_NC_DM01,
+        handler = self.run_handler(GOOD_NC_GZ_DM01,
                                    check_params={'checks': ['cf', 'imos:1.4']}
                                    )
         self.assertEqual(len(handler.file_collection), 2)
@@ -114,9 +135,9 @@ class TestGslaHandler(HandlerTestCase):
         self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.NO_ACTION)
         self.assertEqual(f_gz.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
-        self.assertEqual(f_gz.name, os.path.basename(GOOD_NC_DM01))
+        self.assertEqual(f_gz.name, os.path.basename(GOOD_NC_GZ_DM01))
 
-        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM01/2000", os.path.basename(GOOD_NC_DM01))
+        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM01/2000", os.path.basename(GOOD_NC_GZ_DM01))
         self.assertEqual(expected_path, f_gz.dest_path)
 
     def test_setup_upload_location_push_newer_file(self):
@@ -129,9 +150,9 @@ class TestGslaHandler(HandlerTestCase):
         # create some PipelineFiles to represent the existing files on 'S3'
         preexisting_files = PipelineFileCollection()
 
-        existing_file = PipelineFile(PREV_NC_STORAGE, dest_path=os.path.join(
+        existing_file = PipelineFile(PREV_NC_GZ_STORAGE, dest_path=os.path.join(
             'IMOS/OceanCurrent/GSLA/DM00/2018/',
-            os.path.basename(PREV_NC_STORAGE)))
+            os.path.basename(PREV_NC_GZ_STORAGE)))
 
         preexisting_files.update([existing_file])
 
@@ -143,7 +164,7 @@ class TestGslaHandler(HandlerTestCase):
         broker.upload(preexisting_files)
 
         # run the handler
-        handler = self.run_handler(NEWER_CREATION_DATE_NC)
+        handler = self.run_handler(NEWER_CREATION_DATE_NC_GZ)
 
         nc_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(nc_file.publish_type, PipelineFilePublishType.NO_ACTION)
@@ -151,7 +172,7 @@ class TestGslaHandler(HandlerTestCase):
         nc_gz_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)[0]
         self.assertEqual(nc_gz_file.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
 
-        nc_gz_delete = handler.file_collection.filter_by_attribute_value('name', os.path.basename(PREV_NC_STORAGE))[0]
+        nc_gz_delete = handler.file_collection.filter_by_attribute_value('name', os.path.basename(PREV_NC_GZ_STORAGE))[0]
         self.assertEqual(nc_gz_delete.publish_type, PipelineFilePublishType.DELETE_UNHARVEST)
 
     def test_setup_upload_location_push_same_file(self):
@@ -163,9 +184,9 @@ class TestGslaHandler(HandlerTestCase):
         # create some PipelineFiles to represent the existing files on 'S3'
         preexisting_files = PipelineFileCollection()
 
-        existing_file = PipelineFile(PREV_NC_STORAGE, dest_path=os.path.join(
+        existing_file = PipelineFile(PREV_NC_GZ_STORAGE, dest_path=os.path.join(
             'IMOS/OceanCurrent/GSLA/DM00/2018/',
-            os.path.basename(PREV_NC_STORAGE)))
+            os.path.basename(PREV_NC_GZ_STORAGE)))
 
         preexisting_files.update([existing_file])
 
@@ -177,7 +198,7 @@ class TestGslaHandler(HandlerTestCase):
         broker.upload(preexisting_files)
 
         # run the handler by uploading again the same file
-        handler = self.run_handler(PREV_NC_STORAGE)
+        handler = self.run_handler(PREV_NC_GZ_STORAGE)
 
         nc_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(nc_file.publish_type, PipelineFilePublishType.NO_ACTION)
@@ -198,8 +219,8 @@ class TestGslaHandler(HandlerTestCase):
         # create some PipelineFiles to represent the existing files on 'S3'
         preexisting_files = PipelineFileCollection()
 
-        existing_file = PipelineFile(PREV_NC_STORAGE, dest_path=os.path.join('IMOS/OceanCurrent/GSLA/DM00/2018/',
-                                                                             os.path.basename(PREV_NC_STORAGE)))
+        existing_file = PipelineFile(PREV_NC_GZ_STORAGE, dest_path=os.path.join('IMOS/OceanCurrent/GSLA/DM00/2018/',
+                                                                             os.path.basename(PREV_NC_GZ_STORAGE)))
 
         preexisting_files.update([existing_file])
 
@@ -212,7 +233,7 @@ class TestGslaHandler(HandlerTestCase):
 
         # run the handler
         self.run_handler_with_exception(AttributeValidationError,
-                                        NEWER_CREATION_DATE_NC,
+                                        NEWER_CREATION_DATE_NC_GZ,
                                         allowed_dest_path_regexes=["IMOS/OceanCurrent/GSLA"])
 
     def test_setup_upload_location_push_older_file(self):
@@ -223,9 +244,9 @@ class TestGslaHandler(HandlerTestCase):
         # create some PipelineFiles to represent the existing files on 'S3'
         preexisting_files = PipelineFileCollection()
 
-        existing_file = PipelineFile(PREV_NC_STORAGE, dest_path=os.path.join(
+        existing_file = PipelineFile(PREV_NC_GZ_STORAGE, dest_path=os.path.join(
             'IMOS/OceanCurrent/GSLA/DM00/2018/',
-            os.path.basename(PREV_NC_STORAGE)))
+            os.path.basename(PREV_NC_GZ_STORAGE)))
 
         preexisting_files.update([existing_file])
 
@@ -237,7 +258,7 @@ class TestGslaHandler(HandlerTestCase):
         broker.upload(preexisting_files)
 
         # run the handler on the new file with an older creation date
-        self.run_handler_with_exception(InvalidFileNameError, OLDER_CREATION_DATE_NC)
+        self.run_handler_with_exception(InvalidFileNameError, OLDER_CREATION_DATE_NC_GZ)
 
     def test_push_yearly_file(self):
         """
@@ -262,9 +283,9 @@ class TestGslaHandler(HandlerTestCase):
         # create some PipelineFiles to represent the existing files on 'S3'
         preexisting_files = PipelineFileCollection()
 
-        existing_file = PipelineFile(PREV_YEARLY_NC_STORAGE, dest_path=os.path.join(
+        existing_file = PipelineFile(PREV_YEARLY_NC_GZ_STORAGE, dest_path=os.path.join(
             'IMOS/OceanCurrent/GSLA/DM00/yearfiles',
-            os.path.basename(PREV_YEARLY_NC_STORAGE)))
+            os.path.basename(PREV_YEARLY_NC_GZ_STORAGE)))
 
         preexisting_files.update([existing_file])
 
@@ -284,7 +305,7 @@ class TestGslaHandler(HandlerTestCase):
         nc_gz_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)[0]
         self.assertEqual(nc_gz_file.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
 
-        nc_gz_delete = handler.file_collection.filter_by_attribute_value('name', os.path.basename(PREV_YEARLY_NC_STORAGE))[0]
+        nc_gz_delete = handler.file_collection.filter_by_attribute_value('name', os.path.basename(PREV_YEARLY_NC_GZ_STORAGE))[0]
         self.assertEqual(nc_gz_delete.publish_type, PipelineFilePublishType.DELETE_ONLY)
 
 

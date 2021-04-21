@@ -1,3 +1,4 @@
+import gzip
 import os
 import re
 from datetime import datetime
@@ -70,17 +71,31 @@ def get_product_type(netcdf_path):
 class GslaHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(GslaHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.gz']
+        self.allowed_extensions = ['.gz', '.nc']
 
     def preprocess(self):
-        # add nc_gz file to collection (not by default)
-        self.file_collection.add(self.input_file_object)
-        netcdf_file_gz_collection = self.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)
-        netcdf_file_gz = netcdf_file_gz_collection[0]
-        netcdf_file_gz.publish_type = PipelineFilePublishType.HARVEST_UPLOAD  # default
 
-        # GSLA files are gzipped, so gunzip them before checking them
+        # if input file is a NetCDF, create a .nc.gz and harvest upload it.
+        # historically, files were always sent as *.nc.gz. But as of April 2021, files might be pushed as *.nc.
+        # to be consistent, we transform this .nc into a .nz.gz
+        if self.file_type is FileType.NETCDF:
+            self.file_collection.set_publish_types(PipelineFilePublishType.NO_ACTION)
+
+            gzip_path = os.path.join(self.temp_dir,  self.file_basename + '.gz')
+            with open(self.input_file, 'rb') as f_in, gzip.open(gzip_path, 'wb') as gz_out:
+                gz_out.writelines(f_in)
+
+            # publish
+            self.add_to_collection(gzip_path, publish_type=PipelineFilePublishType.HARVEST_UPLOAD)
+
         if self.file_type is FileType.GZIP:
+            # add nc_gz file to collection (not by default)
+            self.file_collection.add(self.input_file_object)
+            netcdf_file_gz_collection = self.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)
+            netcdf_file_gz = netcdf_file_gz_collection[0]
+            netcdf_file_gz.publish_type = PipelineFilePublishType.HARVEST_UPLOAD  # default
+
+            # some GSLA files are gzipped, so gunzip them before checking them
             # if uploaded file is GZIP check that GZIP contains a NetCDF
             netcdf_collection = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
             if len(netcdf_collection) != 1:
@@ -88,56 +103,57 @@ class GslaHandler(HandlerBase):
                     "Expecting one netCDF file in GZIP archive '{gzip}'".format(gzip=os.path.basename(self.input_file))
                 )
 
-            netcdf_file = netcdf_collection[0]
-            # setting the path of the gz file with the gunzipped file
-            netcdf_file_gz.dest_path = self.dest_path(netcdf_file.src_path)
-            # Nothing to do with *.nc. Talend can harvest *.nc.gz. Set to NO_ACTION
-            netcdf_file.publish_type = PipelineFilePublishType.NO_ACTION
+        netcdf_file_gz = self.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)[0]
+        netcdf_file = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        # setting the path of the gz file with the gunzipped file
+        netcdf_file_gz.dest_path = self.dest_path(netcdf_file.src_path)
+        # Nothing to do with *.nc. Talend can harvest *.nc.gz. Set to NO_ACTION
+        netcdf_file.publish_type = PipelineFilePublishType.NO_ACTION
 
-            # we don't know the product type (DM00 or DM01) of the file already
-            # on s3 in order to deduce its path. We need to get the product
-            # type from the file in incoming
-            result_previous_version_creation_date = self.get_previous_version_creation_date(netcdf_file.src_path)
+        # we don't know the product type (DM00 or DM01) of the file already
+        # on s3 in order to deduce its path. We need to get the product
+        # type from the file in incoming
+        result_previous_version_creation_date = self.get_previous_version_creation_date(netcdf_file.src_path)
 
-            """ default values
-            by default we push to the storage the file landed in the pipeline (ie *.nc.gz) """
-            push_new_file = True
-            remove_previous_version = False
+        """ default values
+        by default we push to the storage the file landed in the pipeline (ie *.nc.gz) """
+        push_new_file = True
+        remove_previous_version = False
 
-            # compare creation dates with file already on storage
-            if result_previous_version_creation_date:
-                new_file_creation_date = get_creation_date(netcdf_file.name)
-                if result_previous_version_creation_date > new_file_creation_date:
-                    push_new_file = False
-                elif result_previous_version_creation_date == new_file_creation_date:
-                    push_new_file = True
-                else:
-                    remove_previous_version = True
-                    previous_file_path = self.get_previous_version_object(netcdf_file.src_path)
-
-            if push_new_file:
-                if GSLA_REGEX_YEARLY.match(netcdf_file.name):
-                    # yearly file should never be harvested
-                    netcdf_file_gz.publish_type = PipelineFilePublishType.UPLOAD_ONLY
+        # compare creation dates with file already on storage
+        if result_previous_version_creation_date:
+            new_file_creation_date = get_creation_date(netcdf_file.name)
+            if result_previous_version_creation_date > new_file_creation_date:
+                push_new_file = False
+            elif result_previous_version_creation_date == new_file_creation_date:
+                push_new_file = True
             else:
-                raise InvalidFileNameError("file name: \"{filename}\"  creation date is older than file already on "
-                                           "storage".format(filename=netcdf_file_gz.name))
+                remove_previous_version = True
+                previous_file_path = self.get_previous_version_object(netcdf_file.src_path)
 
-            # deletion of the previous file
-            if remove_previous_version:
-                previous_file_name = os.path.basename(previous_file_path)
-                file_to_delete = PipelineFile(previous_file_name,
-                                              is_deletion=True,
-                                              dest_path=previous_file_path,
-                                              file_update_callback=self._file_update_callback
-                                              )
+        if push_new_file:
+            if GSLA_REGEX_YEARLY.match(netcdf_file.name):
+                # yearly file should never be harvested
+                netcdf_file_gz.publish_type = PipelineFilePublishType.UPLOAD_ONLY
+        else:
+            raise InvalidFileNameError("file name: \"{filename}\"  creation date is older than file already on "
+                                       "storage".format(filename=netcdf_file_gz.name))
 
-                if GSLA_REGEX_YEARLY.match(netcdf_file.name):
-                    file_to_delete.publish_type = PipelineFilePublishType.DELETE_ONLY
-                else:
-                    file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
+        # deletion of the previous file
+        if remove_previous_version:
+            previous_file_name = os.path.basename(previous_file_path)
+            file_to_delete = PipelineFile(previous_file_name,
+                                          is_deletion=True,
+                                          dest_path=previous_file_path,
+                                          file_update_callback=self._file_update_callback
+                                          )
 
-                self.file_collection.add(file_to_delete)
+            if GSLA_REGEX_YEARLY.match(netcdf_file.name):
+                file_to_delete.publish_type = PipelineFilePublishType.DELETE_ONLY
+            else:
+                file_to_delete.publish_type = PipelineFilePublishType.DELETE_UNHARVEST
+
+            self.file_collection.add(file_to_delete)
 
     def get_previous_version_object(self, filepath):
         destination = self.dest_path(filepath)
