@@ -150,7 +150,8 @@ class DwmFileClassifier(MooringsFileClassifier):
 
     FACILITY = 'DWM'
     SOTS_IMAGES_ZIP_PATTERN = re.compile(r"images_[a-zA-Z0-9-]+-(?P<year>\d{4})\.zip$")
-   
+    SOTS_CALIBRATION_ZIP_PATTERN = re.compile(r"calibration_[a-zA-Z]+-[0-9]+-(?P<year>\d{4})\.zip$")
+
    #old pipeline stuff
     WAVE_VAR = {'VAVH', 'HMAX', 'HAV'}
     MET_VAR = {'UWND', 'VWND', 'WDIR', 'WSPD', 'ATMP', 'AIRT', 'RELH', 'RAIN', 'RAIN_AMOUNT'}
@@ -273,6 +274,8 @@ class DwmFileClassifier(MooringsFileClassifier):
           or
           'IMOS/DWM/SOTS/<year_of_deployment>/<product_type>'
           or
+          'IMOS/DWM/SOTS/calibration'
+          or
           'IMOS/DWM/SOTS/images'
 
         where
@@ -292,9 +295,14 @@ class DwmFileClassifier(MooringsFileClassifier):
         dir_list = [cls.PROJECT, cls.FACILITY]
         input_file_basename = os.path.basename(input_file)
 
-        # deal with image zip files first, as they're simpler
+        # deal with image zip files first, as they are simpler
         if cls.SOTS_IMAGES_ZIP_PATTERN.match(input_file_basename):
             dir_list.extend(['SOTS', 'images', input_file_basename])
+            return cls._make_path(dir_list)
+        
+        # deal with calibration files that contain pdf files
+        if cls.SOTS_CALIBRATION_ZIP_PATTERN.match(input_file_basename):
+            dir_list.extend(['SOTS', 'calibration', input_file_basename])
             return cls._make_path(dir_list)
 
         fac, subfac = cls._get_facility(input_file)
