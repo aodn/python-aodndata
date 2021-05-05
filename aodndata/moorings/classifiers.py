@@ -150,7 +150,7 @@ class DwmFileClassifier(MooringsFileClassifier):
 
     FACILITY = 'DWM'
     SOTS_IMAGES_ZIP_PATTERN = re.compile(r"images_[a-zA-Z0-9-]+-(?P<year>\d{4})\.zip$")
-    SOTS_CALIBRATION_ZIP_PATTERN = re.compile(r"calibration_[a-zA-Z]+-[0-9]+-(?P<year>\d{4})\.zip$")
+    SOTS_CALIBRATION_ZIP_PATTERN = re.compile(r"calibration_[a-zA-Z0-9-]+-(?P<year>\d{4})\.zip$")
 
    #old pipeline stuff
     WAVE_VAR = {'VAVH', 'HMAX', 'HAV'}

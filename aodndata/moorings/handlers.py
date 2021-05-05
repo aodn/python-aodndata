@@ -90,8 +90,8 @@ class DwmHandler(MooringsHandler):
         self.allowed_extensions = ['.nc', '.zip']
 
     def process(self):
-        """Handle a zip file containing images and no NetCDF files. In this case we just want to publish the zip file
-        itself, not the individual images. If we encounter a "mixed" zip file with images and netCDF files,
+        """Handle a zip file containing images and no NetCDF files or a zip file containing calibration files and no NetCDF files. In this case we just want to publish the zip file
+        itself, not the individual images, and the same for the calibration zip files. If we encounter a "mixed" zip file with images/calibration files and netCDF files,
         we're just going to give up, for now.
         """        
         images = PipelineFileCollection(f for f in self.file_collection if f.file_type.is_image_type)
@@ -99,8 +99,8 @@ class DwmHandler(MooringsHandler):
         is_zip = self.file_type is FileType.ZIP
         have_images = len(images) > 0
         have_netcdfs = len(netcdfs) > 0
-        is_image_zip_pattern = is_zip and DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.match(self.file_basename)
-        is_calibration_zip_pattern = is_zip and DwmFileClassifier.SOTS_CALIBRATION_ZIP_PATTERN.match(self.file_basename)
+        is_image_zip_pattern = DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.match(self.file_basename)
+        is_calibration_zip_pattern = DwmFileClassifier.SOTS_CALIBRATION_ZIP_PATTERN.match(self.file_basename)
         zip_file_msg = 'images' if is_image_zip_pattern else 'calibration'
              
         if have_netcdfs:

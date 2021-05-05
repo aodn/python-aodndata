@@ -64,9 +64,9 @@ class TestDwmHandler(HandlerTestCase):
     def test_calib_zip(self):
         handler = self.run_handler(CALIBRATION_ZIP)
         assert('calibration' in handler.file_basename)
-        harvested_files = handler.file_collection.filter_by_attribute_id('publish_type', PipelineFilePublishType.HARVEST_UPLOAD)
-        assert(len(harvested_files)==1)
-        assert(harvested_files[0].file_type is FileType.ZIP)
+        harvested_files = handler.file_collection.filter_by_bool_attribute('is_harvested')
+        self.assertEqual(len(harvested_files), 1)
+        self.assertIs(harvested_files[0].file_type, FileType.ZIP)
 
     def test_calib_zip_good_names(self):
         for calib_zip_name in ('calibration_Pulse-7-2007.zip', 'calibration_OTHER-8-2021.zip'):
