@@ -99,15 +99,25 @@ class DwmHandler(MooringsHandler):
         is_zip = self.file_type is FileType.ZIP
         have_images = len(images) > 0
         have_netcdfs = len(netcdfs) > 0
-        is_image_zip_pattern = DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.match(self.file_basename)
-        is_calibration_zip_pattern = DwmFileClassifier.SOTS_CALIBRATION_ZIP_PATTERN.match(self.file_basename)
-        zip_file_msg = 'images' if is_image_zip_pattern else 'calibration'
-             
+        is_image_zip_pattern = have_images and DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.match(self.file_basename) is not None
+        is_calibration_zip_pattern = DwmFileClassifier.SOTS_CALIBRATION_ZIP_PATTERN.match(self.file_basename) is not None
+        if is_image_zip_pattern:
+            zip_file_msg = 'images'
+        elif is_calibration_zip_pattern:
+            zip_file_msg = 'calibration'
+        else:
+            zip_file_msg = 'no image or calibration file'
+
         if have_netcdfs:
-            raise InvalidFileContentError(
-                "Zip file contains both images or calibration files and netCDFs. Don't know what to do!"
-                " They are handled differently, so please upload only one at a time."
-                )
+            non_netcdfs = self.file_collection.filter_by_attribute_id_not('file_type', FileType.NETCDF)
+            have_only_netcdfs = len(non_netcdfs) == 0
+            if have_only_netcdfs:
+                print('publish!')
+            else:
+                raise InvalidFileContentError(
+                    "Zip file contains both netCDFs and other file types. Don't know what to do!"
+                    " They are handled differently, so please upload only one at a time."
+                    )
         elif is_image_zip_pattern or is_calibration_zip_pattern:
             self.logger.info("Zip file contains {} and no netCDF files. "
                              "Publishing original zip file instead of its contents.".format(zip_file_msg))
@@ -115,19 +125,6 @@ class DwmHandler(MooringsHandler):
             self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(self.input_file_object)
         else:
-            if is_calibration_zip_pattern is None:
-                pattern = DwmFileClassifier.SOTS_CALIBRATION_ZIP_PATTERN.pattern
-                raise InvalidFileNameError(
-                    "Zip file name does not match pattern for {t} zip file "
-                    "(regular expression '{p}')".format(t=zip_file_msg, p=pattern)
-                )
-            elif have_images and is_image_zip_pattern is None:
-                pattern = DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.pattern
-                raise InvalidFileNameError(
-                    "Zip file name does not match pattern for {t} zip file "
-                    "(regular expression '{p}')".format(t=zip_file_msg, p=pattern)
-                )
-            else:
-                raise InvalidFileContentError("file {} has not the right content for an image or calibration zip file".format(self.file_basename))
+            raise InvalidFileNameError("file {} has not the right pattern for an image or calibration zip file".format(self.file_basename))
 
     dest_path = DwmFileClassifier.dest_path

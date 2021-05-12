@@ -52,7 +52,7 @@ class TestDwmHandler(HandlerTestCase):
             self.assertTrue(handler.input_file_object.is_harvested)
 
     def test_images_zip_bad_names(self):
-        for images_zip_name in ('NOT_matching_pattern.zip', 'SAZ47-15-2012-images.zip'):
+        for images_zip_name in ('NOT_matching_image_pattern.zip', 'SAZ47-15-2012-images.zip'):
             bad_images_zip = os.path.join(self.temp_dir, images_zip_name)
             shutil.copy(IMAGES_ZIP, bad_images_zip)
             handler = self.run_handler_with_exception(InvalidFileNameError, bad_images_zip)
@@ -63,7 +63,7 @@ class TestDwmHandler(HandlerTestCase):
 
     def test_calib_zip(self):
         handler = self.run_handler(CALIBRATION_ZIP)
-        assert('calibration' in handler.file_basename)
+        self.assertTrue('calibration' in handler.file_basename)
         harvested_files = handler.file_collection.filter_by_bool_attribute('is_harvested')
         self.assertEqual(len(harvested_files), 1)
         self.assertIs(harvested_files[0].file_type, FileType.ZIP)
