@@ -110,10 +110,8 @@ class DwmHandler(MooringsHandler):
 
         if have_netcdfs:
             non_netcdfs = self.file_collection.filter_by_attribute_id_not('file_type', FileType.NETCDF)
-            have_only_netcdfs = len(non_netcdfs) == 0
-            if have_only_netcdfs:
-                print('publish!')
-            else:
+            have_non_netcdfs = len(non_netcdfs) > 0
+            if have_non_netcdfs:
                 raise InvalidFileContentError(
                     "Zip file contains both netCDFs and other file types. Don't know what to do!"
                     " They are handled differently, so please upload only one at a time."
