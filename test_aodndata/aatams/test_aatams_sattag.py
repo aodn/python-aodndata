@@ -14,11 +14,13 @@ from aodndata.aatams.aatams_sattag import (
     AATAMS_SATTAG_QC_NRT_BASE,
     NRT_TIMESTAMP_COMPARISON_MSG,
 )
+from aodndata.aatams.aatams_sattag_schema import CSV_LONGITUDE
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 DM_GOOD_ZIP = os.path.join(TEST_ROOT, "simple_dm.zip")
 DM_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_ct111_dm.csv")
+DM_INVALID_LONGITUDE = os.path.join(TEST_ROOT, "invalidlongitude_dm.zip")
 
 NRT_FIRST_ZIP = os.path.join(TEST_ROOT, "first_nrt_batch", "ct155_nrt.zip")
 NRT_SECOND_ZIP = os.path.join(TEST_ROOT, "second_nrt_batch", "ct155_nrt.zip")
@@ -28,6 +30,7 @@ NRT_EMPTY_DIVE_ZIP = os.path.join(TEST_ROOT, "emptydive_ct999_nrt.zip")
 NRT_MIXED_CAMPAIGN = os.path.join(TEST_ROOT, "mixcampaign_ct555_nrt.zip")
 NRT_CSV_CAMPAIGN_MISMATCH = os.path.join(TEST_ROOT, "csvcampaignmismatch_ct999_nrt.zip")
 NRT_CSV_CAMPAIGN_FILE_CONTENT_MISMATCH = os.path.join(TEST_ROOT, "csvfilecontentmismatch_ct156_nrt.zip")
+
 
 
 def check_file(cls, file):
@@ -77,6 +80,19 @@ class TestAatamsQcDmHandler(HandlerTestCase):
         for file in handler.file_collection:
             check_file(self, file)
 
+    def test_invalid_longitude(self):
+        """Checking if invalid longitude will raise a proper msg"""
+        with LogCapture() as log:
+            handler = self.run_handler_with_exception(SchemaError,DM_INVALID_LONGITUDE)
+            all_msgs = [x.getMessage() for x in log.records]
+
+            expected_error_msg = CSV_LONGITUDE._error
+            found_error_msg = False
+            for msg in all_msgs:
+                if expected_error_msg in msg:
+                    found_error_msg = True
+                    error = msg
+            assert(found_error_msg)
 
 class TestAatamsQcNrtHandler(HandlerTestCase):
     """tests for the NRT pipeline."""

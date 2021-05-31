@@ -300,20 +300,18 @@ def get_metadata_from_filename(filestr):
 def get_campaign(filestr):
     return get_metadata_from_filename(filestr)[1]
 
+def check_number_of_files_is_correct(alist):
+    return check_len_list(AATAMS_QC_NUMBER_OF_FILES_IN_ZIP,alist)
 
-CHECK_NUMBER_OF_FILES_IS_CORRECT = partial(
-    check_len_list, AATAMS_QC_NUMBER_OF_FILES_IN_ZIP
-)
-
-CHECK_NAME_OF_CSV_FILES_IS_CORRECT = partial(check_csv_tablename, AATAMS_QC_FILE_TYPE_NAMES)
+def check_name_of_csv_files_is_correct(files):
+    return check_csv_tablename(AATAMS_QC_FILE_TYPE_NAMES,files)
 
 # Schema dicts & cases
 FILENAMES_IN_ZIP_SCHEMA = And(
-    CHECK_NUMBER_OF_FILES_IS_CORRECT,
-    CHECK_NAME_OF_CSV_FILES_IS_CORRECT,
+    check_number_of_files_is_correct,
+    check_name_of_csv_files_is_correct,
     check_csv_campaign_name,
     error="Zip file content is invalid. Check if the number, name, and campaign of csv files are correct.")
-
 
 CSV_SEX_CLASS = str  # Or("f", "m", "female", "male")
 CSV_AGE_CLASS = str  # Or("adult", "subadult", "juvenile")
@@ -334,7 +332,7 @@ CSV_NEGATIVE_FLOAT = And(CSV_FLOAT, is_negative)
 CSV_LIST_OF_FLOAT = And(CSV_LIST, iter_float)
 
 # match 0 otherwise schema fails since 0 is false
-CSV_LONGITUDE = And(CSV_FLOAT, Or(valid_longitude, 0))
+CSV_LONGITUDE = And(CSV_FLOAT, Or(valid_longitude, 0), error="Invalid longitude input")
 CSV_LATITUDE = And(CSV_FLOAT, Or(valid_latitude, 0))  # as above
 
 METADATA_SCHEMA = {

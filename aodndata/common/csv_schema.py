@@ -1,4 +1,5 @@
 """A Class to validate/type convert CSV files based on a schema."""
+import os
 import csv
 import logging
 from schema import And, Schema, SchemaError
@@ -205,6 +206,7 @@ class CSVSchema:
         logger.info("Validation Started for %s" % file)
         logger.info("\tLoading content schema for %s" % file)
 
+        file_basename = os.path.basename(file)
         schema_name = self.file2schema(file)
         fschema = self.file_schemas[schema_name]
 
@@ -225,8 +227,17 @@ class CSVSchema:
         logger.info("\tValidating data types in %s" % file)
         valid_dataset = {}
         for key, value in col_dict.items():
-            valid_dataset[key] = Schema([fschema[key]]).validate(value)
-            logger.info("\t\t %s[%s] is valid" % (file, key))
+            logger.info("\t\t validating %s[%s]" % (file_basename, key))
+            try:
+                valid_dataset[key] = Schema([fschema[key]]).validate(value)
+            except Exception as e:
+                #exception = e
+                errormsg = fschema[key]._error
+                improved_msg = "\t\t\tFile %s, with Header %s contains value %s. Schema failed with msg: %s" % (file_basename,key,value,errormsg)
+                e.args = (improved_msg,);
+                raise e
+
+            logger.info("\t\t %s[%s] is valid" % (file_basename, key))
 
         return valid_header, valid_dataset
 
