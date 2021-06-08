@@ -19,7 +19,7 @@ class AuvHandler(HandlerBase):
         return os.path.basename(self.input_file).split('-')[0]
 
     def get_dive_name(self):
-        return os.path.basename(self.input_file).split('-')[1].split('.')[0]
+        return os.path.basename(self.input_file)[len(self.get_campaign_name()) + 1:].split('.')[0]
 
     def manifest_type(self):
         # 0 is the main dive name, -2 the manifest type, -1 is manifest
