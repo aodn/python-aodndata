@@ -1,0 +1,28 @@
+# An environment file for Project Officers wanted to use Conda rather than
+# virtualenv
+# This is based on scripts/setup_virtualenv.sh and doesn't interfere with the
+# wheel package
+# STAGE values {rc, build, production}
+# Usage:
+# export STAGE=build && conda env create --file=stage_environment.yml
+# export STAGE=build && conda env update --file=stage_environment.yml
+
+name: python-aodndata-conda
+channels:
+  - conda-forge
+  - defaults
+  - pypi
+dependencies:
+  - cython
+  - cf-units  # force cf-units to be installed from conda-forge. packaged failed otherwise
+  - python=3.8
+  - pip
+  - pip:
+    - numpy<1.19.0
+    - --index-url http://imos-artifacts.s3-website-ap-southeast-2.amazonaws.com/repo/pypi/${STAGE}/
+    - --extra-index-url https://pypi.python.org/simple/
+    - --trusted-host imos-artifacts.s3-website-ap-southeast-2.amazonaws.com
+    - pytest-cov
+    - -c file:constraints.txt
+    - -e .
+    - -e .[testing]
