@@ -22,7 +22,7 @@ RJOHNSON_FILE_PATTERN = re.compile(r"""
                                 """, re.VERBOSE)
 
 IMOS_OC_FILE_PATTERN = re.compile(r"""
-                                (?P<data_parameter_code>A|S)\.
+                                (?P<data_parameter_code>A|S|V)\.
                                 (?P<time_coverage_resolution>P1D|P1H)\.
                                 (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)\.
                                 (?P<sat_pass>aust|overpass)\.
@@ -49,6 +49,8 @@ class SrsOcGriddedHandler(HandlerBase):
                 product_name = 'aqua'
             elif data_parameter_code == 'S':
                 product_name = 'seawifs'
+            elif data_parameter_code == 'V':
+                product_name = 'viirs'
 
             path = os.path.join(OC_GRIDDED_PREFIX_PATH, product_name, fields['time_coverage_resolution'],
                                 '%d' % nc_time_cov_start.year, '%02d' % nc_time_cov_start.month,
