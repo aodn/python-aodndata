@@ -6,7 +6,7 @@ from aodncore.pipeline import HandlerBase
 from aodncore.pipeline.exceptions import InvalidFileNameError
 from aodncore.util.misc import get_pattern_subgroups_from_string
 
-SRS_OC_GRIDDED_VARIABLES = ['chl_gsm', 'chl_oc3', 'chl_oci', 'chl_oc4', 'dt', 'ipar', 'K_490', 'l2_flags',
+SRS_OC_GRIDDED_VARIABLES = ['chl_gsm', 'chl_oc3', 'chl_oci', 'chl_oc4', 'chl_carder', 'dt', 'ipar', 'K_490', 'l2_flags',
                                'nanop_brewin2010at', 'nanop_brewin2012in', 'npp_vgpm_eppley_gsm',
                                'npp_vgpm_eppley_oc3', 'npp_vgpm_eppley_oc4', 'owtd', 'par', 'picop_brewin2010at',
                                'picop_brewin2012in', 'sst', 'sst_quality', 'tsm_clark16', 'tsm_clark']
