@@ -71,7 +71,12 @@ def get_deployment_id(src_file, ship_code):
     ship_callsign_ls = ship_callsign_list()
 
     if len(name_parts) == 3:
-        deployment_id = "{ship_name}_{dateend}".format(ship_name=ship_callsign_ls[ship_code], dateend=name_parts[-1])
+        if re.match('[0-9]{8}-[0-9]{8}',name_parts[-1]):
+            deployment_id = "{ship_name}_{dateend}".format(ship_name=ship_callsign_ls[ship_code],
+                                                           dateend=name_parts[-1])
+        else:
+            deployment_id = "{ship_name}_{dateend}_{frequency}".format(ship_name=ship_callsign_ls[ship_code],
+                                                                       dateend=name_parts[-2], frequency=name_parts[-1])
     elif len(name_parts) == 4:
         deployment_id = "{ship_name}_{dateend}_{frequency}".format(ship_name=ship_callsign_ls[ship_code],
                                                                    dateend=name_parts[-2], frequency=name_parts[-1])
