@@ -6,7 +6,7 @@ from aodncore.pipeline import HandlerBase
 from aodncore.pipeline.exceptions import InvalidFileNameError
 from aodncore.util.misc import get_pattern_subgroups_from_string
 
-SRS_OC_GRIDDED_VARIABLES = ['chl_gsm', 'chl_oc3', 'chl_oci', 'chl_oc4', 'dt', 'ipar', 'K_490', 'l2_flags',
+SRS_OC_GRIDDED_VARIABLES = ['chl_gsm', 'chl_oc3', 'chl_oci', 'chl_oc4', 'chl_carder', 'dt', 'ipar', 'K_490', 'l2_flags',
                                'nanop_brewin2010at', 'nanop_brewin2012in', 'npp_vgpm_eppley_gsm',
                                'npp_vgpm_eppley_oc3', 'npp_vgpm_eppley_oc4', 'owtd', 'par', 'picop_brewin2010at',
                                'picop_brewin2012in', 'sst', 'sst_quality', 'tsm_clark16', 'tsm_clark']
@@ -22,7 +22,7 @@ RJOHNSON_FILE_PATTERN = re.compile(r"""
                                 """, re.VERBOSE)
 
 IMOS_OC_FILE_PATTERN = re.compile(r"""
-                                (?P<data_parameter_code>A|S)\.
+                                (?P<data_parameter_code>A|S|V)\.
                                 (?P<time_coverage_resolution>P1D|P1H)\.
                                 (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)\.
                                 (?P<sat_pass>aust|overpass)\.
@@ -49,6 +49,8 @@ class SrsOcGriddedHandler(HandlerBase):
                 product_name = 'aqua'
             elif data_parameter_code == 'S':
                 product_name = 'seawifs'
+            elif data_parameter_code == 'V':
+                product_name = 'viirs'
 
             path = os.path.join(OC_GRIDDED_PREFIX_PATH, product_name, fields['time_coverage_resolution'],
                                 '%d' % nc_time_cov_start.year, '%02d' % nc_time_cov_start.month,
