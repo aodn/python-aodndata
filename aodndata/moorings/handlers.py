@@ -99,19 +99,16 @@ class DwmHandler(MooringsHandler):
         is_zip = self.file_type is FileType.ZIP
         have_images = len(images) > 0
         have_netcdfs = len(netcdfs) > 0
-        is_image_zip_pattern = have_images and DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.match(self.file_basename) is not None
+        is_image_zip_pattern = DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.match(self.file_basename) is not None
         is_calibration_zip_pattern = DwmFileClassifier.SOTS_CALIBRATION_ZIP_PATTERN.match(self.file_basename) is not None
         if is_image_zip_pattern:
             zip_file_msg = 'images'
         elif is_calibration_zip_pattern:
             zip_file_msg = 'calibration'
-        else:
-            zip_file_msg = 'no image or calibration file'
 
         if have_netcdfs:
             non_netcdfs = self.file_collection.filter_by_attribute_id_not('file_type', FileType.NETCDF)
-            have_non_netcdfs = len(non_netcdfs) > 0
-            if have_non_netcdfs:
+            if len(non_netcdfs) > 0:
                 raise InvalidFileContentError(
                     "Zip file contains both netCDFs and other file types. Don't know what to do!"
                     " They are handled differently, so please upload only one at a time."
@@ -123,6 +120,8 @@ class DwmHandler(MooringsHandler):
             self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(self.input_file_object)
         else:
-            raise InvalidFileNameError("file {} has not the right pattern for an image or calibration zip file".format(self.file_basename))
+            raise InvalidFileNameError(
+                "The file {} contains no NetCDF data and does not match the file name pattern "
+                "expected for an image or calibration zip file".format(self.file_basename))
 
     dest_path = DwmFileClassifier.dest_path

@@ -155,6 +155,17 @@ class TestDwmFileClassifier(BaseTestCase):
         dest_path = DwmFileClassifier.dest_path(testfile)
         self.assertEqual(os.path.join('IMOS/DWM/SOTS/images/', filename), dest_path)
 
+    def test_sots_calibration_zip(self):
+        filename = 'calibration_Pulse-6-2009.zip'
+        testfile = os.path.join(self.tempdir, filename)
+        dest_path = DwmFileClassifier.dest_path(testfile)
+        self.assertEqual(os.path.join('IMOS/DWM/SOTS/calibration/', filename), dest_path)
+
+        filename = 'calibration_SAZ47-17-2015.zip'
+        testfile = os.path.join(self.tempdir, filename)
+        dest_path = DwmFileClassifier.dest_path(testfile)
+        self.assertEqual(os.path.join('IMOS/DWM/SOTS/calibration/', filename), dest_path)
+
     def test_pulse_delayed(self):
         filename = 'IMOS_DWM-SOTS_20130507T080000Z_Pulse_FV01_Pulse-10-2013_END-20131013T210000Z_C-20160315T000000Z.nc'
         testfile = os.path.join(self.tempdir, filename)

@@ -56,33 +56,21 @@ class TestDwmHandler(HandlerTestCase):
             bad_images_zip = os.path.join(self.temp_dir, images_zip_name)
             shutil.copy(IMAGES_ZIP, bad_images_zip)
             handler = self.run_handler_with_exception(InvalidFileNameError, bad_images_zip)
-            #self.assertRegex(handler.error.args[0], r"is an image or calibration zip file but has wrong name")
 
     def test_mixed_zip(self):
         self.run_handler_with_exception(InvalidFileContentError, MIXED_ZIP)
 
     def test_calib_zip(self):
         handler = self.run_handler(CALIBRATION_ZIP)
-        self.assertTrue('calibration' in handler.file_basename)
         harvested_files = handler.file_collection.filter_by_bool_attribute('is_harvested')
         self.assertEqual(len(harvested_files), 1)
         self.assertIs(harvested_files[0].file_type, FileType.ZIP)
-
-    def test_calib_zip_good_names(self):
-        for calib_zip_name in ('calibration_Pulse-7-2007.zip', 'calibration_OTHER-8-2021.zip'):
-            calib_zip = os.path.join(self.temp_dir, calib_zip_name)
-            shutil.copy(CALIBRATION_ZIP, calib_zip)
-            handler = self.run_handler(calib_zip)
-            self.assertNotEqual(3, len(handler.file_collection))
-            self.assertTrue(handler.input_file_object.is_stored)
-            self.assertTrue(handler.input_file_object.is_harvested)
 
     def test_calib_zip_bad_names(self):
         for calib_zip_name in ('NOT_matching_calib_pattern.zip', 'Pulse-6-2009-calib.zip'):
             bad_calib_zip = os.path.join(self.temp_dir, calib_zip_name)
             shutil.copy(CALIBRATION_ZIP, bad_calib_zip)
             handler = self.run_handler_with_exception(InvalidFileNameError, bad_calib_zip)
-            #self.assertRegex(handler.error.args[0], r"is an image or calibration zip file but has wrong name")
 
     def test_mixed_calib_zip(self):
         self.run_handler_with_exception(InvalidFileContentError, CALIB_MIXED_ZIP)
