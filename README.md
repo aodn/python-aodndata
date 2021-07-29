@@ -25,7 +25,7 @@ It is highly recommended to use the [PyCharm IDE](https://www.jetbrains.com/pych
 ### Pre-requisites
 1. Ensure the [aodn/chef](https://github.com/aodn/chef) repository is checked out (directory will be referred to as **${CHEF_REPO}**), and the usual pre-requisites for running the PO box are met
 1. Ensure that your GitHub keys are in place so that you have write access to the **python-aodndata** repository on GitHub
-1. Provision the PO box using the **bin/po-box.sh** script, so that the required repositories are checked out and the PO box is ready for use
+1. Provision the PO box using the **bin/pipeline-box.sh** script, so that the required repositories are checked out and the PO box is ready for use
 1. Install the boto3 and virtualenv packages into your system Python environment:
 
     ```bash
