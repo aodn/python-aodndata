@@ -67,6 +67,9 @@ Developing in a Python virtual environment is the best choice to isolate the pro
        
 1. Make note of the path to the Python interpreter output by the script (this is needed for the next step)
 
+
+**Alternatively**, if you have some issues with this step, you can try using [anaconda](https://www.anaconda.com/)/[miniconda](https://conda.io/) and the following [conda env file](https://github.com/aodn/python-aodndata/blob/master/stage_environment.yml)
+
 ### IDE setup
 1. Open PyCharm
 1. Click '_Open_' and browse to the **python-aodndata** repository checked out by the PO box script (i.e. **${CHEF_REPO}/src/python-aodndata**)
