@@ -17,6 +17,7 @@ jobs:
       matrix:
         python-version: [ '3.5', '3.8' ]
         stage: [ 'build', 'rc', 'production']
+      fail-fast: false
     steps:
     - uses: actions/checkout@v2
     - name: Install libudunits2-dev
