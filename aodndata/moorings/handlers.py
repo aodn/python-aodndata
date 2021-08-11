@@ -90,32 +90,38 @@ class DwmHandler(MooringsHandler):
         self.allowed_extensions = ['.nc', '.zip']
 
     def process(self):
-        """Handle a zip file containing images and no NetCDF files. In this case we just want to publish the zip file
-        itself, not the individual images. If we encounter a "mixed" zip file with images and netCDF files,
+        """Handle a zip file containing images and no NetCDF files or a zip file containing calibration files and no NetCDF files. In this case we just want to publish the zip file
+        itself, not the individual images, and the same for the calibration zip files. If we encounter a "mixed" zip file with images/calibration files and netCDF files,
         we're just going to give up, for now.
-        """
+        """        
         images = PipelineFileCollection(f for f in self.file_collection if f.file_type.is_image_type)
         netcdfs = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
         is_zip = self.file_type is FileType.ZIP
         have_images = len(images) > 0
         have_netcdfs = len(netcdfs) > 0
-        if is_zip and have_images:
-            if have_netcdfs:
+        is_image_zip_pattern = DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.match(self.file_basename) is not None
+        is_calibration_zip_pattern = DwmFileClassifier.SOTS_CALIBRATION_ZIP_PATTERN.match(self.file_basename) is not None
+        if is_image_zip_pattern:
+            zip_file_msg = 'images'
+        elif is_calibration_zip_pattern:
+            zip_file_msg = 'calibration'
+
+        if have_netcdfs:
+            non_netcdfs = self.file_collection.filter_by_attribute_id_not('file_type', FileType.NETCDF)
+            if len(non_netcdfs) > 0:
                 raise InvalidFileContentError(
-                    "Zip file contains both images and netCDFs. Don't know what to do!"
+                    "Zip file contains both netCDFs and other file types. Don't know what to do!"
                     " They are handled differently, so please upload only one at a time."
-                )
-            if not DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.match(self.file_basename):
-                raise InvalidFileNameError(
-                    "Zip file contains images, but its name does not match pattern for images zip file "
-                    "(regular expression '{p}')".format(p=DwmFileClassifier.SOTS_IMAGES_ZIP_PATTERN.pattern)
-                )
-
-            self.logger.info("Zip file contains images and no netCDF files. "
-                             "Publishing original zip file instead of its contents.")
-
+                    )
+        elif is_image_zip_pattern or is_calibration_zip_pattern:
+            self.logger.info("Zip file contains {} and no netCDF files. "
+                             "Publishing original zip file instead of its contents.".format(zip_file_msg))
             self.file_collection.set_publish_types(PipelineFilePublishType.NO_ACTION)
             self.input_file_object.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
             self.file_collection.add(self.input_file_object)
+        else:
+            raise InvalidFileNameError(
+                "The file {} contains no NetCDF data and does not match the file name pattern "
+                "expected for an image or calibration zip file".format(self.file_basename))
 
     dest_path = DwmFileClassifier.dest_path
