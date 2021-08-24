@@ -58,19 +58,20 @@ def create_burst_average_var(netcdf_file_obj):
 
 def trim_timestamps_burst_vars(burst_vars):
     """
-    Trip timestamps at the start and end of a FV02 file when all FV02 variables
+    Trim timestamps at the start and end of a FV02 file when all FV02 variables
     have a NaN value.
     In details, for every burst var created, look for the first index of non NaN
     value. The lower value will be the one kept, and the new start index of each
     burst variable including the TIME.
     """
     min_index = None
-    for var in burst_vars.keys():
+    for var in list(burst_vars.keys()):
         var_mean_burst = burst_vars[var]['var_mean']  # first non TIME product
         if not np.isnan(var_mean_burst).all():
             min_index_var = next(x for x, y in enumerate(var_mean_burst) if not isnan(y))
         else:
-            min_index_var = 0
+            del burst_vars[var]  # if var only has nan, removing it from burst average file
+            continue
 
         if min_index is None:
             min_index = min_index_var
