@@ -10,8 +10,7 @@ from aodndata.aims.common import get_main_var_folder_name, get_year, get_product
 class AnmnNrsAimsHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(AnmnNrsAimsHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.nc', '.dir_manifest']
-
+        self.allowed_extensions = ['.nc', '.dir_manifest', '.manifest']
 
     @staticmethod
     def add_site_code_to_filename(filepath, site_code):

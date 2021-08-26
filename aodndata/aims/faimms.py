@@ -12,7 +12,7 @@ from aodndata.aims.common import get_main_var_folder_name, get_product_version, 
 class FaimmsHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(FaimmsHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.nc', '.dir_manifest']
+        self.allowed_extensions = ['.nc', '.dir_manifest', '.manifest']
 
     @staticmethod
     def get_faimms_site_name(filepath):
