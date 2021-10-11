@@ -37,6 +37,7 @@ SCAT_VALID_SATS = ["ERS-1",
                    "METOP-A",
                    "OCEANSAT-2",
                    "METOP-B",
+                   "METOP-C",
                    "RAPIDSCAT"
                    ]
 SCAT_FILE_PATTERN = re.compile(r"""
@@ -56,7 +57,7 @@ SAR_FILE_PATTERN = re.compile(r"""
                               (?P<platform_code>Sentinel-1A|Sentinel-1B)_
                               (?P<qc_level>FV00|FV01_DM00)_
                               (?P<wavenum>K1|K2)_END-
-                              (?P<nc_time_cov_end>[0-9]{8}T[0-9]{6}Z)\.nc$                              
+                              (?P<nc_time_cov_end>[0-9]{8}T[0-9]{6}Z)\.nc$
                               """, re.VERBOSE)
 
 
