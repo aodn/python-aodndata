@@ -1,9 +1,8 @@
 import os
-import os
 import unittest
 from unittest.mock import patch
 
-from aodncore.pipeline import (PipelineFileCheckType, FileType)
+from aodncore.pipeline import (PipelineFileCheckType, PipelineFilePublishType, FileType)
 from aodncore.testlib import HandlerTestCase
 
 from aodndata.imos_bgc_db.handler import ImosBgcDbHandler
@@ -48,8 +47,10 @@ class TestImosBgcDbHandler(HandlerTestCase):
         self.assertEqual(handler.harvest_type, 'csv')
         self.assertTrue(handler.input_file_object.is_archived)
         for f in handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV):
-            self.assertTrue(f.is_checked)
             self.assertIs(f.check_type, PipelineFileCheckType.TABLE_SCHEMA_CHECK)
+            self.assertIs(f.publish_type, PipelineFilePublishType.HARVEST_ONLY)
+            self.assertTrue(f.is_checked)
+            self.assertFalse(f.is_stored)
 
         self.assertTrue(mock_harvester.called)
 
