@@ -2,8 +2,10 @@ import os
 import unittest
 from unittest.mock import patch
 
+from aodncore.pipeline.configlib import LazyConfigManager
 from aodncore.pipeline import (PipelineFileCheckType, PipelineFilePublishType, FileType)
 from aodncore.testlib import HandlerTestCase
+from aodncore.testlib.testutil import load_runtime_patched_pipeline_config_file, TESTLIB_CONF_DIR
 
 from aodndata.imos_bgc_db.handler import ImosBgcDbHandler
 
@@ -40,9 +42,21 @@ class TestImosBgcDbHandler(HandlerTestCase):
         self.handler_class = ImosBgcDbHandler
         super().setUp()
 
+        test_pipeline_config_file = os.path.join(TESTLIB_CONF_DIR, 'pipeline.conf')
+        self.testconfig = LazyConfigManager()
+        self.testconfig.__dict__['pipeline_config'] = load_runtime_patched_pipeline_config_file(
+            test_pipeline_config_file, self.temp_dir, self.temp_dir,
+            additional_patch={
+                'harvester': {
+                    "config_dir": TEST_ROOT,
+                    "schema_base_dir": TEST_ROOT
+                }
+            }
+        )
+
     @patch('aodncore.pipeline.steps.harvest.CsvHarvesterRunner')
     def test_good_csv(self, mock_harvester):
-        handler = self.run_handler(GOOD_CSV, harvest_params=HARVEST_PARAMS)
+        handler = self.run_handler(GOOD_CSV, harvest_params=HARVEST_PARAMS, config=self.testconfig)
 
         self.assertEqual(handler.harvest_type, 'csv')
         self.assertTrue(handler.input_file_object.is_archived)
