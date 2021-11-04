@@ -22,6 +22,9 @@ RUN apt-get install -y --no-install-recommends \
     libmagic1 \
     libudunits2-dev \
     python3-dev \
+    libproj-dev \
+    libgeos-dev \
+    libffi-dev \
     wget \
     libffi-dev \
     # Pyenv pre-requisites (from https://github.com/pyenv/pyenv/wiki#suggested-build-environment)
@@ -29,6 +32,26 @@ RUN apt-get install -y --no-install-recommends \
     libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
     libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# cartopy 1 - install cartopy dependencies
+RUN apt-get install -y --no-install-recommends \
+    geos \
+    cmake \
+    && rm -rf /var/lib/apt/lists/*
+
+# cartopy 2 - build proj 9.0 from sources 
+RUN set -ex |
+    && curl https://download.osgeo.org/proj/proj-9.0.0.tar.gz | tar -xz -C /tmp \
+    && cd /tmp/proj-9.0.0/ \
+    && mkdir build \
+    && cd build \
+    && cmake .. \
+    && cmake --build \
+    && cmake --build . --target install
+
+# cartopy 3 - libpro https://github.com/SciTools/cartopy/issues/1966#issuecomment-994470292
+RUN set -ex \
+    ldconfig
 
 # Set-up necessary Env vars for PyEnv
 ENV PYENV_ROOT $HOME/.pyenv

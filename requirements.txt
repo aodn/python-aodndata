@@ -3,3 +3,4 @@
 --trusted-host imos-artifacts.s3-website-ap-southeast-2.amazonaws.com
 -c constraints.txt
 -e .
+shapely --no-binary shapely  # needed to install cartopy for compatibility

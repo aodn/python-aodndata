@@ -32,6 +32,7 @@ ENTRY_POINTS = {
         'SrsOcGriddedHandler = aodndata.srs.srs_oc_gridded:SrsOcGriddedHandler',
         'SrsOcLjcoHandler = aodndata.srs.srs_oc_ljco:SrsOcLjcoHandler',
         'SrsOcSoopRadHandler = aodndata.srs.srs_oc_soop_rad:SrsOcSoopRadHandler',
+        'SrsSarWindHandler = aodndata.srs.srs_surface_waves:SrsSarWindHandler',
         'SstaarsHandler = aodndata.csiro.sstaars:SstaarsHandler',
         'SoopCo2Handler = aodndata.soop.soop_co2:SoopCo2Handler',
         'SoopTmvNrtHandler = aodndata.soop.soop_tmv_nrt:SoopTmvNrtHandler'
@@ -59,6 +60,8 @@ ENTRY_POINTS = {
 INSTALL_REQUIRES = [
     'aodntools>=1.3.1',  # installed before aodncore due to more specific jsonschema dependency
     'aodncore>=1.3.0',
+    'proj',  # needed for cartopy
+    'cartopy>=0.20.3',  # see requirements.txt file installing shapely --no-binary shapely
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8,<1.8.19',
     'fuzzywuzzy>=0.18.0',  # most used python fuzzy search finder
