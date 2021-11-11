@@ -20,9 +20,13 @@ jobs:
       fail-fast: false
     steps:
     - uses: actions/checkout@v2
-    - name: Install libudunits2-dev
+    - name: Install additional required packages
       run: |
-        sudo apt install libudunits2-dev
+        sudo apt-get install -y --no-install-recommends \
+        libudunits2-dev \
+        libproj-dev \
+        libgeos-dev \
+        libffi-dev
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
       with:
@@ -31,6 +35,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install numpy
+        pip install pyshp
+        pip install shapely
+        pip install scipy
         pip install -r stage_requirements.txt
         pip install pytest-cov
       env:

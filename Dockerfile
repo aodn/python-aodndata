@@ -16,17 +16,22 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libudunits2-dev \
     pkg-config \
     python3-dev \
+    libproj-dev \
+    libgeos-dev \
+    libffi-dev \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
 RUN update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
 RUN wget -q https://bootstrap.pypa.io/pip/3.5/get-pip.py \
-    && python get-pip.py pip==18.1 setuptools==49.6.0 wheel==0.35.1 \
+    && python get-pip.py pip==20.3.4 setuptools==49.6.0 wheel==0.35.1 \
     && rm -rf get-pip.py
 
 RUN pip install \
     Cython==0.29 \
+    pyshp \
+    shapely \
     bump2version==0.5.10
 
 RUN useradd --create-home --no-log-init --shell /bin/bash --uid $BUILDER_UID builder
