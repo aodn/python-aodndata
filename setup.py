@@ -56,7 +56,7 @@ ENTRY_POINTS = {
 
 INSTALL_REQUIRES = [
     'aodntools>=1.3.1',  # installed before aodncore due to more specific jsonschema dependency
-    'aodncore>=1.0.0',
+    'aodncore>=1.3.0',
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8,<1.8.19',
     'fuzzywuzzy>=0.18.0',  # most used python fuzzy search finder
