@@ -15,6 +15,7 @@ ENTRY_POINTS = {
         'FaimmsHandler = aodndata.aims.faimms:FaimmsHandler',
         'GenericHandler = aodndata.common.generic:GenericHandler',
         'GslaHandler = aodndata.gsla.handler:GslaHandler',
+        'ImosBgcDbHandler = aodndata.imos_bgc_db.handler:ImosBgcDbHandler',
         'MooringsHandler = aodndata.moorings.handlers:MooringsHandler',
         'MooringsProductsHandler = aodndata.moorings.products_handler:MooringsProductsHandler',
         'NrmnHandler = aodndata.nrmn.handler:NrmnHandler',
@@ -56,7 +57,7 @@ ENTRY_POINTS = {
 
 INSTALL_REQUIRES = [
     'aodntools>=1.3.1',  # installed before aodncore due to more specific jsonschema dependency
-    'aodncore>=1.0.0',
+    'aodncore>=1.3.0',
     'cc-plugin-imos>=1.3.0',
     'fiona>=1.8.8,<1.8.19',
     'fuzzywuzzy>=0.18.0',  # most used python fuzzy search finder
