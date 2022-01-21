@@ -194,7 +194,7 @@ def check_len_list(alen, alist):
 
 
 def check_csv_tablename(table_names, csv_filenames):
-    """Check if a list of of AATAMS csv file names
+    """Check if a list of AATAMS csv file names
     contains the specific table strings in their
     names.
 
@@ -214,7 +214,7 @@ def check_csv_tablename(table_names, csv_filenames):
 
 
 def check_csv_campaign_name(csv_filenames):
-    """Check if a list of of AATAMS csv file names
+    """Check if a list of AATAMS csv file names
     contains the same campaign string in their
     names.
 
@@ -235,7 +235,7 @@ def is_positive(anumber):
     """Check positiveness.
 
     Args:
-      anumber: a number
+      a number: a number
 
     Returns:
       bool: True or False
@@ -248,7 +248,7 @@ def is_negative(anumber):
     """Check negativeness.
 
     Args:
-      anumber: a number
+      a number: a number
 
     Returns:
       bool: True or False
@@ -415,7 +415,6 @@ CTD_SCHEMA = {
     "cid": METADATA_SCHEMA["sattag_program"],
 }
 
-# metadata
 DIAG_SCHEMA = {
     "ref": METADATA_SCHEMA["sattag_program"],
     "ptt": METADATA_SCHEMA["ptt"],
