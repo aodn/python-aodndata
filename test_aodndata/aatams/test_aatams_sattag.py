@@ -30,7 +30,7 @@ NRT_EMPTY_DIVE_ZIP = os.path.join(TEST_ROOT, "emptydive_ct999_nrt.zip")
 NRT_MIXED_CAMPAIGN = os.path.join(TEST_ROOT, "mixcampaign_ct555_nrt.zip")
 NRT_CSV_CAMPAIGN_MISMATCH = os.path.join(TEST_ROOT, "csvcampaignmismatch_ct999_nrt.zip")
 NRT_CSV_CAMPAIGN_FILE_CONTENT_MISMATCH = os.path.join(TEST_ROOT, "csvfilecontentmismatch_ct156_nrt.zip")
-
+NRT_CSV_DATE_FORMAT = os.path.join(TEST_ROOT, "date_format_us_ct156_nrt.zip")
 
 
 def check_file(cls, file):
@@ -192,6 +192,9 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
         """Test a bad zip file with matching campaign names but unmatched csv campaign content"""
         self.run_handler_with_exception(SchemaError, NRT_CSV_CAMPAIGN_FILE_CONTENT_MISMATCH)
 
+    def test_date_format(self):
+        """Test a bad zip file including some date using the US format instead of ISO format"""
+        self.run_handler_with_exception(SchemaError, NRT_CSV_DATE_FORMAT)
 
 if __name__ == "__main__":
     unittest.main()
