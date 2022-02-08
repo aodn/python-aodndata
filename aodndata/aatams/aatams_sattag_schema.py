@@ -34,7 +34,6 @@ AATAMS_QC_FILE_TYPE_NAMES = (
 )
 
 DATE_FMT_STR_1 = "%Y-%m-%dT%H:%M:%SZ"
-DATE_FMT_STR_2 = "%m/%d/%y %H:%M:%S"
 
 
 # schema functions -> Return arg or False
@@ -317,7 +316,6 @@ CSV_SEX_CLASS = str  # Or("f", "m", "female", "male")
 CSV_AGE_CLASS = str  # Or("adult", "subadult", "juvenile")
 
 CSV_DATE_ISO = Use(partial(str2date, fmt=DATE_FMT_STR_1))
-CSV_DATE_US = Use(partial(str2date, fmt=DATE_FMT_STR_2))
 CSV_EMPTY = Use(not_applicable)
 
 CSV_INT = Use(int)
@@ -347,16 +345,16 @@ METADATA_SCHEMA = {
     "release_longitude": CSV_LONGITUDE,
     "release_latitude": CSV_LATITUDE,
     "release_site": str,
-    "release_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
-    "recovery_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
+    "release_date": Or(CSV_EMPTY, CSV_DATE_ISO),
+    "recovery_date": Or(CSV_EMPTY, CSV_DATE_ISO),
     "age_class": CSV_AGE_CLASS,
     "sex": Or(CSV_EMPTY, CSV_SEX_CLASS),
     "length": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "estimated_mass": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "actual_mass": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "state_country": str,
-    "qc_start_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
-    "qc_end_date": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US)
+    "qc_start_date": Or(CSV_EMPTY, CSV_DATE_ISO),
+    "qc_end_date": Or(CSV_EMPTY, CSV_DATE_ISO)
 }
 
 COORD_SCHEMA = {
@@ -386,7 +384,7 @@ POS_SCHEMA = {
 CTD_SCHEMA = {
     "ref": METADATA_SCHEMA["device_id"],
     "ptt": METADATA_SCHEMA["ptt"],
-    "end_date": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "end_date": Or(CSV_DATE_ISO),
     "max_dbar": CSV_POSITIVE_FLOAT,
     "num": CSV_INT,
     "n_temp": Or(CSV_EMPTY, CSV_POSITIVE_INT),
@@ -408,8 +406,8 @@ CTD_SCHEMA = {
     "qc_temp": Or(CSV_EMPTY, CSV_LIST_OF_INT),
     "qc_sal": Or(CSV_EMPTY, CSV_LIST_OF_INT),
     "sal_corrected_vals": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
-    "created": Or(CSV_DATE_ISO, CSV_DATE_US),
-    "modified": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "created": Or(CSV_DATE_ISO),
+    "modified": Or(CSV_DATE_ISO),
     "n_photo": Or(CSV_EMPTY, CSV_INT),
     "photo_dbar": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
     "photo_vals": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
@@ -420,7 +418,7 @@ CTD_SCHEMA = {
 DIAG_SCHEMA = {
     "ref": METADATA_SCHEMA["sattag_program"],
     "ptt": METADATA_SCHEMA["ptt"],
-    "d_date": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "d_date": Or(CSV_DATE_ISO),
     "lq": CSV_INT,
     "lat": CSV_LATITUDE,
     "lon": CSV_LONGITUDE,
@@ -459,7 +457,7 @@ DIVE_SCHEMA = {
     "ref": METADATA_SCHEMA["sattag_program"],
     "ptt": METADATA_SCHEMA["ptt"],
     "cnt": CSV_POSITIVE_INT,
-    "de_date": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "de_date": Or(CSV_DATE_ISO),
     "surf_dur": CSV_FLOAT,
     "dive_dur": CSV_FLOAT,
     "max_dep": CSV_POSITIVE_FLOAT,
@@ -518,11 +516,11 @@ DIVE_SCHEMA = {
     },
     "pitch_str": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
     "tagging_id": Or(CSV_EMPTY, CSV_INT),
-    "de_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
+    "de_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO),
     "qc": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     **{"d" + str(x): Or(CSV_EMPTY, CSV_POSITIVE_FLOAT) for x in range(6, 26)},
     **{"t" + str(x): Or(CSV_EMPTY, CSV_POSITIVE_FLOAT) for x in range(6, 26)},
-    "ds_date": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "ds_date": Or(CSV_DATE_ISO),
     "start_lat": Or(CSV_EMPTY, CSV_LATITUDE),
     "start_lon": Or(CSV_EMPTY, CSV_LONGITUDE),
     **COORD_SCHEMA,
@@ -532,8 +530,8 @@ DIVE_SCHEMA = {
 HAULOUT_SCHEMA = {
     "ref": METADATA_SCHEMA["sattag_program"],
     "ptt": METADATA_SCHEMA["ptt"],
-    "s_date": Or(CSV_DATE_ISO, CSV_DATE_US),
-    "e_date": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "s_date": Or(CSV_DATE_ISO),
+    "e_date": Or(CSV_DATE_ISO),
     "haulout_number": CSV_INT,
     "cnt": CSV_POSITIVE_INT,
     "phosi_secs": Or(CSV_EMPTY, CSV_POSITIVE_INT),
@@ -543,8 +541,8 @@ HAULOUT_SCHEMA = {
     "wet_mean": Or(CSV_EMPTY, CSV_FLOAT),
     "wet_sd": Or(CSV_EMPTY, CSV_FLOAT),
     "tagging_id": Or(CSV_EMPTY, CSV_INT),
-    "s_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
-    "e_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
+    "s_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO),
+    "e_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO),
     "end_number": CSV_INT,
     **COORD_SCHEMA,
     "cid": METADATA_SCHEMA["sattag_program"],
@@ -552,7 +550,7 @@ HAULOUT_SCHEMA = {
 
 SSMOUTPUTS_SCHEMA = {
     "ref": METADATA_SCHEMA["sattag_program"],
-    "date": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "date": Or(CSV_DATE_ISO),
     "lon": COORD_SCHEMA["lon"],
     "lat": COORD_SCHEMA["lat"],
     **POS_SCHEMA,
@@ -563,8 +561,8 @@ SUMMARY_SCHEMA = {
     "ref": METADATA_SCHEMA["sattag_program"],
     "ptt": METADATA_SCHEMA["ptt"],
     "cnt": CSV_POSITIVE_INT,
-    "s_date": Or(CSV_DATE_ISO, CSV_DATE_US),
-    "e_date": Or(CSV_DATE_ISO, CSV_DATE_US),
+    "s_date": Or(CSV_DATE_ISO),
+    "e_date": Or(CSV_DATE_ISO),
     "div_dist": Or(CSV_EMPTY, CSV_FLOAT),
     "surf_tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "dive_tm": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
@@ -609,8 +607,8 @@ SUMMARY_SCHEMA = {
     "sd_phosi_dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "max_phosi_dur": str,  # Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "tagging_id": Or(CSV_EMPTY, CSV_INT),
-    "s_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
-    "e_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO, CSV_DATE_US),
+    "s_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO),
+    "e_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO),
     "ssm_lon": COORD_SCHEMA["ssm_lon"],
     "ssm_lat": COORD_SCHEMA["ssm_lat"],
     "ssm_x": COORD_SCHEMA["ssm_x"],
