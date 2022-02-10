@@ -307,7 +307,10 @@ class DwmFileClassifier(MooringsFileClassifier):
 
         fac, subfac = cls._get_facility(input_file)
         is_asfs_and_rt = subfac == 'ASFS' and cls._is_realtime(input_file)
-        if subfac == 'DA':
+        if 'FV02_daily-depth-gridded-product' in input_file_basename:
+            dir_list.append(subfac)
+            dir_list.append('CSIRO_gridded_all_variables')
+        elif subfac == 'DA':
             dir_list.append(subfac)
             dir_list.append(cls._get_nc_att(input_file, 'platform_code'))
             dir_list.append(cls._get_data_category(input_file))
