@@ -22,15 +22,16 @@ DM_GOOD_ZIP = os.path.join(TEST_ROOT, "simple_dm.zip")
 DM_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_ct111_dm.csv")
 DM_INVALID_LONGITUDE = os.path.join(TEST_ROOT, "invalidlongitude_dm.zip")
 
-NRT_FIRST_ZIP = os.path.join(TEST_ROOT, "first_nrt_batch", "ct155_nrt.zip")
-NRT_SECOND_ZIP = os.path.join(TEST_ROOT, "second_nrt_batch", "ct155_nrt.zip")
-NRT_NEW_CAMPAIGN = os.path.join(TEST_ROOT, "new_ct156_nrt.zip")
+NRT_FIRST_ZIP = os.path.join(TEST_ROOT, "first_nrt_batch", "wd12_nrt.zip")
+NRT_SECOND_ZIP = os.path.join(TEST_ROOT, "second_nrt_batch", "wd12_nrt.zip")
+NRT_NEW_CAMPAIGN = os.path.join(TEST_ROOT, "new_wd10_nrt.zip")
 NRT_SINGLE_CSV = os.path.join(TEST_ROOT, "metadata_ct111_nrt.csv")
 NRT_EMPTY_DIVE_ZIP = os.path.join(TEST_ROOT, "emptydive_ct999_nrt.zip")
 NRT_MIXED_CAMPAIGN = os.path.join(TEST_ROOT, "mixcampaign_ct555_nrt.zip")
 NRT_CSV_CAMPAIGN_MISMATCH = os.path.join(TEST_ROOT, "csvcampaignmismatch_ct999_nrt.zip")
 NRT_CSV_CAMPAIGN_FILE_CONTENT_MISMATCH = os.path.join(TEST_ROOT, "csvfilecontentmismatch_ct156_nrt.zip")
-
+NRT_CSV_SNAKE_CASE = os.path.join(TEST_ROOT, "dots_wd12_nrt.zip")
+NRT_CSV_DATE_FORMAT = os.path.join(TEST_ROOT, "date_format_us_ct156_nrt.zip")
 
 
 def check_file(cls, file):
@@ -192,6 +193,13 @@ class TestAatamsQcNrtHandler(HandlerTestCase):
         """Test a bad zip file with matching campaign names but unmatched csv campaign content"""
         self.run_handler_with_exception(SchemaError, NRT_CSV_CAMPAIGN_FILE_CONTENT_MISMATCH)
 
+    def test_snake_case(self):
+        """Test a bad zip file with old csv headers including a '.' instead of the new snake_case '_'"""
+        self.run_handler_with_exception(SchemaError, NRT_CSV_SNAKE_CASE)
+
+    def test_date_format(self):
+        """Test a bad zip file including some date using the US format instead of ISO format"""
+        self.run_handler_with_exception(SchemaError, NRT_CSV_DATE_FORMAT)
 
 if __name__ == "__main__":
     unittest.main()
