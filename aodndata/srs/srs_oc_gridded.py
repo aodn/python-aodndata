@@ -8,7 +8,7 @@ from aodncore.util.misc import get_pattern_subgroups_from_string
 
 SRS_OC_GRIDDED_VARIABLES = ['chl_gsm', 'chl_oc3', 'chl_oci', 'chl_oc4', 'chl_carder', 'dt', 'ipar', 'K_490', 'l2_flags',
                                'nanop_brewin2010at', 'nanop_brewin2012in', 'npp_vgpm_eppley_gsm',
-                               'npp_vgpm_eppley_oc3', 'npp_vgpm_eppley_oc4', 'owtd', 'par', 'picop_brewin2010at',
+                               'npp_vgpm_eppley_oc3', 'npp_vgpm_eppley_oc4', 'owtd_csiro', 'par', 'picop_brewin2010at',
                                'picop_brewin2012in', 'sst', 'sst_quality', 'tsm_clark16', 'tsm_clark']
 
 OC_VARIABLES = '|'.join(SRS_OC_GRIDDED_VARIABLES)
@@ -61,7 +61,7 @@ class SrsOcGriddedHandler(HandlerBase):
         elif RJOHNSON_FILE_PATTERN.match(file_basename):
             fields = get_pattern_subgroups_from_string(file_basename, RJOHNSON_FILE_PATTERN)
             data_parameter_code = fields['data_parameter_code']
-            time_coverage_resolution =  fields['time_coverage_resolution']
+            time_coverage_resolution = fields['time_coverage_resolution']
 
             if data_parameter_code == 'A':
                 product_name = 'aqua'
