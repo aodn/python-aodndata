@@ -112,6 +112,23 @@ class TestDwmFileClassifier(BaseTestCase):
         self.assertEqual(dest_dir, 'IMOS/DWM/DA/TOTTEN1/Velocity')
         self.assertEqual(dest_filename, filename)
 
+    def test_da_single_ping_velocity(self):
+        filename = 'IMOS_DWM-DA_AETVZ_20190926T030000Z_EAC2000_FV00_EAC2000-2021-Long-Ranger-Workhorse-ADCP-120_END' \
+                   '-20210527T213000Z_C-20211104T222150Z.nc'
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile, {'platform_code': 'EAC2000'},
+                       VEL1={'long_name': 'sea_water_velocity_from_acoustic_beam_1'},
+                       VEL2={'long_name': 'sea_water_velocity_from_acoustic_beam_2'},
+                       VEL3={'long_name': 'sea_water_velocity_from_acoustic_beam_3'},
+                       ABSIC1={},
+                       CMAG1={},
+                       PERG1={},
+                       TEMP={}
+                       )
+        dest_dir, dest_filename = os.path.split(DwmFileClassifier.dest_path(testfile))
+        self.assertEqual(dest_dir, 'IMOS/DWM/DA/EAC2000/Velocity/non-QC')
+        self.assertEqual(dest_filename, filename)
+
     def test_sots_velocity(self):
         filename = 'IMOS_DWM-SOTS_AETVZ_20100912T224200Z_SAZ47_FV01_SAZ47-13-2010-Aquadopp-Current-Meter-1100_END' \
                    '-20110804T053000Z_C-20140826T062213Z.nc '
