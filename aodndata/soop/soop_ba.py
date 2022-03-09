@@ -126,7 +126,7 @@ class SoopBaHandler(HandlerBase):
             non_nc_files = PipelineFileCollection(f for f in self.file_collection if f.file_type is not FileType.NETCDF)
             for non_nc in non_nc_files:
                 non_nc.check_type = PipelineFileCheckType.FORMAT_CHECK
-                if non_nc.extension in ['.ek5', '.out', '.raw']:
+                if non_nc.extension in ['.ek5', '.out', '.raw', '.csv']:
                     non_nc.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
                     dest_archive = archive_path_soop_ba(nc)
                     non_nc.archive_path = os.path.join(dest_archive, non_nc.name)

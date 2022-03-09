@@ -82,12 +82,12 @@ class TestSoopBaHandler(HandlerTestCase):
                          'IMOS/SOOP/SOOP-BA/VKAD_Antarctic-Discovery/Antarctic-Discovery_20160116-20160129/' + p.name)
         self.assertEqual(p.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
 
-        rawf = handler.file_collection.filter_by_attribute_value('extension', '.raw')
-        raw = rawf[0]
-        self.assertEqual(raw.archive_path,
+        rawf = handler.file_collection.filter_by_attribute_value('extension', ['.raw', 'csv'])
+        for raw in rawf:
+            self.assertEqual(raw.archive_path,
                          'IMOS/SOOP/SOOP-BA/raw/VKAD_Antarctic-Discovery/Antarctic-Discovery_20160116-20160129/'
                          + raw.name)
-        self.assertEqual(raw.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+            self.assertEqual(raw.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
 
     @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_bad_zip(self, mock_callsign):
@@ -107,14 +107,10 @@ class TestSoopBaHandler(HandlerTestCase):
         existing_file1 = PipelineFile(PREV_NC, dest_path=os.path.join(
             'IMOS/SOOP/SOOP-BA/VKAD_Antarctic-Discovery/Antarctic-Discovery_20160116-20160129/',
             os.path.basename(PREV_NC)))
-
-        existing_file2 = PipelineFile(CSV, dest_path=os.path.join(
-            'IMOS/SOOP/SOOP-BA/VKAD_Antarctic-Discovery/Antarctic-Discovery_20160116-20160129/',
-            os.path.basename(CSV)))
-        existing_file3 = PipelineFile(PNG, dest_path=os.path.join(
+        existing_file2 = PipelineFile(PNG, dest_path=os.path.join(
             'IMOS/SOOP/SOOP-BA/VKAD_Antarctic-Discovery/Antarctic-Discovery_20160116-20160129/',
             os.path.basename(PNG)))
-        preexisting_files.update([existing_file1, existing_file2, existing_file3])
+        preexisting_files.update([existing_file1, existing_file2])
 
         # set the files to UPLOAD_ONLY
         preexisting_files.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
@@ -141,8 +137,7 @@ class TestSoopBaHandler(HandlerTestCase):
         csvs = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)
         for csv in csvs:
             if csv.name == os.path.basename(CSV):
-                self.assertEqual(csv.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
-                self.assertEqual(csv.is_deleted, False)
+                self.assertEqual(csv.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
 
         pngs = handler.file_collection.filter_by_attribute_id('file_type', FileType.PNG)
         for png in pngs:
@@ -158,11 +153,7 @@ class TestSoopBaHandler(HandlerTestCase):
             'IMOS/SOOP/SOOP-BA/VKAD_Antarctic-Discovery/Antarctic-Discovery_20160116-20160129/',
             os.path.basename(GOOD_NC)))
 
-        existing_file2 = PipelineFile(CSV, dest_path=os.path.join(
-            'IMOS/SOOP/SOOP-BA/VKAD_Antarctic-Discovery/Antarctic-Discovery_20160116-20160129/',
-            os.path.basename(CSV)))
-
-        preexisting_files.update([existing_file1, existing_file2])
+        preexisting_files.update([existing_file1])
         # upload the 'preexisting_files' collection to the unit test's temporary upload location
         broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         broker.upload(preexisting_files)
@@ -173,11 +164,6 @@ class TestSoopBaHandler(HandlerTestCase):
         self.assertEqual(nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertEqual(nc[0].is_deleted, False)
 
-        csvs = handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV)
-        for csv in csvs:
-            if csv.name == os.path.basename(CSV):
-                self.assertEqual(csv.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
-                self.assertEqual(csv.is_deleted, False)
 
     @patch("aodndata.soop.soop_ba.ship_callsign_list", side_effect=mock_ship_callsign_list)
     def test_deployment_id_with_frequency(self, mock_callsign):
