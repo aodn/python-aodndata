@@ -22,6 +22,9 @@ GOOD_BUFR_CSV_PX30 = os.path.join(TEST_ROOT,
 BUFR_CSV_NO_LINE = os.path.join(TEST_ROOT,
                                   'IOSS01_AMMC_20200908051000_VLMJ.csv')
 
+BUFR_ALTERNATIVE_ASTROLABE_NAME = os.path.join(TEST_ROOT,
+                                               'IOSS01_AMMC_20211204160500_XEKXW9W.csv')
+
 
 def mock_platform_altlabels_per_preflabel(category_name='Vessel'):
     return {'VLHJ': 'Southern-Surveyor',
@@ -196,6 +199,20 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME/VLMJ_Investigator/2020/',
                                       'IMOS_SOOP-XBT_T_20200908T051000Z_NOLINE_FV00.nc'),
+                         f_nc.dest_path)
+        self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+
+    @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+           side_effect=mock_platform_altlabels_per_preflabel)
+    def test_alternative_astrolabe_name(self, mock_ship):
+        handler = self.run_handler(BUFR_ALTERNATIVE_ASTROLABE_NAME,
+                                   check_params={'checks': ['cf']},
+                                   custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
+
+        f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME/FASB_Astrolabe/2021/',
+                                      'IMOS_SOOP-XBT_T_20211204T160500Z_IX28_FV00_ID_9797539.nc'),
                          f_nc.dest_path)
         self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
 

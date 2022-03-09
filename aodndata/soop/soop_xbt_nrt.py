@@ -214,11 +214,11 @@ def parse_bufr_file(csv_path):
                 df["id"] == key_val].astype(int)
         del(j, key_id, key_val)
 
-        date_utc = datetime.datetime(_date['year'],
-                                     _date['month'],
-                                     _date['day'],
-                                     _date['hour'],
-                                     _date['minute'])
+        date_utc = datetime.datetime(_date['year'].values[0],
+                                     _date['month'].values[0],
+                                     _date['day'].values[0],
+                                     _date['hour'].values[0],
+                                     _date['minute'].values[0])
 
         profile_geotime['date_utc'] = date_utc  # store date_utc to profile_geotime
 
@@ -319,7 +319,7 @@ def fzf_vessel_get_info(profile):
     ship_name = profile['profile_metadata']['ship_name']
     ship_name_fuzzy_search = fwprocess.extractOne(ship_name,
                                                   list(callsign_list.values()),
-                                                  score_cutoff=90)
+                                                  score_cutoff=86)
     try:
         ship_name = ship_name_fuzzy_search[0]
     except:
