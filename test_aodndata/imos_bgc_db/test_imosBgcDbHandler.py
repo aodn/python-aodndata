@@ -62,9 +62,9 @@ class TestImosBgcDbHandler(HandlerTestCase):
         self.assertEqual(len(handler.file_collection), 1)
         for f in handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV):
             self.assertIs(f.check_type, PipelineFileCheckType.TABLE_SCHEMA_CHECK)
-            self.assertIs(f.publish_type, PipelineFilePublishType.HARVEST_ONLY)
+            self.assertIs(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
             self.assertTrue(f.is_checked)
-            self.assertFalse(f.is_stored)
+            self.assertTrue(f.is_stored)
 
         self.assertTrue(mock_harvester.called)
 
@@ -77,9 +77,9 @@ class TestImosBgcDbHandler(HandlerTestCase):
         self.assertEqual(len(handler.file_collection), 2)
         for f in handler.file_collection.filter_by_attribute_id('file_type', FileType.CSV):
             self.assertIs(f.check_type, PipelineFileCheckType.TABLE_SCHEMA_CHECK)
-            self.assertIs(f.publish_type, PipelineFilePublishType.HARVEST_ONLY)
+            self.assertIs(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
             self.assertTrue(f.is_checked)
-            self.assertFalse(f.is_stored)
+            self.assertTrue(f.is_stored)
 
         self.assertTrue(mock_harvester.called)
 
