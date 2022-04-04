@@ -23,7 +23,7 @@ class ImosBgcDbHandler(HandlerBase):
 
     def dest_path(self, filepath):
         """Destination path function for CSV files."""
-        return os.path.join('IMOS', 'BGC_DB', os.path.basename(filepath))
+        return os.path.join('IMOS', 'BGC_DB', 'harvested_from_CSIRO', os.path.basename(filepath))
 
     def archive_path(self, filepath):
         """Archive path for original input file."""
