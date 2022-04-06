@@ -19,6 +19,8 @@ For example, a child class may do one or more of the following:
 # User Guide
 
 It is highly recommended to use the [PyCharm IDE](https://www.jetbrains.com/pycharm/) for developing on this code base, as it provides many useful features out of the box, such as good unit test integration, real time code quality checking, automatic completion, and the usual basic IDE debugging capabilities such as setting breakpoints and syntax highlighting.
+## Licensing
+This project is licensed under the terms of the GNU GPLv3 license.
 
 ## Setting up the development environment
 
