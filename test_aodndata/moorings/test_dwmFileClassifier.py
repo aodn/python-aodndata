@@ -320,5 +320,13 @@ class TestDwmFileClassifier(BaseTestCase):
         self.assertEqual(dest_dir, 'IMOS/DWM/DA/CSIRO_gridded_all_variables')
         self.assertEqual(dest_filename, filename)
 
+    def test_hourly_depth_gridded_product(self):
+        filename = 'IMOS_DWM-DA_STZV_20120401_EAC2000_FV02_hourly-depth-gridded-product_END-20190924_C-20210910.nc'
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile, {'site_code': 'EAC2000', 'featureType': 'timeSeriesProfile'}, TIME={}, DEPTH={}, TEMP={}, PSAL={}, UCUR={}, VCUR={})
+        dest_dir, dest_filename = os.path.split(DwmFileClassifier.dest_path(testfile))
+        self.assertEqual(dest_dir, 'IMOS/DWM/DA/CSIRO_gridded_all_variables')
+        self.assertEqual(dest_filename, filename)
+
 if __name__ == '__main__':
     unittest.main()
