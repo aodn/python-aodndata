@@ -19,7 +19,7 @@ from aodntools.timeseries_products.velocity_hourly_timeseries import velocity_ho
 from aodndata.moorings.classifiers import MooringsFileClassifier
 
 
-PRODUCT_TYPE_PATTERN = re.compile(r'FV0[12]_([^_]+)_END')
+PRODUCT_TYPE_PATTERN = re.compile(r'FV0[123]_([^_]+)_END')
 DOWNLOAD_URL_PREFIX = "https://s3-ap-southeast-2.amazonaws.com/imos-data/"
 OPENDAP_URL_PREFIX = "http://thredds.aodn.org.au/thredds/dodsC/"
 
