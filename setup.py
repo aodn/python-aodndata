@@ -39,6 +39,7 @@ ENTRY_POINTS = {
         'dest_path_aatams_sattag_qc_ctd = aodndata.aatams:dest_path_aatams_sattag_qc_ctd',
         'dest_path_anmn_nrs_realtime = aodndata.moorings.classifiers:dest_path_anmn_nrs_realtime',
         'dest_path_aodn_wave_dm = aodndata.aodn_wave_dm.aodn_wave_dm:dest_path_aodn_wave_dm',
+        'dest_path_aodn_wave = aodndata.aodn_wave.aodn_wave:dest_path_aodn_wave',
         'dest_path_cars = aodndata.csiro.cars:dest_path_cars',
         'dest_path_deakin_bathymetry = aodndata.deakin.deakin_bathymetry:dest_path_deakin_bathymetry',
         'dest_path_mmp_ctd = aodndata.aims.mmp_ctd:dest_path_mmp_ctd',
