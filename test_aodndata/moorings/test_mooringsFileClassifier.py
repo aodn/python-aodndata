@@ -354,6 +354,21 @@ class TestMooringFileClassifier(BaseTestCase):
         make_test_file(testfile, {'site_code': 'NRSMAI'}, xCO2EQ_PPM={})
         self.assertRaises(InvalidFileNameError, MooringsFileClassifier.dest_path, testfile)
 
+    def test_profiling_mooring(self):
+        filename = 'IMOS_NTP-PME_BCFPST_20200308_GBRPPS-WireWalker_FV00_GBRPPS-WireWalker-01-2020-RBRmaestro3-200699-30m_END-20200417_C-20210917.nc'
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile,
+                       {'site_code': 'GBRPPS',
+                        'featureType': 'timeSeries'},
+                       TEMP={},
+                       CPHL={},
+                       PSAL={}
+                       )
+        dest_dir, dest_filename = os.path.split(MooringsFileClassifier.dest_path(testfile))
+        self.assertEqual(dest_dir, 'IMOS/NTP/Profiling_Moorings/GBRPPS')
+        self.assertEqual(dest_filename, filename)
+
+
 
 if __name__ == '__main__':
     unittest.main()
