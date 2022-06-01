@@ -25,6 +25,7 @@ DATA_MODE_REGEX = re.compile(r"""
                            (?P<site_name>(.*))_(?P<mode>RT|DM)_WAVE-PARAMETERS_END-
                            (?P<nc_time_cov_end>[0-9]{8})\.nc$
                            """, re.VERBOSE)
+
 BOM_WAVEBUOY = re.compile(r"""
                            BOM_
                            (?P<nc_time_cov_start>[0-9]{8})_
