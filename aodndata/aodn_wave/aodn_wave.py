@@ -19,7 +19,7 @@ WAVEBUOY_DIR = 'Wave_Buoys'
 DELAYED_DIR = 'Delayed'
 REALTIME_DIR = 'Realtime'
 
-DATA_MODE_REGEX = re.compile(r"""
+DATA_MODE_REGEX = re.compile(f"""
                            (.*)_
                            (?P<nc_time_cov_start>[0-9]{8})_
                            (?P<site_name>(.*))_(?P<mode>RT|DM)_WAVE-PARAMETERS_END-
