@@ -121,8 +121,10 @@ class MooringsFileClassifier(FileClassifier):
 
         dir_list = [cls.PROJECT]
         dir_list.extend(cls._get_facility(input_file))
-
-        if input_file.endswith('.nc'):
+        if name_fields[1] == 'NTP-PME':
+            dir_list[2] = 'Profiling_Moorings'
+            dir_list.append(cls._get_site_code(input_file))
+        elif input_file.endswith('.nc'):
             dir_list.append(cls._get_site_code(input_file))
             dir_list.append(cls._get_data_category(input_file))
             dir_list.append(cls._get_product_level(input_file))
