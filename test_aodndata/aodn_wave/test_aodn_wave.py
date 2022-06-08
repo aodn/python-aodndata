@@ -9,6 +9,10 @@ from aodndata.aodn_wave.handler import AodnWaveHandler
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
+PARAMETERS_FILE = os.path.join(TEST_ROOT, 'WAVE-PARAMETERS_END-12345678.nc')
+SPECTRA_FILE = os.path.join(TEST_ROOT, 'SPECTRA_END-12345678.nc')
+RAWDISPL_FILE = os.path.join(TEST_ROOT, 'RAW-DISPLACEMENTS_END-12345678.nc')
+
 
 class TestAodnWaveHandler(unittest.TestCase):
 
@@ -29,8 +33,8 @@ class TestAodnWaveHandler(unittest.TestCase):
                          os.path.join(
                              'Department_of_Planning_and_Environment-New_South_Wales',
                              'Wave_Buoys',
-                             'Delayed',
-                             'Wave-parameters',
+                             'DELAYED',
+                             'WAVE-PARAMETERS',
                              'MAROUBRA',
                              os.path.basename(testfile)))
 
@@ -43,8 +47,8 @@ class TestAodnWaveHandler(unittest.TestCase):
                          os.path.join(
                              'Department_of_Transport-Western_Australia',
                              'Wave_Buoys',
-                             'Delayed',
-                             'Wave-parameters',
+                             'DELAYED',
+                             'WAVE-PARAMETERS',
                              'CAPE-NATURALISTE',
                              os.path.basename(testfile)))
 
@@ -57,8 +61,8 @@ class TestAodnWaveHandler(unittest.TestCase):
                          os.path.join(
                              'Bureau_of_Meteorology',
                              'Wave_Buoys',
-                             'Delayed',
-                             'Wave-parameters',
+                             'DELAYED',
+                             'WAVE-PARAMETERS',
                              'CAPE-SORELL',
                              os.path.basename(testfile)))
 
@@ -71,8 +75,8 @@ class TestAodnWaveHandler(unittest.TestCase):
                          os.path.join(
                              'Bureau_of_Meteorology',
                              'Wave_Buoys',
-                             'Realtime',
-                             'Wave-parameters',
+                             'REALTIME',
+                             'WAVE-PARAMETERS',
                              'CAPE-DU-COUEDIC',
                              os.path.basename(testfile)))
 
@@ -85,8 +89,8 @@ class TestAodnWaveHandler(unittest.TestCase):
                          os.path.join(
                              'Department_of_Environment_and_Science-Queensland',
                              'Wave_Buoys',
-                             'Realtime',
-                             'Wave-parameters',
+                             'REALTIME',
+                             'WAVE-PARAMETERS',
                              'MACKAY',
                              os.path.basename(testfile)))
 
@@ -100,8 +104,8 @@ class TestAodnWaveHandler(unittest.TestCase):
         #                      'Department_of_Planning_and_Environment-New_South_Wales',
         #                      'Manly_Hydraulics_Laboratory',
         #                      'Wave_Buoys',
-        #                      'Delayed',
-        #                      'Wave-parameters',
+        #                      'DELAYED',
+        #                      'WAVE-PARAMETERS',
         #                      'BYRON_BAY',
         #                      os.path.basename(testfile)))
 
@@ -114,8 +118,8 @@ class TestAodnWaveHandler(unittest.TestCase):
                          os.path.join(
                              'Defence_Technology_Agency-New_Zealand',
                              'Wave_Buoys',
-                             'Delayed',
-                             'Wave-parameters',
+                             'DELAYED',
+                             'WAVE-PARAMETERS',
                              'CAMPBELL-ISLAND',
                              os.path.basename(testfile)))
 
@@ -128,8 +132,8 @@ class TestAodnWaveHandler(unittest.TestCase):
                          os.path.join(
                              'Defence_Technology_Agency-New_Zealand',
                              'Wave_Buoys',
-                             'Delayed',
-                             'Wave-parameters',
+                             'DELAYED',
+                             'WAVE-PARAMETERS',
                              'SOUTHERN-OCEAN',
                              os.path.basename(testfile)))
 
@@ -142,8 +146,8 @@ class TestAodnWaveHandler(unittest.TestCase):
                          os.path.join(
                              'IMOS/NTP/Low_Cost_Wave_Buoy_Technology',
                              'Wave_Buoys',
-                             'Delayed',
-                             'Wave-parameters',
+                             'DELAYED',
+                             'WAVE-PARAMETERS',
                              'TORBAY',
                              os.path.basename(testfile)))
 
@@ -156,8 +160,8 @@ class TestAodnWaveHandler(unittest.TestCase):
                          os.path.join(
                              'Department_of_Planning_and_Environment-New_South_Wales',
                              'Wave_Buoys',
-                             'Delayed',
-                             'Spectra',
+                             'DELAYED',
+                             'SPECTRA',
                              'MAROUBRA',
                              os.path.basename(testfile)))
 
