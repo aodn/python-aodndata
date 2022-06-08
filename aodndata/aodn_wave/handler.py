@@ -24,30 +24,11 @@ INSTITUTION_PATHNAME = {
 INSTITUTION_CODES = '|'.join([i for i in INSTITUTION_PATHNAME.keys()])
 
 # - All files/paths will have Wave-buoy in the file name and dir name:
-WAVEBUOY_DIR = 'Wave_Buoys'
+WAVEBUOY_DIR = 'WAVE-BUOYS'
 
 # - Possible data modes {in filename: in dir name}:
 DATA_MODE = {"RT": "REALTIME",
              "DM": "DELAYED"}
-
-INSTITUTION_REGEX = re.compile(r"""
-                (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|NSW-DPE|VIC-DEAKIN-UNI|UWA)_
-                .*\.nc$""", re.VERBOSE)
-
-DATE_REGEX = re.compile(r"""
-                (.*)_
-                (?P<nc_time_cov_start>[0-9]{8})_.*
-                (?P<nc_time_cov_end>[0-9]{8})\.nc$""", re.VERBOSE)
-
-DATA_MODE_REGEX = re.compile(r"""
-                (.*)_
-                (?P<mode>RT|DM)_
-                .*\.nc$""", re.VERBOSE)
-
-DATA_TYPE_REGEX = re.compile(r"""
-                (.*)_
-                (?P<datatype>WAVE-PARAMETERS|SPECTRA|RAW-DISPLACEMENTS)_END-
-                .*\.nc$""", re.VERBOSE)
 
 DATA_FILE_REGEX = re.compile(r"""
                 (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|NSW-DPE|VIC-DEAKIN-UNI|UWA)_
