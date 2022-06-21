@@ -22,7 +22,7 @@ class SrsOcLjcoHandler(HandlerBase):
         m = re.search(r'^IMOS_SRS-OC-LJCO_.*_([0-9]{8}T[0-9]{6}Z)_(SRC|LJCO)_FV0([0-2]{1}).*\.nc$', netcdf_filename)
 
         if m is None:
-            raise InvalidFileNameError("file name not matching regex to deduce dest_path")
+            raise InvalidFileNameError("file name {filename} not matching regex to deduce dest_path".format(filename=netcdf_filename))
 
         # list of allowed products keywords
         products_type_ls = ['ACS', 'EcoTriplet', 'BB9', 'HyperOCR', 'WQM', 'DALEC']
@@ -69,9 +69,15 @@ class SrsOcLjcoHandler(HandlerBase):
                 return os.path.join(nc_common_dir_structure_prefix,
                                     '%02d' % nc_month, netcdf_filename)
 
+
         if nc_product_time_cov[0] == 'hourly':
-            return os.path.join(nc_common_dir_structure_prefix,
-                                '%02d' % nc_month, '%02d' % nc_day, netcdf_filename)
+            base = os.path.join(nc_common_dir_structure_prefix,
+                                '%02d' % nc_month, '%02d' % nc_day)
 
         if nc_product_time_cov[0] == 'daily':
-            return os.path.join(nc_common_dir_structure_prefix, netcdf_filename)
+            base = nc_common_dir_structure_prefix
+
+        if nc_product_qc == 'FV02':
+            base = os.path.join(base, 'fv02-products')
+
+        return os.path.join(base, netcdf_filename)
