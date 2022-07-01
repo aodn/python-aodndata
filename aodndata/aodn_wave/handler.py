@@ -94,12 +94,12 @@ class AodnWaveHandler(HandlerBase):
         file_basename = os.path.basename(self.input_file)
         fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
         datatype = fields['datatype']
+
+        nc = self.file_collection[0]
         if datatype == 'WAVE-PARAMETERS':
-            self.input_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-            print("harvested")
+           nc.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
         elif datatype == 'SPECTRA' or 'RAW-DISPLACEMENTS':
-            self.input_file.publish_type = PipelineFilePublishType.UPLOAD_ONLY
-            print("S3")
+           nc.publish_type = PipelineFilePublishType.UPLOAD_ONLY
         else:
             raise ValueError(
                 "Invalid data type for this collection '{datatype}'".format(datatype=datatype))

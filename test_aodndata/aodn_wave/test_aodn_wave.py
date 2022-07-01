@@ -98,20 +98,6 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'CAMPBELL-ISLAND',
                              os.path.basename(testfile)))
 
-        testfile = 'DTA_20170530_SOUTHERN-OCEAN_DM_WAVE-PARAMETERS_END-20170530.nc'
-        make_test_file(testfile, {'site_name': 'Maroubra'},
-                       WSSH={}
-                       )
-        dest_dir = AodnWaveHandler.dest_path(testfile)
-        self.assertEqual(dest_dir,
-                         os.path.join(
-                             'Defence_Technology_Agency-New_Zealand',
-                             'WAVE-BUOYS',
-                             'DELAYED',
-                             'WAVE-PARAMETERS',
-                             'SOUTHERN-OCEAN',
-                             os.path.basename(testfile)))
-
         testfile = 'IMOS_NTP-WAVE_20200113_TORBAY_DM_WAVE-PARAMETERS_END-20200319.nc'
         make_test_file(testfile, {'site_name': 'Maroubra'},
                        WSSH={}
@@ -140,7 +126,38 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'MAROUBRA',
                              os.path.basename(testfile)))
 
+    def test_publication_integral_parameter(self):
+        testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_WAVE-PARAMETERS_END-20170918.nc'
+        make_test_file(testfile, {'site_name': 'Maroubra'},
+                       WSSH={}
+                       )
+        handler = self.run_handler(testfile)
 
+        nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
+        self.assertEqual(nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertTrue(nc[0].is_harvested)
+        self.assertTrue(nc[0].is_stored)
 
+    def test_publication_spectra(self):
+        testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_SPECTRA_END-20170918.nc'
+        make_test_file(testfile, {'site_name': 'Cape Naturaliste'},
+                       WSSH={}
+                       )
+        handler = self.run_handler(testfile)
+
+        nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
+        self.assertEqual(nc[0].publish_type, PipelineFilePublishType.UPLOAD_ONLY)
+        self.assertTrue(nc[0].is_stored)
+
+    def test_publication_raw(self):
+        testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_RAW-DISPLACEMENTS_END-20170918.nc'
+        make_test_file(testfile, {'site_name': 'Cape Naturaliste'},
+                       WSSH={}
+                       )
+        handler = self.run_handler(testfile)
+
+        nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
+        self.assertEqual(nc[0].publish_type, PipelineFilePublishType.UPLOAD_ONLY)
+        self.assertTrue(nc[0].is_stored)
 if __name__ == '__main__':
     unittest.main()
