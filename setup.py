@@ -8,6 +8,7 @@ ENTRY_POINTS = {
         'AnfogHandler = aodndata.anfog.handlers:AnfogHandler',
         'AcornHandler = aodndata.acorn.handler:AcornHandler',
         'AnmnNrsAimsHandler = aodndata.aims.anmn_nrs:AnmnNrsAimsHandler',
+        'AodnWaveHandler = aodndata.aodn_wave.handler:AodnWaveHandler',
         'AuvHandler = aodndata.auv.handler:AuvHandler',
         'ArgoHandler = aodndata.argo.handler:ArgoHandler',
         'AsyncUploadHandler = aodndata.common.asyncupload:AsyncUploadHandler',
