@@ -159,5 +159,7 @@ class TestAodnWaveHandler(HandlerTestCase):
         nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
         self.assertEqual(nc[0].publish_type, PipelineFilePublishType.UPLOAD_ONLY)
         self.assertTrue(nc[0].is_stored)
+
+
 if __name__ == '__main__':
     unittest.main()

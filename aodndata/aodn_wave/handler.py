@@ -97,9 +97,9 @@ class AodnWaveHandler(HandlerBase):
 
         nc = self.file_collection[0]
         if datatype == 'WAVE-PARAMETERS':
-           nc.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+            nc.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
         elif datatype == 'SPECTRA' or 'RAW-DISPLACEMENTS':
-           nc.publish_type = PipelineFilePublishType.UPLOAD_ONLY
+            nc.publish_type = PipelineFilePublishType.UPLOAD_ONLY
         else:
             raise ValueError(
                 "Invalid data type for this collection '{datatype}'".format(datatype=datatype))
