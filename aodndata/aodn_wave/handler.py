@@ -35,7 +35,7 @@ DATA_FILE_REGEX = re.compile(r"""
                 (?P<nc_time_cov_start>[0-9]{8})_
                 (?P<site_name>(.*))_
                 (?P<mode>RT|DM)_
-                (?P<datatype>WAVE-PARAMETERS|SPECTRA|RAW-DISPLACEMENTS)_END-
+                (?P<datatype>WAVE-PARAMETERS|WAVE-SPECTRA|WAVE-RAW-DISPLACEMENTS)_END-
                 (?P<nc_time_cov_end>[0-9]{8})\.nc$
                 """, re.VERBOSE)
 
@@ -64,7 +64,7 @@ class AodnWaveHandler(HandlerBase):
 
         mode_dir = DATA_MODE[data_mode]
 
-        type = re.search('WAVE-PARAMETERS|SPECTRA|RAW-DISPLACEMENTS', file_basename)
+        type = re.search('WAVE-PARAMETERS|WAVE-SPECTRA|WAVE-RAW-DISPLACEMENTS', file_basename)
         if type is None:
             raise InvalidFileNameError(
                 "file name: \"{filename}\" has incorrect data type that is not part of the collection".format(
@@ -98,7 +98,7 @@ class AodnWaveHandler(HandlerBase):
         nc = self.file_collection[0]
         if datatype == 'WAVE-PARAMETERS':
             nc.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-        elif datatype == 'SPECTRA' or 'RAW-DISPLACEMENTS':
+        elif datatype == 'WAVE-SPECTRA' or 'WAVE-RAW-DISPLACEMENTS':
             nc.publish_type = PipelineFilePublishType.UPLOAD_ONLY
         else:
             raise ValueError(
