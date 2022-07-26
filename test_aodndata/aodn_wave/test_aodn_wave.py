@@ -12,8 +12,8 @@ from aodndata.aodn_wave.handler import AodnWaveHandler
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 PARAMETERS_FILE = os.path.join(TEST_ROOT, 'NSW-DPE_20160811_MAROUBRA_DM_WAVE-PARAMETERS_END-20160912.nc')
-SPECTRA_FILE = os.path.join(TEST_ROOT, 'SPECTRA_END-12345678.nc')
-RAWDISPL_FILE = os.path.join(TEST_ROOT, 'RAW-DISPLACEMENTS_END-12345678.nc')
+SPECTRA_FILE = os.path.join(TEST_ROOT, 'WAVE-SPECTRA_END-12345678.nc')
+RAWDISPL_FILE = os.path.join(TEST_ROOT, 'WAVE-RAW-DISPLACEMENTS_END-12345678.nc')
 
 
 class TestAodnWaveHandler(HandlerTestCase):
@@ -112,7 +112,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'TORBAY',
                              os.path.basename(testfile)))
 
-        testfile = 'NSW-DPE_20200113_MAROUBRA_DM_SPECTRA_END-20200319.nc'
+        testfile = 'NSW-DPE_20200113_MAROUBRA_DM_WAVE-SPECTRA_END-20200319.nc'
         make_test_file(testfile, {'site_name': 'Maroubra'},
                        WSSH={}
                        )
@@ -122,8 +122,22 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'Department_of_Planning_and_Environment-New_South_Wales',
                              'WAVE-BUOYS',
                              'DELAYED',
-                             'SPECTRA',
+                             'WAVE-SPECTRA',
                              'MAROUBRA',
+                             os.path.basename(testfile)))
+
+        testfile = 'UWA_20210701_KING-GEORGE-SOUND_DM_WAVE-PARAMETERS_END-20210801.nc'
+        make_test_file(testfile, {'site_name': 'Maroubra'},
+                       WSSH={}
+                       )
+        dest_dir = AodnWaveHandler.dest_path(testfile)
+        self.assertEqual(dest_dir,
+                         os.path.join(
+                             'UWA',
+                             'WAVE-BUOYS',
+                             'DELAYED',
+                             'WAVE-PARAMETERS',
+                             'KING-GEORGE-SOUND',
                              os.path.basename(testfile)))
 
     def test_publication_integral_parameter(self):
@@ -139,7 +153,7 @@ class TestAodnWaveHandler(HandlerTestCase):
         self.assertTrue(nc[0].is_stored)
 
     def test_publication_spectra(self):
-        testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_SPECTRA_END-20170918.nc'
+        testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_WAVE-SPECTRA_END-20170918.nc'
         make_test_file(testfile, {'site_name': 'Cape Naturaliste'},
                        WSSH={}
                        )
@@ -150,7 +164,7 @@ class TestAodnWaveHandler(HandlerTestCase):
         self.assertTrue(nc[0].is_stored)
 
     def test_publication_raw(self):
-        testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_RAW-DISPLACEMENTS_END-20170918.nc'
+        testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_WAVE-RAW-DISPLACEMENTS_END-20170918.nc'
         make_test_file(testfile, {'site_name': 'Cape Naturaliste'},
                        WSSH={}
                        )
