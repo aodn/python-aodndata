@@ -56,7 +56,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'CAPE-SORELL',
                              os.path.basename(testfile)))
 
-        testfile = 'BOM_19980107_CAPE-DU-COUEDIC_RT_WAVE-PARAMETERS_END-19981231.nc'
+        testfile = 'BOM_19980107_CAPE-DU-COUEDIC_DM_WAVE-PARAMETERS_END-19981231.nc'
         make_test_file(testfile, {'site_name': 'Maroubra'},
                        WSSH={}
                        )
@@ -65,12 +65,12 @@ class TestAodnWaveHandler(HandlerTestCase):
                          os.path.join(
                              'Bureau_of_Meteorology',
                              'WAVE-BUOYS',
-                             'REALTIME',
+                             'DELAYED',
                              'WAVE-PARAMETERS',
                              'CAPE-DU-COUEDIC',
                              os.path.basename(testfile)))
 
-        testfile = 'DES-QLD_19750918_MACKAY_RT_WAVE-PARAMETERS_END-20110210.nc'
+        testfile = 'DES-QLD_19750918_MACKAY_DM_WAVE-PARAMETERS_END-20110210.nc'
         make_test_file(testfile, {'site_name': 'Maroubra'},
                        WSSH={}
                        )
@@ -79,7 +79,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                          os.path.join(
                              'Department_of_Environment_and_Science-Queensland',
                              'WAVE-BUOYS',
-                             'REALTIME',
+                             'DELAYED',
                              'WAVE-PARAMETERS',
                              'MACKAY',
                              os.path.basename(testfile)))
