@@ -56,7 +56,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'CAPE-SORELL',
                              os.path.basename(testfile)))
 
-        testfile = 'BOM_19980107_CAPE-DU-COUEDIC_RT_WAVE-PARAMETERS_END-19981231.nc'
+        testfile = 'BOM_19980107_CAPE-DU-COUEDIC_DM_WAVE-PARAMETERS_END-19981231.nc'
         make_test_file(testfile, {'site_name': 'Maroubra'},
                        WSSH={}
                        )
@@ -65,12 +65,12 @@ class TestAodnWaveHandler(HandlerTestCase):
                          os.path.join(
                              'Bureau_of_Meteorology',
                              'WAVE-BUOYS',
-                             'REALTIME',
+                             'DELAYED',
                              'WAVE-PARAMETERS',
                              'CAPE-DU-COUEDIC',
                              os.path.basename(testfile)))
 
-        testfile = 'DES-QLD_19750918_MACKAY_RT_WAVE-PARAMETERS_END-20110210.nc'
+        testfile = 'DES-QLD_19750918_MACKAY_DM_WAVE-PARAMETERS_END-20110210.nc'
         make_test_file(testfile, {'site_name': 'Maroubra'},
                        WSSH={}
                        )
@@ -79,7 +79,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                          os.path.join(
                              'Department_of_Environment_and_Science-Queensland',
                              'WAVE-BUOYS',
-                             'REALTIME',
+                             'DELAYED',
                              'WAVE-PARAMETERS',
                              'MACKAY',
                              os.path.basename(testfile)))
@@ -174,6 +174,28 @@ class TestAodnWaveHandler(HandlerTestCase):
         self.assertEqual(nc[0].publish_type, PipelineFilePublishType.UPLOAD_ONLY)
         self.assertTrue(nc[0].is_stored)
 
+    def test_publication_realtime(self):
+        testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_RT_WAVE-PARAMETERS_END-20170918.nc'
+        make_test_file(testfile, {'site_name': 'Cape Naturaliste'},
+                       WSSH={}
+                       )
+        handler = self.run_handler(testfile)
+
+        nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
+        self.assertEqual(nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertTrue(nc[0].is_stored)
+        self.assertTrue(nc[0].is_harvested)
+        dest_dir = AodnWaveHandler.dest_path(testfile)
+        self.assertEqual(dest_dir,
+                         os.path.join(
+                             'Department_of_Transport-Western_Australia',
+                             'WAVE-BUOYS',
+                             'REALTIME',
+                             'WAVE-PARAMETERS',
+                             'CAPE-NATURALISTE',
+                             '2017',
+                             '06',
+                             os.path.basename(testfile)))
 
 if __name__ == '__main__':
     unittest.main()

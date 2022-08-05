@@ -1,8 +1,7 @@
 import os
 import re
 
-from aodncore.pipeline.exceptions import InvalidFileContentError, InvalidFileNameError, InvalidFileFormatError, \
-    InvalidInputFileError
+from aodncore.pipeline.exceptions import InvalidFileNameError
 from aodncore.pipeline import HandlerBase, PipelineFilePublishType
 from aodncore.util.misc import get_pattern_subgroups_from_string
 
@@ -83,6 +82,10 @@ class AodnWaveHandler(HandlerBase):
         data_base_dir = os.path.join(INSTITUTION_PATHNAME[institution], WAVEBUOY_DIR, mode_dir, data_type)
         fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
         product_dir = fields['site_name']
+        if data_mode == 'RT':
+            year = fields['nc_time_cov_start'][0:4]
+            month = fields['nc_time_cov_start'][4:6]
+            product_dir = os.path.join(product_dir, year, month)
 
         return os.path.join(data_base_dir, product_dir, os.path.basename(filepath))
 
