@@ -9,7 +9,7 @@ from datetime import datetime
 class SrsOcLjcoHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(SrsOcLjcoHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.nc']
+        self.allowed_extensions = ['.nc', '.manifest']
 
     @staticmethod
     def dest_path(filepath):
