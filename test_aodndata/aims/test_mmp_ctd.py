@@ -1,17 +1,25 @@
 import os
 import unittest
 
-from aodndata.aims.mmp_ctd import dest_path_mmp_ctd
+from aodncore.pipeline import PipelineFilePublishType
+from aodncore.testlib import HandlerTestCase
+from aodndata.aims.mmp_ctd import MmpCtdHandler
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
+GOOD_NC = os.path.join(TEST_ROOT, 'AIMS_MMP-WQ_20061027T111208Z_WQN083_FV01_Profile-SBE19plus_C-20210831T061352Z.nc')
+
+class TestMmpCtdHandler(HandlerTestCase):
+    def setUp(self):
+        self.handler_class = MmpCtdHandler
+        super(TestMmpCtdHandler, self).setUp()
 
 
-class TestMmpCtd(unittest.TestCase):
+    def test_handler(self):
+        handler = self.run_handler(GOOD_NC)
+        self.assertEqual(len(handler.file_collection), 1)
+        f = handler.file_collection[0]
+        self.assertEqual(f.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
 
-    def test_dest_path_mmp_ctd(self):
-        good_nc = os.path.join(TEST_ROOT, 'AIMS_MMP-WQ_20061027T111208Z_WQN083_FV01_Profile-SBE19plus_C-20210831T061352Z.nc')
-        self.assertEqual('AIMS/Marine_Monitoring_Program/CTD_profiles/2006/BUR4/AIMS_MMP-WQ_20061027T111208Z_WQN083_FV01_Profile-SBE19plus_C-20210831T061352Z.nc',
-                         dest_path_mmp_ctd(good_nc))
 
 
 if __name__ == '__main__':
