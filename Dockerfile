@@ -15,6 +15,8 @@ RUN apt-get update && \
 
 RUN add-apt-repository ppa:rael-gc/rvm && apt-get update
 
+RUN add-apt-repository ppa:ubuntugis/ubuntugis-unstable && apt-get update
+
 RUN apt-get install -y --no-install-recommends \
     build-essential \
     ca-certificates \
@@ -22,6 +24,9 @@ RUN apt-get install -y --no-install-recommends \
     libmagic1 \
     libudunits2-dev \
     python3-dev \
+    libproj-dev \
+    libgeos-dev \
+    libffi-dev \
     wget \
     libffi-dev \
     # Pyenv pre-requisites (from https://github.com/pyenv/pyenv/wiki#suggested-build-environment)

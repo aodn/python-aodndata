@@ -16,6 +16,7 @@ dependencies:
   - cython
   - cf-units  # force cf-units to be installed from conda-forge. packaged failed otherwise
   - python=3.8
+  - cartopy=0.20.3
   - pip
   - pip:
     - numpy>1.19.0
