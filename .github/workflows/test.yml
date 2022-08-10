@@ -20,14 +20,15 @@ jobs:
       fail-fast: false
     steps:
     - uses: actions/checkout@v3
-    - name: additional required packages
+    - name: update apt-cache
       run: |
         sudo apt-get update &&
-        sudo apt-get install -y --no-install-recommends \
-        libudunits2-dev
-    - name: cartopy - install additional required packages
+        sudo apt-get install -y software-properties-common --no-install-recommends &&
+        sudo add-apt-repository -y -u ppa:ubuntugis/ubuntugis-unstable
+    - name: install additional required packages
       run: |
         sudo apt-get install -y --no-install-recommends \
+        libudunits2-dev \
         libproj-dev \
         libgeos-dev \
         libffi-dev \
@@ -36,23 +37,6 @@ jobs:
         build-essential \
         curl \
         libcurl4-openssl-dev
-    - name: cartopy - build Gtest needed for proj build
-      run: |
-        cd /usr/src/googletest && \
-        sudo cmake . && \
-        sudo cmake --build . --target install
-    - name: cartopy - build proj 9.0.0
-      run: |
-        curl https://download.osgeo.org/proj/proj-9.0.0.tar.gz | tar -xz -C /tmp \
-        && cd /tmp/proj-9.0.0/ \
-        && mkdir build \
-        && cd build \
-        && cmake .. \
-        && cmake --build && echo "THIS IS A TEST";
-        sudo cmake --build . --target install
-    - name: cartopy - libproj
-      run: |
-        sudo ldconfig
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
