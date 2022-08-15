@@ -160,12 +160,14 @@ class SrsSarWindHandler(HandlerBase):
         Creation of a plot for each NetCDF file
         :return:
         """
-        nc_file = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        nc_files = self.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
 
-        png_output_path, png_output_dest_path = create_sar_wind_plot(nc_file.src_path, self.temp_dir)
-        png_file = PipelineFile(png_output_path, dest_path=png_output_dest_path)
-        png_file.publish_type = PipelineFilePublishType.UPLOAD_ONLY
-        self.file_collection.add(png_file)
+        for nc_file in nc_files:
+
+            png_output_path, png_output_dest_path = create_sar_wind_plot(nc_file.src_path, self.temp_dir)
+            png_file = PipelineFile(png_output_path, dest_path=png_output_dest_path)
+            png_file.publish_type = PipelineFilePublishType.UPLOAD_ONLY
+            self.file_collection.add(png_file)
 
     @staticmethod
     def dest_path(filepath, file_pattern=SAR_WIND_FILE_PATTERN, prefix_path=SAR_WIND_PREFIX_PATH):
