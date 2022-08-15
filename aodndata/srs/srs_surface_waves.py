@@ -153,7 +153,7 @@ def dest_path_srs_surface_waves_sar(filepath, file_pattern=SAR_FILE_PATTERN, pre
 class SrsSarWindHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(SrsSarWindHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.nc', '.png']
+        self.allowed_extensions = ['.nc', '.png', '.manifest']
 
     def preprocess(self):
         """
