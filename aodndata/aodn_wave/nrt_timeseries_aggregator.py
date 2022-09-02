@@ -25,29 +25,21 @@ def file_aggregator(file_to_agg, src_file_path, products_dir, filename_fields):
     Find the monthly timeseries file to aggreagte with and create the aggregated netcdf file
     :param: file_to_agg file to aggregate to monthy product (pipelinefile)
     :param: src_file_path  path or name of existing aggregated file
+    :param: products_dir directory where the product is created
     :param: filename_fields fields making up the filename (list)
     :return:  aggregated file path
     """
 
-    institution = filename_fields['institution']
-    nc_time_cov_start = filename_fields['nc_time_cov_start']
-    site_name = filename_fields['site_name']
-    mode = filename_fields['mode']
-    datatype = filename_fields['datatype']
-    aggregated_filename = ('{institution}_{time_start}_{site_name}_{mode}_{datatype}_monthly.nc'.format(
-        institution=institution,
-        time_start=nc_time_cov_start,
-        site_name=site_name,
-        mode=mode,
-        datatype=datatype
-    ))
-    aggregated_file_path = os.path.join(products_dir, aggregated_filename) #new product name
     to_agg_df, to_agg_nc = extract_variable(file_to_agg.src_path)
 
-    if src_file_path is not None:
+    if src_file_path:
         # extract variables from files and aggregate into a dataframe
-        source_df, source_nc = extract_variable(os.path.join(src_file_path))
+        aggregated_filename = os.path.basename(src_file_path)
+        aggregated_file_path = os.path.join(products_dir, aggregated_filename)
+        source_df, source_nc = extract_variable(src_file_path)
     else:
+        aggregated_filename = make_monthly_product_name(filename_fields)
+        aggregated_file_path = os.path.join(products_dir, aggregated_filename)
         source_df = pd.DataFrame()
         source_nc = to_agg_nc
 
@@ -100,7 +92,7 @@ def file_aggregator(file_to_agg, src_file_path, products_dir, filename_fields):
         template.variables[var]['_data'] = source_df[var].values
 
     template.variables['Timeseries']['_data'] = [1]
-    #### verifier values for TIME
+
     ## create temporary aggregated file -  with filename identical to monthly source file
     template.to_netcdf(aggregated_file_path)
 
@@ -131,3 +123,23 @@ def extract_variable(filepath):
                        'WAVE_quality_control': WAVE_quality_control})
     nc.close()
     return df, nc
+
+
+def make_monthly_product_name(fields):
+    """generate product filename
+    params: fields list of string
+    :return filename string
+    """
+    institution = fields['institution']
+    nc_time_cov_start = fields['nc_time_cov_start']
+    site_name = fields['site_name']
+    mode = fields['mode']
+    datatype = fields['datatype']
+    filename = ('{institution}_{time_start}_{site_name}_{mode}_{datatype}_monthly.nc'.format(
+        institution=institution,
+        time_start=nc_time_cov_start,
+        site_name=site_name,
+        mode=mode,
+        datatype=datatype
+    ))
+    return filename
