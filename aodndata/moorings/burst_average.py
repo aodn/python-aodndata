@@ -25,8 +25,7 @@ from netCDF4 import Dataset, date2num, num2date
 
 from aodntools.ncwriter import ImosTemplate
 from aodndata.moorings.classifiers import MooringsFileClassifier
-from aodndata.version import __version__
-
+from aodndata._version import __version__ as _aodndata_version
 
 TEMPLATE_JSON = resource_filename('aodndata', 'templates/moorings_burst_average_template.json')
 
@@ -409,7 +408,7 @@ def create_burst_average_netcdf(input_netcdf_file_path, output_dir):
     template.variables['TIME']['_data'] = np.ma.masked_invalid(time_burst_vals)
 
     github_comment = (' Product created with https://github.com/aodn/python-aodndata'
-                      '/blob/{v}/aodndata/moorings/burst_average.py'.format(v=__version__)
+                      '/blob/{v}/aodndata/moorings/burst_average.py'.format(v=_aodndata_version)
                       )
     template.global_attributes['lineage'] += github_comment
 
