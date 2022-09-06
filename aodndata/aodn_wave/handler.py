@@ -1,9 +1,11 @@
 import os
 import re
 
-from aodncore.pipeline.exceptions import InvalidFileNameError
-from aodncore.pipeline import HandlerBase, PipelineFilePublishType
+from aodncore.pipeline.exceptions import InvalidFileNameError, PipelineProcessingError,DuplicatePipelineFileError
+from aodncore.pipeline import PipelineFile, HandlerBase, PipelineFilePublishType
 from aodncore.util.misc import get_pattern_subgroups_from_string
+
+from . import nrt_timeseries_aggregator
 
 # Defining global variables:
 # - Defining all the possible Institutions that provides us with data (the acronym and the dir name for each):
@@ -34,10 +36,9 @@ DATA_FILE_REGEX = re.compile(r"""
                 (?P<nc_time_cov_start>[0-9]{8})_
                 (?P<site_name>(.*))_
                 (?P<mode>RT|DM)_
-                (?P<datatype>WAVE-PARAMETERS|WAVE-SPECTRA|WAVE-RAW-DISPLACEMENTS)_END-
-                (?P<nc_time_cov_end>[0-9]{8})\.nc$
+                (?P<datatype>WAVE-PARAMETERS|WAVE-SPECTRA|WAVE-RAW-DISPLACEMENTS)_.*
+                \.nc$
                 """, re.VERBOSE)
-
 
 class AodnWaveHandler(HandlerBase):
     """Handling AODN wave data files in Near Realtime or Delayed mode. It handles the following types of NetCDF files:
@@ -48,46 +49,46 @@ class AodnWaveHandler(HandlerBase):
 
     def __init__(self, *args, **kwargs):
         super(AodnWaveHandler, self).__init__(*args, **kwargs)
+        self.allowed_extensions = ['.nc']
+
+        # store the NC file and the subsequent upload destination calculated from it in the class for other file types
+        # to access it when they need to (e.g. dest_path)
+        self.upload_destination = None
 
     @staticmethod
     def dest_path(filepath):
         file_basename = os.path.basename(filepath)
-
-        mode = re.search('RT|DM', file_basename)
+        fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
+        mode = fields['mode']
         if mode is None:
             raise InvalidFileNameError(
-                "file name: \"{filename}\" has data mode (RT or DM) missing or incorrect".format(
+                "file name: '{filename}' has data mode (RT or DM) missing or incorrect".format(
                     filename=file_basename))
-        else:
-            data_mode = mode.group(0)
 
-        mode_dir = DATA_MODE[data_mode]
+        mode_dir = DATA_MODE[mode]
 
-        type = re.search('WAVE-PARAMETERS|WAVE-SPECTRA|WAVE-RAW-DISPLACEMENTS', file_basename)
-        if type is None:
+        data_type = fields['datatype']
+        if data_type is None:
             raise InvalidFileNameError(
-                "file name: \"{filename}\" has incorrect data type that is not part of the collection".format(
-                    filename=file_basename))
-        else:
-            data_type = type.group(0)
+                "file name: '{filename}' has incorrect data type '{type}'that is not part of the collection".format(
+                    filename=file_basename, type=data_type))
 
-        inst = re.search(INSTITUTION_CODES, file_basename)
-        if inst is None:
+        institution = fields['institution']
+        if institution is None:
             raise InvalidFileNameError(
-                "file name: \"{filename}\" has incorrect institution which is not listed as part of the collection"
-                .format(filename=file_basename))
-        else:
-            institution = inst.group(0)
+                "file name: '{filename}' has incorrect institution '{institution}' which is not listed "
+                "as part of the collection".format(filename=file_basename, insitution=institution))
 
         data_base_dir = os.path.join(INSTITUTION_PATHNAME[institution], WAVEBUOY_DIR, mode_dir, data_type)
-        fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
-        product_dir = fields['site_name']
-        if data_mode == 'RT':
+
+        site_dir = fields['site_name']
+        if mode == 'RT':
+            site_dir = fields['site_name']
             year = fields['nc_time_cov_start'][0:4]
             month = fields['nc_time_cov_start'][4:6]
-            product_dir = os.path.join(product_dir, year, month)
+            site_dir = os.path.join(site_dir, year, month)
 
-        return os.path.join(data_base_dir, product_dir, os.path.basename(filepath))
+        return os.path.join(data_base_dir, site_dir, os.path.basename(filepath))
 
     def preprocess(self):
         """
@@ -96,13 +97,58 @@ class AodnWaveHandler(HandlerBase):
         """
         file_basename = os.path.basename(self.input_file)
         fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
-        datatype = fields['datatype']
+        if not fields:
+            raise InvalidFileNameError("Incorrect file name: '{file}'".format(file=file_basename))
 
-        nc = self.file_collection[0]
-        if datatype == 'WAVE-PARAMETERS':
-            nc.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-        elif datatype == 'WAVE-SPECTRA' or 'WAVE-RAW-DISPLACEMENTS':
-            nc.publish_type = PipelineFilePublishType.UPLOAD_ONLY
+        datatype = fields['datatype']
+        mode = fields['mode']
+
+        # len
+        if len(self.file_collection)>1:
+            DuplicatePipelineFileError("ABORTING:More than one file in the file collection")
+
+        input_nc_file = self.file_collection[0]
+
+        if mode == 'RT':
+            # check if an aggregated monthly file exist in the destination folder.
+            # If a monthly file exist, aggregate the new file
+            self.upload_destination = os.path.dirname(AodnWaveHandler.dest_path(self.input_file))
+            result = self.state_query.query_storage(self.upload_destination)
+            if result:
+                if len(result) > 1:
+                    raise PipelineProcessingError("More than one file found in monthly folder")
+
+                self.logger.info("Mode '{mode}': found an existing monthly file. Generating updated aggregated "
+                                 "product '{remotefile}'."
+                             .format(mode=mode, remotefile=result[0].dest_path))
+                # No need to add previous file to the Pipelinefilecollection for deletion as it will simply be overwritten.
+                # aggregate files and add to pipeline file collection
+                self.state_query.download(result, self.temp_dir)
+                source_file_path = result[0].local_path
+                aggregated_file_path = nrt_timeseries_aggregator.file_aggregator(input_nc_file,
+                                                                                 source_file_path,
+                                                                                 self.products_dir, fields)
+            else:
+                #process input_file only to rename it
+                self.logger.info("Mode '{mode}': no existing monthly file at : {remotefile}.".
+                                 format(mode=mode, remotefile=self.upload_destination))
+                aggregated_file_path = nrt_timeseries_aggregator.file_aggregator(input_nc_file, None, self.products_dir,
+                                                                                 fields)
+
+            aggregated_file = PipelineFile(aggregated_file_path)
+            aggregated_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+            input_nc_file.publish_type = PipelineFilePublishType.NO_ACTION
+            self.file_collection.add(aggregated_file)
+
         else:
-            raise ValueError(
-                "Invalid data type for this collection '{datatype}'".format(datatype=datatype))
+            if datatype == 'WAVE-PARAMETERS':
+                input_nc_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+            elif datatype == 'WAVE-SPECTRA' or 'WAVE-RAW-DISPLACEMENTS':
+                input_nc_file.publish_type = PipelineFilePublishType.UPLOAD_ONLY
+            else:
+                raise ValueError(
+                    "Invalid data type for this collection '{datatype}'".format(datatype=datatype))
+
+
+
+
