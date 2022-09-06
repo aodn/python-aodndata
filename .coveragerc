@@ -2,7 +2,7 @@
 branch = True
 source = aodndata
 omit =
-    aodndata/__init__.py
+    setup.py
     test_aodndata/*
 
 [report]
