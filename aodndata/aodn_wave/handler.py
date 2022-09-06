@@ -33,7 +33,7 @@ DATA_MODE = {"RT": "REALTIME",
 
 DATA_FILE_REGEX = re.compile(r"""
                 (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|NSW-DPE|VIC-DEAKIN-UNI|UWA)_
-                (?P<nc_time_cov_start>[0-9]{8})_
+                (?P<nc_time_cov_start>[0-9]{8}).*_
                 (?P<site_name>(.*))_
                 (?P<mode>RT|DM)_
                 (?P<datatype>WAVE-PARAMETERS|WAVE-SPECTRA|WAVE-RAW-DISPLACEMENTS)_.*
