@@ -14,11 +14,13 @@ INSTITUTION_PATHNAME = {
     "DOT-WA": 'Department_of_Transport-Western_Australia',
     "DTA": 'Defence_Technology_Agency-New_Zealand',
     "DES-QLD": 'Department_of_Environment_and_Science-Queensland',
-    "MHL": 'Manly_Hydraulics_Laboratory',
+    "MHL": 'Department_of_Planning_and_Environment-New_South_Wales/Manly_Hydraulics_Laboratory',
     "IMOS_NTP-WAVE": 'IMOS/NTP/Low_Cost_Wave_Buoy_Technology',
     "NSW-DPE": 'Department_of_Planning_and_Environment-New_South_Wales',
     "VIC-DEAKIN-UNI": 'Deakin_University',
-    "UWA": 'UWA'
+    "UWA": 'UWA',
+    "PPA": "Pilbara_Ports_Authority",
+    "GP-VIC": "Gippsland-Ports-Victoria"
 }
 
 # - Listing just the institution codes (A|B|C|...|F|G):
@@ -32,7 +34,7 @@ DATA_MODE = {"RT": "REALTIME",
              "DM": "DELAYED"}
 
 DATA_FILE_REGEX = re.compile(r"""
-                (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|NSW-DPE|VIC-DEAKIN-UNI|UWA)_
+                (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|NSW-DPE|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC)_
                 (?P<nc_time_cov_start>[0-9]{8}).*_
                 (?P<site_name>(.*))_
                 (?P<mode>RT|DM)_
