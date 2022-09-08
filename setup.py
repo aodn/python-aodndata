@@ -51,7 +51,7 @@ ENTRY_POINTS = {
         'dest_path_srs_surface_waves_sar = aodndata.srs.srs_surface_waves:dest_path_srs_surface_waves_sar'
     ],
     'pipeline.module_versions': [
-        'aodndata = aodndata.version:__version__',
+        'aodndata = aodndata:__version__',
         'cc-plugin-imos = cc_plugin_imos:__version__',
         'aodntools = aodntools:__version__'
     ]
