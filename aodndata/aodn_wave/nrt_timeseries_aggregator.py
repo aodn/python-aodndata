@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
 
-import argparse
-import json
 import os
-import shutil
-import tempfile
-
 import pandas as pd
 import numpy as np
 import xarray as xr
@@ -13,10 +8,10 @@ from netCDF4 import Dataset, num2date, stringtochar
 from pkg_resources import resource_filename
 
 from aodntools.ncwriter import ImosTemplate
-from aodntools.timeseries_products.common import (NoInputFilesError, check_file, in_water, current_utc_timestamp,
-                                                  TIMESTAMP_FORMAT, DATESTAMP_FORMAT)
+from aodntools.timeseries_products.common import (current_utc_timestamp)
 
 TEMPLATE_JSON = resource_filename('aodndata', 'templates/aodn_wave_nrt_timeseries_template.json')
+
 
 ## MAIN FUNCTION
 def file_aggregator(file_to_agg, src_file_path, products_dir, filename_fields):
@@ -48,50 +43,13 @@ def file_aggregator(file_to_agg, src_file_path, products_dir, filename_fields):
 
     # dataframe to store template of new aggregated file
     template = ImosTemplate.from_json(TEMPLATE_JSON)
-    # copy attribute to new file
-    template.global_attributes.update({'site_name': to_agg_nc.site_name,
-                                       'institution': to_agg_nc.institution,
-                                       'wave_buoy_type': to_agg_nc.wave_buoy_type,
-                                       'instrument': to_agg_nc.instrument,
-                                       'instrument_burst_interval': to_agg_nc.instrument_burst_interval,
-                                       'instrument_burst_duration': to_agg_nc.instrument_burst_duration,
-                                       'instrument_burst_units': to_agg_nc.instrument_burst_units,
-                                       'instrument_sampling_interval': to_agg_nc.instrument_sampling_interval,
-                                       'wave_motion_sensor_type': to_agg_nc.wave_motion_sensor_type,
-                                       'wave_sensor_serial_number': to_agg_nc.wave_sensor_serial_number,
-                                       'hull_serial_number': to_agg_nc.hull_serial_number,
-                                       'transmission': to_agg_nc.transmission,
-                                       'water_depth': to_agg_nc.water_depth,
-                                       'water_depth_units': to_agg_nc.water_depth_units,
-                                       'geospatial_lat_min': min(source_df['LATITUDE']),
-                                       'geospatial_lat_max': max(source_df['LATITUDE']),
-                                       'geospatial_lon_min': min(source_df['LONGITUDE']),
-                                       'geospatial_lon_max': max(source_df['LONGITUDE']),
-                                       'date_created': current_utc_timestamp(),
-                                       'time_coverage_start': source_nc.time_coverage_start,
-                                       'time_coverage_end': to_agg_nc.time_coverage_end,
-                                       'title': ('Near real time wave buoy observations at {site} '
-                                                 'from {start} to {end}').format(site=to_agg_nc.site_name,
-                                                                                 start=source_nc.time_coverage_start,
-                                                                                 end=to_agg_nc.time_coverage_end),
-                                       'abstract': ('Near real time integral wave parameters from wave buoys'
-                                                    ' collected by the {institution} using a {instrument} at '
-                                                    '{site} between {start} and {end}. Data have been aggregated '
-                                                    'into a monthly product').format(institution=to_agg_nc.institution,
-                                                                                     instrument=to_agg_nc.instrument,
-                                                                                     site=to_agg_nc.site_name,
-                                                                                     start=source_nc.time_coverage_start,
-                                                                                     end=to_agg_nc.time_coverage_end)})
-    template.add_date_created_attribute()
-    # ensure WAVE qc attribute are of type byte
-    template.variables['WAVE_quality_control']['flag_values'] = np.int8([1, 2, 3, 4, 9])
-    template.variables['WAVE_quality_control']['valid_min'] = np.int8(1)
-    template.variables['WAVE_quality_control']['valid_max'] = np.int8(9)
+    # add attributes to template
+    set_template_attributes(template, to_agg_nc, source_nc, source_df)
 
     for var in list(source_df.keys()):
         template.variables[var]['_data'] = source_df[var].values
 
-    template.variables['Timeseries']['_data'] = [1]
+    template.variables['timeSeries']['_data'] = [1]
 
     ## create temporary aggregated file -  with filename identical to monthly source file
     template.to_netcdf(aggregated_file_path)
@@ -108,20 +66,24 @@ def extract_variable(filepath):
     epoch = np.datetime64("1950-01-01T00:00:00")
     with xr.open_dataset(filepath) as nc:
         TIME = (nc.TIME.values - epoch) / np.timedelta64(1, 'D')  # convert to number of days since 1950
-        LATITUDE = nc.LATITUDE.values
-        LONGITUDE = nc.LONGITUDE.values
-        WHTH = nc.WHTH.values
-        WMXH = nc.WMXH.values
-        WPPE = nc.WPPE.values
-        WPMH = nc.WPMH.values
-        WPDI = nc.WPDI.values
-        WPDS = nc.WPDS.values
+        LATITUDE = get_variable_values(nc,'LATITUDE')
+        LONGITUDE = get_variable_values(nc,'LONGITUDE')
+        WSSH = get_variable_values(nc,'WSSH')
+        SSWMD = get_variable_values(nc,'SSWMD')
+        WMDS = get_variable_values(nc,'WMDS')
+        WPFM = get_variable_values(nc,'WPFM')
+        WHTH = get_variable_values(nc,'WHTH')
+        WMXH = get_variable_values(nc,'WMXH')
+        WPPE = get_variable_values(nc,'WPPE')
+        WPMH = get_variable_values(nc,'WPMH')
+        WPDI = get_variable_values(nc,'WPDI')
+        WPDS = get_variable_values(nc,'WPDS')
         WAVE_quality_control = np.int8(nc.WAVE_quality_control.values)
 
-    df = pd.DataFrame({'TIME': TIME, 'LATITUDE': LATITUDE, 'LONGITUDE': LONGITUDE, 'WHTH': WHTH, 'WMXH': WMXH,
-                       'WPPE': WPPE, 'WPMH': WPMH, 'WPDI': WPDI, 'WPDS': WPDS,
-                       'WAVE_quality_control': WAVE_quality_control})
-    nc.close()
+    df = pd.DataFrame({'TIME': TIME, 'LATITUDE': LATITUDE, 'LONGITUDE': LONGITUDE, 'WSSH': WSSH, 'SSWMD': SSWMD,
+                       'WMDS': WMDS, 'WPFM': WPFM, 'WHTH': WHTH, 'WMXH': WMXH, 'WPPE': WPPE, 'WPMH': WPMH,
+                       'WPDI': WPDI, 'WPDS': WPDS, 'WAVE_quality_control': WAVE_quality_control})
+
     return df, nc
 
 
@@ -143,3 +105,70 @@ def make_monthly_product_name(fields):
         datatype=datatype
     ))
     return filename
+
+
+def set_template_attributes(template, to_agg_nc,source_nc, source_df):
+    """set attribute using json config. Update datatype when needed
+     :params: template
+     :params: to_agg_nc  incoming file (xarray dataset)
+     :params: source_nc existing monthly file (xarray dataset)
+     :params: source_df existing monthly data (dataframe)
+     :returns: updated template
+     """
+    template.global_attributes.update({'site_name': to_agg_nc.site_name,
+                                       'institution': to_agg_nc.institution,
+                                       'wave_buoy_type': to_agg_nc.wave_buoy_type,
+                                       'instrument': to_agg_nc.instrument,
+                                       'instrument_burst_interval': int(to_agg_nc.instrument_burst_interval),
+                                       'instrument_burst_duration': int(to_agg_nc.instrument_burst_duration),
+                                       'instrument_burst_units': to_agg_nc.instrument_burst_units,
+                                       'instrument_sampling_interval': int(to_agg_nc.instrument_sampling_interval),
+                                       'wave_motion_sensor_type': to_agg_nc.wave_motion_sensor_type,
+                                       'wave_sensor_serial_number': to_agg_nc.wave_sensor_serial_number,
+                                       'hull_serial_number': to_agg_nc.hull_serial_number,
+                                       'transmission': to_agg_nc.transmission,
+                                       'water_depth': int(to_agg_nc.water_depth),
+                                       'water_depth_units': to_agg_nc.water_depth_units,
+                                       'geospatial_lat_min': min(source_df['LATITUDE']),
+                                       'geospatial_lat_max': max(source_df['LATITUDE']),
+                                       'geospatial_lon_min': min(source_df['LONGITUDE']),
+                                       'geospatial_lon_max': max(source_df['LONGITUDE']),
+                                       'date_created': current_utc_timestamp(),
+                                       'time_coverage_start': source_nc.time_coverage_start,
+                                       'time_coverage_end': to_agg_nc.time_coverage_end,
+                                       'title': ('Near real time wave buoy observations at {site} '
+                                                 'from {start} to {end}').format(site=to_agg_nc.site_name,
+                                                                                 start=source_nc.time_coverage_start,
+                                                                                 end=to_agg_nc.time_coverage_end),
+                                       'abstract': ('Near real time integral wave parameters from wave buoys'
+                                                    ' collected by the {institution} using a {instrument} at '
+                                                    '{site} between {start} and {end}. Data have been aggregated '
+                                                    'into a monthly product').format(institution=to_agg_nc.institution,
+                                                                                     instrument=to_agg_nc.instrument,
+                                                                                     site=to_agg_nc.site_name,
+                                                                                     start=source_nc.time_coverage_start,
+                                                                                     end=to_agg_nc.time_coverage_end)})
+    template.add_date_created_attribute()
+    # add wmo_id where applicable
+    if to_agg_nc.wmo_id:
+        template.global_attributes.update({'wmo_id': to_agg_nc.wmo_id})
+
+    # ensure WAVE qc attribute are of type byte
+    template.variables['WAVE_quality_control']['flag_values'] = np.int8([1, 2, 3, 4, 9])
+    template.variables['WAVE_quality_control']['valid_min'] = np.int8(1)
+    template.variables['WAVE_quality_control']['valid_max'] = np.int8(9)
+
+def get_variable_values(nc, variable):
+    """
+    Get values of the variable
+
+    :param nc: xarray dataset
+    :param variable: name of the variable to get
+    :return: variable values
+    """
+    file_variables = list(nc.variables)
+
+    if variable in file_variables:
+        variable_values = nc[variable].values
+
+    return variable_values
