@@ -50,6 +50,13 @@ def file_aggregator(file_to_agg, src_file_path, products_dir, filename_fields):
         template.variables[var]['_data'] = source_df[var].values
 
     template.variables['timeSeries']['_data'] = [1]
+    # Remove empty varaibles from template
+    template_vars = set(template.variables.keys())
+    data_vars = set(source_df.keys())
+    data_vars.add('timeSeries')
+    excluded_vars = template_vars.difference(data_vars)
+    for excl_var in excluded_vars:
+        template.variables.pop(excl_var)
 
     ## create temporary aggregated file -  with filename identical to monthly source file
     template.to_netcdf(aggregated_file_path)
@@ -65,27 +72,19 @@ def extract_variable(filepath):
     """
     epoch = np.datetime64("1950-01-01T00:00:00")
     with xr.open_dataset(filepath) as nc:
-        TIME = (nc.TIME.values - epoch) / np.timedelta64(1, 'D')  # convert to number of days since 1950
-        LATITUDE = get_variable_values(nc,'LATITUDE')
-        LONGITUDE = get_variable_values(nc,'LONGITUDE')
-        WSSH = get_variable_values(nc,'WSSH')
-        SSWMD = get_variable_values(nc,'SSWMD')
-        WMDS = get_variable_values(nc,'WMDS')
-        WPFM = get_variable_values(nc,'WPFM')
-        WHTH = get_variable_values(nc,'WHTH')
-        WMXH = get_variable_values(nc,'WMXH')
-        WPPE = get_variable_values(nc,'WPPE')
-        WPMH = get_variable_values(nc,'WPMH')
-        WPDI = get_variable_values(nc,'WPDI')
-        WPDS = get_variable_values(nc,'WPDS')
-        WAVE_quality_control = np.int8(nc.WAVE_quality_control.values)
+        varlist = set(nc.variables)
+        #Time and timeSeries traeted separately
+        varlist.remove('TIME')
+        varlist.remove('timeSeries')
 
-    df = pd.DataFrame({'TIME': TIME, 'LATITUDE': LATITUDE, 'LONGITUDE': LONGITUDE, 'WSSH': WSSH, 'SSWMD': SSWMD,
-                       'WMDS': WMDS, 'WPFM': WPFM, 'WHTH': WHTH, 'WMXH': WMXH, 'WPPE': WPPE, 'WPMH': WPMH,
-                       'WPDI': WPDI, 'WPDS': WPDS, 'WAVE_quality_control': WAVE_quality_control})
+        TIME = pd.DataFrame((nc.TIME.values - epoch) / np.timedelta64(1, 'D'))  # convert to number of days since 1950
+        TIME.columns = ['TIME']
+        df = TIME
+
+        for var in varlist:
+            df = get_variable_values(nc, df ,var)
 
     return df, nc
-
 
 def make_monthly_product_name(fields):
     """generate product filename
@@ -150,7 +149,7 @@ def set_template_attributes(template, to_agg_nc,source_nc, source_df):
                                                                                      end=to_agg_nc.time_coverage_end)})
     template.add_date_created_attribute()
     # add wmo_id where applicable
-    if to_agg_nc.wmo_id:
+    if 'wmo_id' in to_agg_nc.attrs.keys():
         template.global_attributes.update({'wmo_id': to_agg_nc.wmo_id})
 
     # ensure WAVE qc attribute are of type byte
@@ -158,17 +157,18 @@ def set_template_attributes(template, to_agg_nc,source_nc, source_df):
     template.variables['WAVE_quality_control']['valid_min'] = np.int8(1)
     template.variables['WAVE_quality_control']['valid_max'] = np.int8(9)
 
-def get_variable_values(nc, variable):
+def get_variable_values(nc, df, variable):
     """
-    Get values of the variable
+    Get values of the variable and append to DataFrame
 
     :param nc: xarray dataset
     :param variable: name of the variable to get
-    :return: variable values
+    :return: data dataframe
     """
     file_variables = list(nc.variables)
-
     if variable in file_variables:
-        variable_values = nc[variable].values
+        data = pd.DataFrame(nc[variable].values)
+        data.columns = [variable]
+        df = df.join(data)
 
-    return variable_values
+    return df
