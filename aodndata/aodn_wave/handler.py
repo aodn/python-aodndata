@@ -104,14 +104,15 @@ class AodnWaveHandler(HandlerBase):
 
         datatype = fields['datatype']
         mode = fields['mode']
+        institution = fields['institution']
 
         # len
         if len(self.file_collection)>1:
             DuplicatePipelineFileError("ABORTING:More than one file in the file collection")
 
         input_nc_file = self.file_collection[0]
-
-        if mode == 'RT':
+        # Specific processing of BOM-sourced files becasue of aggregation of hourly file into monthly product
+        if mode == 'RT' and re.match(('BOM|DOT-WA|DES-QLD|MHL|GP-VIC'),institution):
             # check if an aggregated monthly file exist in the destination folder.
             # If a monthly file exist, aggregate the new file
             self.upload_destination = os.path.dirname(AodnWaveHandler.dest_path(self.input_file))
