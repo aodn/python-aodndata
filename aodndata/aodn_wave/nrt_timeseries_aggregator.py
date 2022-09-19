@@ -121,7 +121,7 @@ def set_template_attributes(template, to_agg_nc,source_nc, source_df):
                                        'instrument_burst_interval': int(to_agg_nc.instrument_burst_interval),
                                        'instrument_burst_duration': int(to_agg_nc.instrument_burst_duration),
                                        'instrument_burst_units': to_agg_nc.instrument_burst_units,
-                                       'instrument_sampling_interval': int(to_agg_nc.instrument_sampling_interval),
+                                       'instrument_sampling_interval': float(to_agg_nc.instrument_sampling_interval),
                                        'wave_motion_sensor_type': to_agg_nc.wave_motion_sensor_type,
                                        'wave_sensor_serial_number': to_agg_nc.wave_sensor_serial_number,
                                        'hull_serial_number': to_agg_nc.hull_serial_number,

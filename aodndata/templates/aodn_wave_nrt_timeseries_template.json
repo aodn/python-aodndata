@@ -1,12 +1,12 @@
 {
   "_dimensions": {
     "TIME": null,
-    "Timeseries": 1
+    "timeSeries": 1
   },
   "_variables": {
     "timeSeries": {
       "_datatype": "int16",
-      "_dimensions": ["Timeseries"],
+      "_dimensions": ["timeSeries"],
       "long_name": "unique identifier for each feature instance",
       "cf_role": "timeseries_id"
     },
