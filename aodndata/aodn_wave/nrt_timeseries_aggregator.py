@@ -49,7 +49,7 @@ def file_aggregator(file_to_agg, src_file_path, products_dir, filename_fields):
     for var in list(source_df.keys()):
         template.variables[var]['_data'] = source_df[var].values
 
-    template.variables['timeSeries']['_data'] = [1]
+    template.variables['timeSeries']['_data'] = np.int16([1])
     # Remove empty varaibles from template
     template_vars = set(template.variables.keys())
     data_vars = set(source_df.keys())
