@@ -73,7 +73,7 @@ def extract_variable(filepath):
     epoch = np.datetime64("1950-01-01T00:00:00")
     with xr.open_dataset(filepath) as nc:
         varlist = set(nc.variables)
-        #Time and timeSeries traeted separately
+        #Time and timeSeries treated separately. timseries, treated outside of this function
         varlist.remove('TIME')
         varlist.remove('timeSeries')
 
