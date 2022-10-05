@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import os
 import pandas as pd
 import numpy as np
@@ -9,6 +7,7 @@ from pkg_resources import resource_filename
 
 from aodntools.ncwriter import ImosTemplate
 from aodntools.timeseries_products.common import (current_utc_timestamp)
+from aodncore.pipeline.exceptions import InvalidFileContentError
 
 TEMPLATE_JSON = resource_filename('aodndata', 'templates/aodn_wave_nrt_timeseries_template.json')
 
@@ -40,6 +39,23 @@ def file_aggregator(file_to_agg, src_file_path, products_dir, filename_fields):
 
     # aggregate dataframes
     source_df = source_df.append(to_agg_df, ignore_index=True)
+
+    # check for STRICTLY monotonic TIME values
+    # It is possible, however unlikely, that because of an issue with the celery queue (a restart for example), a file
+    # containing data from ]T2; T3] could be aggregated to the monthly file containing [T0;T1] before the file
+    # containing ]T1;T2].
+    # in the following, we sort the data, and make sure there is no duplicate TIME values.
+
+    # 1st pass: sorting based on TIME.
+    if not (source_df['TIME'].is_monotonic_increasing and source_df['TIME'].is_unique):
+        source_df = source_df.sort_values("TIME")  # sort based on TIME
+        source_df = source_df.drop_duplicates()  # drop duplicate rows based on all columns (not just on TIME)
+
+        # 2nd pass: if TIME is still not STRICTLY monotonic after the drop of duplicate values, raise error
+        if not (source_df['TIME'].is_monotonic_increasing and source_df['TIME'].is_unique):
+            raise InvalidFileContentError(
+                f"The TIME variable from {os.path.basename(src_file_path)} is not strictly monotonic"
+            )
 
     # dataframe to store template of new aggregated file
     template = ImosTemplate.from_json(TEMPLATE_JSON)
