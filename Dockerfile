@@ -53,9 +53,6 @@ RUN pip install \
     numpy==1.23.0 \
     setuptools-scm==7.0.4
 
-# update standard name vocabulary for compliance checker
-RUN compliance-checker -d 78 || : # force success. this commands always returns 1 even on success
-
 RUN useradd --create-home --no-log-init --shell /bin/bash --uid $BUILDER_UID builder
 
 USER builder

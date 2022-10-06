@@ -53,9 +53,6 @@ jobs:
         pip install pytest-cov
       env:
         STAGE: ${{ matrix.stage }}
-    - name: update standard name vocabulary for compliance checker
-      run: |
-        compliance-checker -d 78 || : # force success. this commands always returns 1 even on success
     - name: Test with pytest
       run: |
         pytest --cov=./ --cov-report=xml
