@@ -198,7 +198,7 @@ class TestAodnWaveHandler(HandlerTestCase):
         self.assertTrue(monthly_nc[0].is_harvested)
         self.assertTrue(monthly_nc[0].is_checked)
 
-        destination = AodnWaveHandler.dest_path(os.path.basename(RT_MONTHLY_FILE))
+        destination = monthly_nc[0].dest_path
         self.assertEqual(destination,
                          os.path.join(
                              'Department_of_Transport-Western_Australia',
@@ -208,7 +208,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'MANDURAH',
                              '2022',
                              '09',
-                            os.path.basename(RT_MONTHLY_FILE)))
+                             'DOT-WA_20220913_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc'))
 
         input_nc = handler.file_collection.filter_by_attribute_regex('name', INPUT_FILE_REGEX)
         self.assertEqual(input_nc[0].publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
@@ -238,6 +238,19 @@ class TestAodnWaveHandler(HandlerTestCase):
                                        check_params={'checks': ['cf:1.6'],
                                                      'criteria': 'lenient'})
 
+            # check RT file archived only
+            realtime_nc = handler.file_collection.filter_by_attribute_id('publish_type',
+                                                                    PipelineFilePublishType.ARCHIVE_ONLY)
+            self.assertFalse(realtime_nc[0].is_harvested)
+            self.assertFalse(realtime_nc[0].is_harvested)
+            self.assertEqual(os.path.join('Department_of_Transport-Western_Australia/WAVE-BUOYS/REALTIME/'
+                                          'WAVE-PARAMETERS/MANDURAH/2022/09/'
+                                          'DOT-WA_20220929T120000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220929T120000Z.nc'),
+                             realtime_nc[0].archive_path)
+            self.assertTrue(realtime_nc[0].is_checked)
+
+
+            # check monthly file harvest and pushed to S3
             monthly_nc = handler.file_collection.filter_by_attribute_regex('name',
                                                                            RT_MONTHLY_REGEX)
             self.assertEqual(monthly_nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
@@ -245,7 +258,7 @@ class TestAodnWaveHandler(HandlerTestCase):
             self.assertTrue(monthly_nc[0].is_harvested)
             self.assertTrue(monthly_nc[0].is_checked)
 
-            destination = AodnWaveHandler.dest_path(os.path.basename(RT_MONTHLY_FILE))
+            destination = monthly_nc[0].dest_path
             self.assertEqual(destination,
                              os.path.join(
                                  'Department_of_Transport-Western_Australia',
@@ -293,8 +306,7 @@ class TestAodnWaveHandler(HandlerTestCase):
             self.assertTrue(monthly_nc[0].is_harvested)
             self.assertTrue(monthly_nc[0].is_checked)
 
-
-            destination = AodnWaveHandler.dest_path(os.path.basename(RT_MONTHLY_FILE))
+            destination = monthly_nc[0].dest_path
             self.assertEqual(destination,
                              os.path.join(
                                  'Department_of_Transport-Western_Australia',
@@ -310,7 +322,7 @@ class TestAodnWaveHandler(HandlerTestCase):
             # What should happen in this scenario? discussion with @ggalibert on 2022/10/01: merge the data in a
             # monotonic fashion
 
-            # TODO: TIME dimension has to be monotonic. However this test is only tested in the IMOS checks,
+            # TIME dimension has to be monotonic. However this test is only tested in the IMOS checks,
             # not in the CF one as in 4.1.1
 
             handler = self.run_handler(RT_INCOMING_FILE_2,
@@ -323,7 +335,7 @@ class TestAodnWaveHandler(HandlerTestCase):
             self.assertTrue(monthly_nc[0].is_harvested)
             self.assertTrue(monthly_nc[0].is_checked)
 
-            destination = AodnWaveHandler.dest_path(os.path.basename(RT_MONTHLY_FILE))
+            destination = monthly_nc[0].dest_path
             self.assertEqual(destination,
                              os.path.join(
                                  'Department_of_Transport-Western_Australia',
@@ -405,7 +417,7 @@ class TestAodnWaveHandler(HandlerTestCase):
         self.assertTrue(nc[0].is_stored)
         self.assertTrue(nc[0].is_harvested)
 
-        destination = AodnWaveHandler.dest_path(os.path.basename(testfile))
+        destination = nc[0].dest_path
         self.assertEqual(destination,
                          os.path.join(
                              'Department_of_Planning_and_Environment-New_South_Wales',
