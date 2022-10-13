@@ -95,7 +95,7 @@ class AodnWaveHandler(HandlerBase):
     def preprocess(self):
         """
         Set integral wave parameters delayed mode and realtime files destination path based on file attributes
-         files have to be uploaded to S3 and are not harvested
+        files have to be uploaded to S3 and are not harvested
         """
         file_basename = os.path.basename(self.input_file)
         fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
@@ -111,10 +111,10 @@ class AodnWaveHandler(HandlerBase):
             DuplicatePipelineFileError("ABORTING:More than one file in the file collection")
 
         input_nc_file = self.file_collection[0]
-        # Specific processing of BOM-sourced files becasue of aggregation of hourly file into monthly product
+        # Specific processing of BOM-sourced files because of aggregation of hourly file into monthly product
         if mode == 'RT' and re.match(('BOM|DOT-WA|DES-QLD|MHL|GP-VIC'),institution):
             # check if an aggregated monthly file exist in the destination folder.
-            # If a monthly file exist, aggregate the new file
+            # If a monthly file exists, aggregate the new file
             self.upload_destination = os.path.dirname(AodnWaveHandler.dest_path(self.input_file))
             result = self.state_query.query_storage(self.upload_destination)
             if result:
@@ -140,7 +140,7 @@ class AodnWaveHandler(HandlerBase):
 
             aggregated_file = PipelineFile(aggregated_file_path)
             aggregated_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-            input_nc_file.publish_type = PipelineFilePublishType.NO_ACTION
+            input_nc_file.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
             self.file_collection.add(aggregated_file)
 
         else:
