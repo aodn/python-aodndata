@@ -117,6 +117,7 @@ class AodnWaveHandler(HandlerBase):
             # If a monthly file exists, aggregate the new file
             self.upload_destination = os.path.dirname(AodnWaveHandler.dest_path(self.input_file))
             result = self.state_query.query_storage(self.upload_destination)
+            ###### add a regex step to specifically look for the input file in the upload destination.
             if result:
                 if len(result) > 1:
                     raise PipelineProcessingError("More than one file found in monthly folder")

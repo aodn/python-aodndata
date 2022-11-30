@@ -5,16 +5,16 @@
 # -Map vessel specific variable to set of common output variables
 # Mapping as follows:
 #       Input Variable                  NetCDF Variable
-#   Aurora      Investigator
+#        Investigator
 #       PcDate+PcTime                        TIME
 #       GpsShipLatitude                     LATITUDE
 #       GpsShipLongitude                    LONGITUDE
 #           Type                            TYPE
 #           EquTemp                         TEQ_raw
 #           CO2StdValue                     CO2_STD_Value
-#           CO2um_m                         xCO2_PPM_raw
-#           H2Omm_m                         xH2O_PPT_raw
-#       DryBoxDruckPress                    Press_Licor_raw
+#           Li7815_CO2_avg                  xCO2_PPM_raw
+#           Li7815_H2O_avg                  xH2O_PPT_raw
+#           DryBoxDruckPress                Press_Licor_raw
 #           EquPress                        Diff_Press_Equ_raw
 #           EquH2OFlow                      H2O_flow_raw
 #           LicorFlow                       Licor_flow_raw
@@ -22,10 +22,10 @@
 #           MetTrueWindSpKts                WSPD_raw
 #           MetTrueWindDir                  WDIR_raw
 #           IntakeShipTemp                  TEMP_raw
-# TsgSbe45Salinity  TsgShipSalinity          PSAL_raw
-# TsgSbe45Temp      TsgShipTemp             TEMP_Tsg_raw
-# SBE45Flow         TsgShipFlow             Tsg_flow_raw
-#    -             LabMainSwFlow            LabMain_sw_flow_raw
+#           TsgShipSalinity                 PSAL_raw
+#           TsgShipTemp                     TEMP_Tsg_raw
+#           TsgShipFlow                     Tsg_flow_raw
+#           LabMainSwFlow                   LabMain_sw_flow_raw
 """
 import os
 from datetime import datetime
@@ -40,16 +40,11 @@ from pkg_resources import resource_filename
 VALID_PROJECT = ['IMOS', 'FutureReefMap', 'SOOP-CO2_RT']
 INPUT_RT_PARAMETERS = {'Type', 'PcDate', 'PcTime', 'GpsShipLatitude',
                        'GpsShipLongitude', 'EquTemp', 'CO2StdValue',
-                       'CO2um_m', 'H2Omm_m', 'DryBoxDruckPress', 'EquPress',
-                       'EquH2OFlow', 'LicorFlow', 'IntakeShipTemp', 'MetTrueWindSpKts',
-                       'MetTrueWindDir', 'AtmSeaLevelPress'}
-AA_SPECIFIC_INPUT_PARAMS = {'SBE45Flow', 'TsgSbe45Temp',
-                            'TsgSbe45Salinity'}
-IN_SPECIFIC_INPUT_PARAMS = {'TsgShipTemp',
-                            'TsgShipSalinity', 'TsgShipFlow', 'LabMainSwFlow'}
-
+                       'Li7815_CO2_avg', 'Li7815_H2O_avg', 'DryBoxDruckPress', 'EquPress',
+                       'EquH2OFlow', 'LicorFlow', 'Intake_T1','Intake_T2', 'MetTrueWindSpKts',
+                       'MetTrueWindDir', 'MetShipAtmPress','MetRelHum','MetAirTemp','TsgShipTemp',
+                        'TsgShipSalinity', 'TsgShipFlow', 'LabMainSwFlow'}
 VESSEL = {
-    'AA': 'VNAA',
     'IN': 'VLMJ'
 }
 
@@ -61,14 +56,14 @@ def process_co2_rt(realtime_file, temp_dir, ship_callsign_ls):
     Read in data from co2 realtime file and produce a netcdf file
     """
     # Parse data into dataframe
-    (dataf, platform_code) = read_realtime_file(realtime_file)
+    (dataf, platform_code, missing_param) = read_realtime_file(realtime_file)
     # format data
     (dtime, time) = get_time_formatted(dataf)
 
     netcdf_filename = create_netcdf_filename(platform_code, dtime)
     netcdf_file_path = os.path.join(temp_dir, "{filename}.nc").format(filename=netcdf_filename)
 
-    netcdf_writer(netcdf_file_path, dataf, dtime, time, realtime_file.src_path, platform_code, ship_callsign_ls)
+    netcdf_writer(netcdf_file_path, dataf, dtime, time, realtime_file.src_path, platform_code, ship_callsign_ls, missing_param)
 
     return netcdf_file_path
 
@@ -111,7 +106,7 @@ def get_time_formatted(dataf):
     return dtime, np.array(time) / 3600. / 24.
 
 
-def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code, ship_callsign_ls):
+def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code, ship_callsign_ls, missing_params):
     """
     Create the netcdf file
     """
@@ -145,17 +140,6 @@ def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code,
         'sourceFilename': os.path.basename(src_file)
     })
 
-    if platform_code == 'VLMJ':
-        template.variables.update({"LabMain_sw_flow_raw": {
-            "_datatype": "float64",
-            "_dimensions": ["TIME"],
-            "long_name": "Seawater flow in main laboratory",
-            "reference_datum": "sea surface",
-            "units": "l min-1",
-            "coordinates": "TIME LATITUDE LONGITUDE"}
-        }
-        )
-
     template.variables['WSPD_raw']['_data'] = dataf['MetTrueWindSpKts'].multiply(0.514444)
 
     # replace nans with fillvalue in dataframe
@@ -177,26 +161,23 @@ def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code,
     template.variables['TEQ_raw']['_data'] = dataf['EquTemp'].values
 
     template.variables['CO2_STD_Value']['_data'] = dataf['CO2StdValue'].values
-    template.variables['xCO2_PPM_raw']['_data'] = dataf['CO2um_m'].values
-    template.variables['xH2O_PPT_raw']['_data'] = dataf['H2Omm_m'].values
+    template.variables['xCO2_PPM_raw']['_data'] = dataf['Li7815_CO2_avg'].values
+    template.variables['xH2O_PPM_raw']['_data'] = dataf['Li7815_H2O_avg'].values
     template.variables['Press_Licor_raw']['_data'] = dataf['DryBoxDruckPress'].values
     template.variables['Diff_Press_Equ_raw']['_data'] = dataf['EquPress'].values
     template.variables['H2O_flow_raw']['_data'] = dataf['EquH2OFlow'].values
     template.variables['Licor_flow_raw']['_data'] = dataf['LicorFlow'].values
-    template.variables['TEMP_raw']['_data'] = dataf['IntakeShipTemp'].values
+    template.variables['TEMP_1_raw']['_data'] = dataf['Intake_T1'].values
+    template.variables['TEMP_2_raw']['_data'] = dataf['Intake_T2'].values
     template.variables['WSPD_raw']['_data'] = dataf['MetTrueWindSpKts'].values * 0.514444 # WSP converted to m s-1
     template.variables['WDIR_raw']['_data'] = dataf['MetTrueWindDir'].values
-    template.variables['ATMP_raw']['_data'] = dataf['AtmSeaLevelPress'].values
-
-    if platform_code == 'VLMJ':
-        template.variables['TEMP_Tsg_raw']['_data'] = dataf['TsgShipTemp'].values
-        template.variables['Tsg_flow_raw']['_data'] = dataf['TsgShipFlow'].values
-        template.variables['LabMain_sw_flow_raw']['_data'] = dataf['LabMainSwFlow'].values
-        template.variables['PSAL_raw']['_data']= dataf['TsgShipSalinity'].values
-    elif platform_code == 'VNAA':
-        template.variables['TEMP_Tsg_raw']['_data'] = dataf['TsgSbe45Temp'].values
-        template.variables['PSAL_raw']['_data']= dataf['TsgSbe45Salinity'].values
-        template.variables['Tsg_flow_raw']['_data'] = dataf['SBE45Flow'].values
+    template.variables['ATMP_raw']['_data'] = dataf['MetShipAtmPress'].values
+    template.variables['TEMP_Tsg_raw']['_data'] = dataf['TsgShipTemp'].values
+    template.variables['Tsg_flow_raw']['_data'] = dataf['TsgShipFlow'].values
+    template.variables['LabMain_sw_flow_raw']['_data'] = dataf['LabMainSwFlow'].values
+    template.variables['PSAL_raw']['_data']= dataf['TsgShipSalinity'].values
+    template.variables['AIRT_raw']['_data'] = dataf['MetAirTemp'].values
+    template.variables['RELH_raw']['_data'] = dataf['MetRelHum'].values
 
     template.to_netcdf(netcdf_file_path)
     return netcdf_file_path
@@ -220,11 +201,17 @@ def read_realtime_file(self):
     dataf.reset_index(inplace=True)
     input_rt_parameter = list(dataf)
 
-    dataf = check_parameters(dataf, platform_code_short,
+    [dataf,missing_param] = check_parameters(dataf, platform_code_short,
                              input_rt_parameter, self.src_path)
     dataf = dataf.apply(lambda x: x.str.strip() if x.dtype == "object" else x)  # strip whitespace
 
-    return dataf, platform_code
+    # create empty array for missing parameters
+    filldata = np.full(len(dataf), np.nan)
+
+    for miss in missing_param:
+        dataf[miss] = filldata
+
+    return dataf, platform_code, missing_param
 
 
 def check_parameters(dataf, vessel_code, input_param, src_file):
@@ -234,19 +221,14 @@ def check_parameters(dataf, vessel_code, input_param, src_file):
     Checks that Lat/Lon are not all missing.
     Returns updated dataframe
     """
-    rt_input_parameters = set.union(INPUT_RT_PARAMETERS,
-                                    eval(vessel_code + '_SPECIFIC_INPUT_PARAMS'))
-    if not all(param in input_param for param in rt_input_parameters):
-        missing_param = []
-        for required_param in rt_input_parameters:
+    missing_param = []
+    if not all(param in input_param for param in INPUT_RT_PARAMETERS):
+        for required_param in INPUT_RT_PARAMETERS:
             if required_param not in input_param:
-                missing_param = missing_param.append(required_param)
-                raise InvalidFileContentError(
-                    "Missing parameter(s) '{missing_param}' in file '{src_file}'.Aborting".format(
-                        missing_param=missing_param, src_file=src_file))
+                missing_param.append(required_param)
     else:  # required_param all present . Change dtype to numeric where relevant
         # var TYPE conversion to string outside this function
-        for param in rt_input_parameters:
+        for param in INPUT_RT_PARAMETERS:
             if param not in set(['Type', 'PcDate', 'PcTime']):
                 dataf[param] = dataf[param].apply(pd.to_numeric, errors='coerce')  # convert bad non numeric to NaN
 
@@ -254,7 +236,7 @@ def check_parameters(dataf, vessel_code, input_param, src_file):
         raise InvalidFileContentError(
             "Latitude and/or Longitude values all missing in file '{src_file}'.Aborting".format(
                 src_file=src_file))
-    return dataf
+    return dataf,missing_param
 
 
 if __name__ == '__main__':
