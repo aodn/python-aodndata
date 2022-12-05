@@ -228,7 +228,7 @@ def check_parameters(dataf, vessel_code, input_param, src_file):
             if param not in set(['Type', 'PcDate', 'PcTime']):
                 dataf[param] = dataf[param].apply(pd.to_numeric, errors='coerce')  # convert bad non numeric to NaN
 
-    if missing_params:
+    if missing_param:
         raise InvalidFileContentError(
             "Missing parameter(s) '{missing_param}' in file '{src_file}'.Aborting".format(
                 missing_param=missing_param, src_file=src_file))

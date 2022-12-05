@@ -2,6 +2,7 @@ import os
 import unittest
 
 from aodncore.pipeline import FileType, PipelineFilePublishType, PipelineFileCheckType
+from aodncore.pipeline.exceptions import InvalidFileContentError
 from aodncore.testlib import HandlerTestCase
 
 from aodndata.soop.soop_co2 import SoopCo2Handler
@@ -11,6 +12,7 @@ GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.
 GOOD_FRMAP = os.path.join(TEST_ROOT, 'FutureReefMap_GST_20150518T124011Z_9V2768_FV01.nc')
 GOOD_ZIP = os.path.join(TEST_ROOT, 'IMOS_SOOP-CO2_GST_20170126T023510Z_VNAA_FV01.zip')
 GOOD_RT_IN_TXT = os.path.join(TEST_ROOT, 'IN_2022-332-0000dat.txt')
+BAD_RT_IN_TXT = os.path.join(TEST_ROOT, 'IN_2022-332-missparamdat.txt')
 
 ship_callsign_ls = {'VNAA': 'Aurora-Australis',
                     '9V2768': 'RTM-Wakmatha',
@@ -97,7 +99,8 @@ class TestSoopCo2Handler(HandlerTestCase):
                          f_txt.archive_path)
         self.assertTrue(f_nc.is_checked)
         self.assertTrue(f_nc.is_stored)
-
+    def test_bad_rt(self):
+        self.run_handler_with_exception(InvalidFileContentError, BAD_RT_IN_TXT)
 
 if __name__ == '__main__':
     unittest.main()
