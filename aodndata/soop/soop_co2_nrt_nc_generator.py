@@ -13,7 +13,7 @@
 #           EquTemp                         TEQ_raw
 #           CO2StdValue                     CO2_STD_Value
 #           Li7815_CO2_avg                  xCO2_PPM_raw
-#           Li7815_H2O_avg                  xH2O_PPT_raw
+#           Li7815_H2O_avg                  xH2O_PPM_raw
 #           DryBoxDruckPress                Press_Licor_raw
 #           EquPress                        Diff_Press_Equ_raw
 #           EquH2OFlow                      H2O_flow_raw
@@ -26,6 +26,8 @@
 #           TsgShipTemp                     TEMP_Tsg_raw
 #           TsgShipFlow                     Tsg_flow_raw
 #           LabMainSwFlow                   LabMain_sw_flow_raw
+#           MetRelHum                       RELH_raw
+#           MetAirTemp                      AIRT_raw
 """
 import os
 from datetime import datetime
@@ -56,14 +58,14 @@ def process_co2_rt(realtime_file, temp_dir, ship_callsign_ls):
     Read in data from co2 realtime file and produce a netcdf file
     """
     # Parse data into dataframe
-    (dataf, platform_code, missing_param) = read_realtime_file(realtime_file)
+    (dataf, platform_code) = read_realtime_file(realtime_file)
     # format data
     (dtime, time) = get_time_formatted(dataf)
 
     netcdf_filename = create_netcdf_filename(platform_code, dtime)
     netcdf_file_path = os.path.join(temp_dir, "{filename}.nc").format(filename=netcdf_filename)
 
-    netcdf_writer(netcdf_file_path, dataf, dtime, time, realtime_file.src_path, platform_code, ship_callsign_ls, missing_param)
+    netcdf_writer(netcdf_file_path, dataf, dtime, time, realtime_file.src_path, platform_code, ship_callsign_ls)
 
     return netcdf_file_path
 
@@ -106,7 +108,7 @@ def get_time_formatted(dataf):
     return dtime, np.array(time) / 3600. / 24.
 
 
-def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code, ship_callsign_ls, missing_params):
+def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code, ship_callsign_ls):
     """
     Create the netcdf file
     """
@@ -201,17 +203,11 @@ def read_realtime_file(self):
     dataf.reset_index(inplace=True)
     input_rt_parameter = list(dataf)
 
-    [dataf,missing_param] = check_parameters(dataf, platform_code_short,
+    dataf = check_parameters(dataf, platform_code_short,
                              input_rt_parameter, self.src_path)
     dataf = dataf.apply(lambda x: x.str.strip() if x.dtype == "object" else x)  # strip whitespace
 
-    # create empty array for missing parameters
-    filldata = np.full(len(dataf), np.nan)
-
-    for miss in missing_param:
-        dataf[miss] = filldata
-
-    return dataf, platform_code, missing_param
+    return dataf, platform_code
 
 
 def check_parameters(dataf, vessel_code, input_param, src_file):
@@ -232,11 +228,16 @@ def check_parameters(dataf, vessel_code, input_param, src_file):
             if param not in set(['Type', 'PcDate', 'PcTime']):
                 dataf[param] = dataf[param].apply(pd.to_numeric, errors='coerce')  # convert bad non numeric to NaN
 
+    if missing_params:
+        raise InvalidFileContentError(
+            "Missing parameter(s) '{missing_param}' in file '{src_file}'.Aborting".format(
+                missing_param=missing_param, src_file=src_file))
+
     if all(np.isnan(dataf['GpsShipLatitude'])) or all(np.isnan(dataf['GpsShipLongitude'])):
         raise InvalidFileContentError(
             "Latitude and/or Longitude values all missing in file '{src_file}'.Aborting".format(
                 src_file=src_file))
-    return dataf,missing_param
+    return dataf
 
 
 if __name__ == '__main__':
