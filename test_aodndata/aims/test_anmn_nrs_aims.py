@@ -18,7 +18,7 @@ class TestAnmnNrsAimsHandler(HandlerTestCase):
     def test_good_netcdf(self):
         handler = self.run_handler(GOOD_NC,
                                    include_regexes=[r'IMOS_ANMN_Z_.*\.nc'],
-                                   check_params={'checks': ['cf', 'imos:1.3']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.3']}
                                    )
 
         self.assertEqual(len(handler.file_collection), 1)

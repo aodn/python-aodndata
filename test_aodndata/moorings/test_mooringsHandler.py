@@ -37,13 +37,13 @@ class TestMooringsHandler(HandlerTestCase):
     def test_noncompliant_netcdf(self):
         self.run_handler_with_exception(ComplianceCheckFailedError, BAD_NC,
                                         include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
-                                        check_params={'checks': ['cf', 'imos:1.4']}
+                                        check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                         )
 
     def test_good_netcdf(self):
         handler = self.run_handler(GOOD_NC,
                                    include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
-                                   check_params={'checks': ['cf', 'imos:1.4']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                    )
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
@@ -121,7 +121,7 @@ class TestMooringsHandler(HandlerTestCase):
         zip_file = make_zip(self.temp_dir, [GOOD_NC])
         handler = self.run_handler(zip_file,
                                    include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
-                                   check_params={'checks': ['cf', 'imos:1.4']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                    )
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
@@ -137,7 +137,7 @@ class TestMooringsHandler(HandlerTestCase):
         zip_file = make_zip(self.temp_dir, [GOOD_NC, BAD_NC])
         handler = self.run_handler_with_exception(ComplianceCheckFailedError, zip_file,
                                                   include_regexes=[r'IMOS_ANMN-NRS_.*\.nc'],
-                                                  check_params={'checks': ['cf', 'imos:1.4']}
+                                                  check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                                   )
         self.assertEqual(len(handler.file_collection), 2)
 
@@ -157,7 +157,7 @@ class TestMooringsHandler(HandlerTestCase):
         zip_file = make_zip(self.temp_dir, [GOOD_NC, GOOD_PDF, GOOD_PNG, GOOD_CNV])
         handler = self.run_handler(zip_file,
                                    include_regexes=[r'IMOS_ANMN-NRS_.*\.(nc|pdf|png|cnv)'],
-                                   check_params={'checks': ['cf', 'imos:1.4']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                    )
         self.assertEqual(len(handler.file_collection), 4)
         for f in handler.file_collection:
@@ -169,8 +169,8 @@ class TestMooringsHandler(HandlerTestCase):
         zip_file = make_zip(self.temp_dir, [BURST_NC, BURST_ADCP])
         handler = self.run_handler(zip_file,
                                    include_regexes=[r'.*\.nc'],
-                                   check_params={'checks': ['cf', 'imos:1.4'],
-                                                 'skip_checks': ['check_dimension_order']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4'],
+                                                 'skip_checks': ['check_dimension_order:M']}
                                    )
 
         self.assertEqual(3, len(handler.file_collection))
