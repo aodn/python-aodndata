@@ -32,7 +32,7 @@ class TestSoopCo2Handler(HandlerTestCase):
 
     def test_good_co2_nc(self):
         handler = self.run_handler(GOOD_NC,
-                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']},
                                    custom_params={'ship_callsign_ls': ship_callsign_ls}
                                    )
         self.assertEqual(len(handler.file_collection), 1)
@@ -57,7 +57,7 @@ class TestSoopCo2Handler(HandlerTestCase):
 
     def test_good_nc_zip(self):
         handler = self.run_handler(GOOD_ZIP,
-                                   check_params={'checks': ['cf']},
+                                   check_params={'checks': ['cf:1.6']},
                                    custom_params={'ship_callsign_ls': ship_callsign_ls}
                                      )
         self.assertEqual(len(handler.file_collection), 3)
@@ -82,7 +82,7 @@ class TestSoopCo2Handler(HandlerTestCase):
     def test_good_rt_in_txt(self):
         handler = self.run_handler(GOOD_RT_IN_TXT,
                                    custom_params={'ship_callsign_ls': ship_callsign_ls},
-                                   check_params={'checks': ['cf', 'imos:1.4']})
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']})
 
         f_txt = handler.file_collection.filter_by_attribute_value('extension', '.txt')[0]
         self.assertEqual(f_txt.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
@@ -103,7 +103,7 @@ class TestSoopCo2Handler(HandlerTestCase):
     def test_good_rt_in_2_txt(self):
         handler = self.run_handler(GOOD_RT_IN_2_TXT,
                                    custom_params={'ship_callsign_ls': ship_callsign_ls},
-                                   check_params={'checks': ['cf', 'imos:1.4']})
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']})
 
         f_txt = handler.file_collection.filter_by_attribute_value('extension', '.txt')[0]
         self.assertEqual(f_txt.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
@@ -124,7 +124,7 @@ class TestSoopCo2Handler(HandlerTestCase):
     def test_good_rt_aa_txt(self):
         handler = self.run_handler(GOOD_RT_AA_TXT,
                                    custom_params={'ship_callsign_ls': ship_callsign_ls},
-                                   check_params={'checks': ['cf', 'imos:1.4']})
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']})
 
         f_txt = handler.file_collection.filter_by_attribute_value('extension', '.txt')[0]
         self.assertEqual(f_txt.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)

@@ -137,7 +137,7 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
            side_effect=mock_platform_altlabels_per_preflabel)
     def test_handler(self, mock_ship):
         handler = self.run_handler(GOOD_BUFR_CSV,
-                                   check_params={'checks': ['cf']},
+                                   check_params={'checks': ['cf:1.6']},
                                    custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
@@ -167,7 +167,7 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
 
         # test the handler by pushing this newly created NetCDF file back into the handler
         handler = self.run_handler(nc_path,
-                                   check_params={'checks': ['cf']},
+                                   check_params={'checks': ['cf:1.6']},
                                    custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
@@ -177,7 +177,7 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
            side_effect=mock_platform_altlabels_per_preflabel)
     def test_handler_px30(self, mock_ship):
         handler = self.run_handler(GOOD_BUFR_CSV_PX30,
-                                   check_params={'checks': ['cf']},
+                                   check_params={'checks': ['cf:1.6']},
                                    custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
@@ -192,7 +192,7 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
            side_effect=mock_platform_altlabels_per_preflabel)
     def test_handler_noline(self, mock_ship):
         handler = self.run_handler(BUFR_CSV_NO_LINE,
-                                   check_params={'checks': ['cf']},
+                                   check_params={'checks': ['cf:1.6']},
                                    custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
@@ -206,7 +206,7 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
            side_effect=mock_platform_altlabels_per_preflabel)
     def test_alternative_astrolabe_name(self, mock_ship):
         handler = self.run_handler(BUFR_ALTERNATIVE_ASTROLABE_NAME,
-                                   check_params={'checks': ['cf']},
+                                   check_params={'checks': ['cf:1.6']},
                                    custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]

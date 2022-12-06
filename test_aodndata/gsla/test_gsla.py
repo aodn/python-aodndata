@@ -50,7 +50,7 @@ class TestGslaHandler(HandlerTestCase):
                     shutil.copyfileobj(f_in, f_out)
 
             handler = self.run_handler(good_nc_dm01,
-                                       check_params={'checks': ['cf', 'imos:1.4']}
+                                       check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                        )
             self.assertEqual(len(handler.file_collection), 2)
             f_nc = handler.file_collection.filter_by_attribute_value('file_type', FileType.NETCDF)[0]
@@ -126,7 +126,7 @@ class TestGslaHandler(HandlerTestCase):
 
     def test_good_dm01(self):
         handler = self.run_handler(GOOD_NC_GZ_DM01,
-                                   check_params={'checks': ['cf', 'imos:1.4']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                    )
         self.assertEqual(len(handler.file_collection), 2)
         f_nc = handler.file_collection.filter_by_attribute_value('file_type', FileType.NETCDF)[0]

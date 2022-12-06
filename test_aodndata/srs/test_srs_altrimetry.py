@@ -21,7 +21,7 @@ class TestSrsAltHandler(HandlerTestCase):
     def test_netcdf_publish(self):
         handler = self.run_handler(NC_FILE_SBE26,
                                    include_regexes=[r'IMOS_SRSALT_PT_.*\.nc'],
-                                   check_params={'checks': ['cf', 'imos:1.3']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.3']}
                                    )
 
         f = handler.file_collection[0]
