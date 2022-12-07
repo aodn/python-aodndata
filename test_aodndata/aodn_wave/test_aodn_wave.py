@@ -207,7 +207,6 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'WAVE-PARAMETERS',
                              'MANDURAH',
                              '2022',
-                             '09',
                              'DOT-WA_20220913_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc'))
 
         input_nc = handler.file_collection.filter_by_attribute_regex('name', INPUT_FILE_REGEX)
@@ -224,7 +223,7 @@ class TestAodnWaveHandler(HandlerTestCase):
             preexisting_file = PipelineFileCollection()
             existing_file = PipelineFile(RT_MONTHLY_FILE, dest_path=os.path.join(
                 'Department_of_Transport-Western_Australia', 'WAVE-BUOYS', 'REALTIME', 'WAVE-PARAMETERS',
-                'MANDURAH', '2022', '09', os.path.basename(RT_MONTHLY_FILE)))
+                'MANDURAH', '2022', os.path.basename(RT_MONTHLY_FILE)))
             preexisting_file.update([existing_file])
 
             # set the files to UPLOAD_ONLY
@@ -244,7 +243,7 @@ class TestAodnWaveHandler(HandlerTestCase):
             self.assertFalse(realtime_nc[0].is_harvested)
             self.assertFalse(realtime_nc[0].is_harvested)
             self.assertEqual(os.path.join('Department_of_Transport-Western_Australia/WAVE-BUOYS/REALTIME/'
-                                          'WAVE-PARAMETERS/MANDURAH/2022/09/'
+                                          'WAVE-PARAMETERS/MANDURAH/2022/'
                                           'DOT-WA_20220929T120000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220929T120000Z.nc'),
                              realtime_nc[0].archive_path)
             self.assertTrue(realtime_nc[0].is_checked)
@@ -267,7 +266,6 @@ class TestAodnWaveHandler(HandlerTestCase):
                                  'WAVE-PARAMETERS',
                                  'MANDURAH',
                                  '2022',
-                                 '09',
                                  os.path.basename(RT_MONTHLY_FILE)))
 
             input_nc = handler.file_collection.filter_by_attribute_regex('name', INPUT_FILE_REGEX)
@@ -286,7 +284,7 @@ class TestAodnWaveHandler(HandlerTestCase):
             preexisting_file = PipelineFileCollection()
             existing_file = PipelineFile(RT_MONTHLY_FILE, dest_path=os.path.join(
                 'Department_of_Transport-Western_Australia', 'WAVE-BUOYS', 'REALTIME', 'WAVE-PARAMETERS',
-                'MANDURAH', '2022', '09', os.path.basename(RT_MONTHLY_FILE)))
+                'MANDURAH', '2022', os.path.basename(RT_MONTHLY_FILE)))
             preexisting_file.update([existing_file])
 
             # set the files to UPLOAD_ONLY
@@ -315,7 +313,6 @@ class TestAodnWaveHandler(HandlerTestCase):
                                  'WAVE-PARAMETERS',
                                  'MANDURAH',
                                  '2022',
-                                 '09',
                                  os.path.basename(RT_MONTHLY_FILE)))
 
             # upload a new RT file which has its timestamp before the maximum timestamp of the monthly file available
@@ -344,7 +341,6 @@ class TestAodnWaveHandler(HandlerTestCase):
                                  'WAVE-PARAMETERS',
                                  'MANDURAH',
                                  '2022',
-                                 '09',
                                  os.path.basename(RT_MONTHLY_FILE)))
 
     def test_publication_bom_realtime_with_aggregation_not_striclty_monotonic(self):
@@ -362,7 +358,7 @@ class TestAodnWaveHandler(HandlerTestCase):
         preexisting_file = PipelineFileCollection()
         existing_file = PipelineFile(RT_MONTHLY_FILE, dest_path=os.path.join(
             'Department_of_Transport-Western_Australia', 'WAVE-BUOYS', 'REALTIME', 'WAVE-PARAMETERS',
-            'MANDURAH', '2022', '09', os.path.basename(RT_MONTHLY_FILE)))
+            'MANDURAH', '2022', os.path.basename(RT_MONTHLY_FILE)))
         preexisting_file.update([existing_file])
 
         # set the files to UPLOAD_ONLY
@@ -426,8 +422,28 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'WAVE-PARAMETERS',
                              'BENGELLO',
                              '2022',
-                             '09',
                              os.path.basename(testfile)))
+    def test_publication_monthly_BOM_file(self):
+        """
+        test case when need to repush a BOM monthly file through the pipeline
+        """
+        handler = self.run_handler(RT_MONTHLY_FILE,
+                                   check_params={'checks': ['cf:1.6'],
+                                                 'criteria': 'lenient'})
+        nc = handler.file_collection.filter_by_attribute_id('publish_type',
+                                                            PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        destination = nc[0].dest_path
+        self.assertEqual(destination,
+                        os.path.join(
+                            'Department_of_Transport-Western_Australia',
+                            'WAVE-BUOYS',
+                            'REALTIME',
+                            'WAVE-PARAMETERS',
+                            'MANDURAH',
+                            '2022',
+                            os.path.basename(RT_MONTHLY_FILE)))
+
 
 
 if __name__ == '__main__':
