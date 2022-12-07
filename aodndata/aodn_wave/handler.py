@@ -1,10 +1,9 @@
 import os
 import re
 
-from aodncore.pipeline.exceptions import InvalidFileNameError, PipelineProcessingError,DuplicatePipelineFileError
+from aodncore.pipeline.exceptions import InvalidFileNameError,DuplicatePipelineFileError
 from aodncore.pipeline import PipelineFile, HandlerBase, PipelineFilePublishType
 from aodncore.util.misc import get_pattern_subgroups_from_string
-from aodn_wave.nrt_timeseries_aggregator import make_monthly_product_name
 
 from . import nrt_timeseries_aggregator
 
@@ -112,12 +111,11 @@ class AodnWaveHandler(HandlerBase):
         input_nc_file = self.file_collection[0]
 
         # Specific processing of BOM-sourced files because of aggregation of hourly file into monthly product -
-        # Excludes monthly files
+        # Excludes monthly files(when repushed) from aggregation
         if mode == 'RT' and re.match(('BOM|DOT-WA|DES-QLD|MHL|GP-VIC'),institution) and not re.search('monthly_nc',file_basename):
             # deduce target monthly file name
             month_start = fields['nc_time_cov_start'][0:6]
-            monthly_file_regex = institution +'_' + month_start + r"\d{2}_.*" + mode + '_' + datatype + '_monthly.nc'
-
+            monthly_file_regex = institution + '_' + month_start + r"\d{2}_.*" + mode + '_' + datatype + '_monthly.nc'
             # check if an aggregated monthly file exist in the destination folder.
             # If a monthly file exists, aggregate the new file
             self.upload_destination = os.path.dirname(AodnWaveHandler.dest_path(self.input_file))
@@ -126,8 +124,8 @@ class AodnWaveHandler(HandlerBase):
             existing_monthly_file = result.filter_by_attribute_regex('name', monthly_file_regex)
             if existing_monthly_file:
                 self.logger.info("Mode '{mode}': found an existing monthly file. Generating updated aggregated "
-                        "product '{remotefile}'."
-                        .format(mode=mode, remotefile=existing_monthly_file[0].dest_path))
+                                 "product '{remotefile}'."
+                                 .format(mode=mode, remotefile=existing_monthly_file[0].dest_path))
                     # No need to add previous file to the Pipelinefilecollection for deletion as it will simply be overwritten.
                     # aggregate files and add to pipeline file collection
                 self.state_query.download(existing_monthly_file, self.temp_dir)
