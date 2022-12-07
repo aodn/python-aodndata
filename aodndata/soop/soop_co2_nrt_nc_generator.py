@@ -21,7 +21,8 @@
 #           AtmSeaLevelPress                ATMP_raw
 #           MetTrueWindSpKts                WSPD_raw
 #           MetTrueWindDir                  WDIR_raw
-#           IntakeShipTemp                  TEMP_raw
+#           Intake_T1                        TEMP_1_raw
+#           Intake_T2                        TEMP_2_raw
 #           TsgShipSalinity                 PSAL_raw
 #           TsgShipTemp                     TEMP_Tsg_raw
 #           TsgShipFlow                     Tsg_flow_raw
