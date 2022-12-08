@@ -188,7 +188,7 @@
       "valid_min": 0.0,
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "ATMP_raw": {
+    "ATMP_uncorr_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
       "_dimensions": [
