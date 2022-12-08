@@ -3,7 +3,10 @@
 # Script processes data from 2 vessels: RV Aurora Australis and RV Investigator
 # -Extract variable relevant to CO2 measurements and processing from input text file.
 # -Map vessel specific variable to set of common output variables
-# Mapping as follows:
+#
+# WARNING: VARIABLE MAPPING changed in Dec2022. Data stored in "old" variables (TEMP_raw,ATMP_raw,xH2O_PPT_raw) are
+# still available in the schema but won't be populated in the future.
+# Mapping as follows (Dec2022):
 #       Input Variable                  NetCDF Variable
 #        Investigator
 #       PcDate+PcTime                        TIME
@@ -18,7 +21,7 @@
 #           EquPress                        Diff_Press_Equ_raw
 #           EquH2OFlow                      H2O_flow_raw
 #           LicorFlow                       Licor_flow_raw
-#           AtmSeaLevelPress                ATMP_raw
+#           MetShipAtmPress                 ATMP_uncorr_raw
 #           MetTrueWindSpKts                WSPD_raw
 #           MetTrueWindDir                  WDIR_raw
 #           Intake_T1                        TEMP_1_raw
@@ -174,7 +177,7 @@ def netcdf_writer(netcdf_file_path, dataf, dtime, time, src_file, platform_code,
     template.variables['TEMP_2_raw']['_data'] = dataf['Intake_T2'].values
     template.variables['WSPD_raw']['_data'] = dataf['MetTrueWindSpKts'].values * 0.514444 # WSP converted to m s-1
     template.variables['WDIR_raw']['_data'] = dataf['MetTrueWindDir'].values
-    template.variables['ATMP_raw']['_data'] = dataf['MetShipAtmPress'].values
+    template.variables['ATMP_uncorr_raw']['_data'] = dataf['MetShipAtmPress'].values
     template.variables['TEMP_Tsg_raw']['_data'] = dataf['TsgShipTemp'].values
     template.variables['Tsg_flow_raw']['_data'] = dataf['TsgShipFlow'].values
     template.variables['LabMain_sw_flow_raw']['_data'] = dataf['LabMainSwFlow'].values
