@@ -104,7 +104,7 @@ class TestSrsGhrsstHandler(HandlerTestCase):
 
     def test_l3s_netcdf(self):
         handler = self.run_handler(SRS_L3S_1D_DAY,
-                                   check_params={'checks': ['cf', 'ghrsst:1.0']}
+                                   check_params={'checks': ['cf:1.6', 'ghrsst:1.0']}
                                    )
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]

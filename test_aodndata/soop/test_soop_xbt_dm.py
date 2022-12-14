@@ -21,7 +21,7 @@ class TestSoopXbtDmHandler(HandlerTestCase):
     def test_good_netcdf(self):
         handler = self.run_handler(GOOD_NC,
                                    include_regexes=[r'IMOS_SOOP-XBT_T_.*\.nc'],
-                                   check_params={'checks': ['cf', 'imos:1.4']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                    )
         self.assertEqual(len(handler.file_collection), 2)
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]

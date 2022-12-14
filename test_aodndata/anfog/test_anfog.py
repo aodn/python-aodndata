@@ -65,7 +65,7 @@ class TestAnfogHandler(HandlerTestCase):
         broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
         broker.upload(preexisting_file)
 
-        handler = self.run_handler(GOOD_NC, check_params={'checks': ['cf', 'imos:1.4']})
+        handler = self.run_handler(GOOD_NC, check_params={'checks': ['cf:1.6', 'imos:1.4']})
 
         f = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
         # self.assertEqual(f[0].check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
@@ -80,7 +80,7 @@ class TestAnfogHandler(HandlerTestCase):
 
     def test_good_anfog_dm_zip(self):
 
-        handler = self.run_handler(GOOD_ZIP_DM, check_params={'checks': ['cf', 'imos:1.4']})
+        handler = self.run_handler(GOOD_ZIP_DM, check_params={'checks': ['cf:1.6', 'imos:1.4']})
 
         raw = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RAW_FILES_REGEX)
         jpg = handler.file_collection.filter_by_attribute_value('extension', '.jpg')
@@ -154,7 +154,7 @@ class TestAnfogHandler(HandlerTestCase):
 
     def test_adapter(self):
         # test processing of NRL file collection. Collection containn FV01 and FV00
-        handler = self.run_handler(ZIP_ADAPTER, check_params={'checks': ['cf']})
+        handler = self.run_handler(ZIP_ADAPTER, check_params={'checks': ['cf:1.6']})
 
         non_nc = handler.file_collection.filter_by_attribute_value('extension', '.jpg|.kml')
         fv01 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
@@ -257,7 +257,7 @@ class TestAnfogHandler(HandlerTestCase):
         broker.upload(preexisting_files)
 
         # run the handler
-        handler = self.run_handler(GOOD_ZIP_DM, check_params={'checks': ['cf', 'imos:1.4']})
+        handler = self.run_handler(GOOD_ZIP_DM, check_params={'checks': ['cf:1.6', 'imos:1.4']})
 
         nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)
         for n in nc:
@@ -384,7 +384,7 @@ class TestAnfogHandler(HandlerTestCase):
         self.run_handler_with_exception(MissingFileError, GOOD_NC)
 
     def test_slocumRU_data(self):
-        handler = self.run_handler(SLOCUM_RU_MISSION, check_params={'checks': ['cf']})
+        handler = self.run_handler(SLOCUM_RU_MISSION, check_params={'checks': ['cf:1.6']})
         dm_file = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
         jpg = handler.file_collection.filter_by_attribute_value('extension', '.jpg')
         j = jpg[0]

@@ -120,7 +120,7 @@ class AodnWaveHandler(HandlerBase):
             # If a monthly file exists, aggregate the new file
             self.upload_destination = os.path.dirname(AodnWaveHandler.dest_path(self.input_file))
             result = self.state_query.query_storage(self.upload_destination)
-
+            
             existing_monthly_file = result.filter_by_attribute_regex('name', monthly_file_regex)
             if existing_monthly_file:
                 self.logger.info("Mode '{mode}': found an existing monthly file. Generating updated aggregated "

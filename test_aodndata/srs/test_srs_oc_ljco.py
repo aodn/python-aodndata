@@ -47,7 +47,7 @@ class TestSrsOcLjcoHandler(HandlerTestCase):
     def test_handler(self):
         handler = self.run_handler(NC_FILE_ACS,
                                    include_regexes=[r'IMOS_SRS-OC-LJCO_.*\.nc'],
-                                   check_params={'checks': ['cf', 'imos:1.4']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                    )
 
         f = handler.file_collection[0]

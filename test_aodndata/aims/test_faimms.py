@@ -18,7 +18,7 @@ class TestFaimmsHandler(HandlerTestCase):
     def test_good_netcdf(self):
         handler = self.run_handler(GOOD_NC,
                                    include_regexes=[r'IMOS_FAIMMS_T_.*\.nc'],
-                                   check_params={'checks': ['cf', 'imos:1.3']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.3']}
                                    )
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]

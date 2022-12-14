@@ -5,7 +5,9 @@
   },
   "_variables": {
     "TIME": {
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "_datatype": "float64",
       "units": "days since 1950-01-01 00:00:00 UTC",
       "calendar": "gregorian",
@@ -17,7 +19,9 @@
     },
     "LATITUDE": {
       "_FillValue": -999.0,
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "_datatype": "float64",
       "standard_name": "latitude",
       "long_name": "latitude",
@@ -29,7 +33,9 @@
     },
     "LONGITUDE": {
       "_FillValue": -999.0,
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "_datatype": "float64",
       "standard_name": "longitude",
       "long_name": "longitude",
@@ -39,16 +45,21 @@
       "valid_max": 180.0,
       "reference_datum": "WGS84 coordinate reference system"
     },
-    "TYPE":{
+    "TYPE": {
       "_datatype": "S1",
-      "_dimensions": ["TIME", "string_10"],
-      "long_name":  "measurement type (equilibrator, standard or atmosphere)",
+      "_dimensions": [
+        "TIME",
+        "string_10"
+      ],
+      "long_name": "measurement type (equilibrator, standard or atmosphere)",
       "units": "categorical"
     },
-    "TEQ_raw":{
+    "TEQ_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "equilibrator water temperature",
       "reference_datum": "sea surface",
       "units": "degree_Celsius",
@@ -56,75 +67,91 @@
       "valid_min": -2.0,
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "CO2_STD_Value":{
+    "CO2_STD_Value": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "CO2 reference value",
       "reference_datum": "sea surface",
       "units": "1e-6",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "xCO2_PPM_raw":{
+    "xCO2_PPM_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "mole fraction of CO2",
       "comment": "the unit 1e-6 is also called parts per million (ppm)",
       "reference_datum": "sea surface",
       "units": "1e-6",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "xH2O_PPT_raw":{
+    "xH2O_PPM_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "mole fraction of H2O",
       "reference_datum": "sea surface",
-      "units": "1e-3",
-      "comment": "the unit 1e-6 is also called parts per million (ppt)",
+      "units": "1e-6",
+      "comment": "the unit 1e-6 is also called parts per million (ppm)",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "Press_Licor_raw":{
+    "Press_Licor_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "pressure in the infrared gas analyser",
       "reference_datum": "sea surface",
       "units": "hPa",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "Diff_Press_Equ_raw":{
+    "Diff_Press_Equ_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "differential pressure between equilibrator and ambient air",
       "reference_datum": "sea surface",
       "units": "hPa",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "H2O_flow_raw":{
+    "H2O_flow_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "water flow to equilibrator",
       "reference_datum": "sea surface",
       "units": "l min-1",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "Licor_flow_raw":{
+    "Licor_flow_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "Gas flow through infrared gas analyser",
       "reference_datum": "sea surface",
       "units": "ml min-1",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "TEMP_raw":{
+    "TEMP_1_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "sea surface temperature",
       "standard_name": "sea_surface_temperature",
       "reference_datum": "sea surface",
@@ -133,11 +160,27 @@
       "valid_min": -2.0,
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "PSAL_raw":{
+    "TEMP_2_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
-      "long_name": "sea surface salinity",
+      "_dimensions": [
+        "TIME"
+      ],
+      "long_name": "sea surface temperature",
+      "standard_name": "sea_surface_temperature",
+      "reference_datum": "sea surface",
+      "units": "degree_Celsius",
+      "valid_max": 40.0,
+      "valid_min": -2.0,
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "PSAL_raw": {
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": [
+        "TIME"
+      ],
+      "long_name": "sea surface salinity measured by thermosalinograph",
       "standard_name": "sea_surface_salinity",
       "reference_datum": "sea surface",
       "units": "1e-3",
@@ -145,30 +188,36 @@
       "valid_min": 0.0,
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "ATMP_raw":{
+    "ATMP_uncorr_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
-      "long_name": "atmospheric pressure",
+      "_dimensions": [
+        "TIME"
+      ],
+      "long_name": "atmospheric pressure at the height of the instrument",
       "standard_name": "air_pressure",
-      "reference_datum": "sea surface",
+      "comment": "atmospheric pressure measured at 9.610 above sea level",
       "units": "hPa",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "WSPD_raw":{
+    "WSPD_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "wind speed",
       "standard_name": "wind_speed",
       "reference_datum": "sea surface",
       "units": "m s-1",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "WDIR_raw":{
+    "WDIR_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "wind direction",
       "standard_name": "wind_from_direction",
       "reference_datum": "magnetic north",
@@ -177,25 +226,66 @@
       "units": "degree",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "Tsg_flow_raw":{
+    "Tsg_flow_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
+      "_dimensions": [
+        "TIME"
+      ],
       "long_name": "thermosalinograph water flow",
       "reference_datum": "sea surface",
       "units": "l min-1",
       "coordinates": "TIME LATITUDE LONGITUDE"
     },
-    "TEMP_Tsg_raw":{
+    "TEMP_Tsg_raw": {
       "_FillValue": -999.0,
       "_datatype": "float64",
-      "_dimensions": ["TIME"],
-      "long_name": "Sea water temperature measured by thermosalinograph",
+      "_dimensions": [
+        "TIME"
+      ],
+      "long_name": "sea water temperature measured by thermosalinograph",
       "standard_name": "sea_surface_temperature",
       "reference_datum": "sea surface",
       "units": "degree_Celsius",
       "valid_max": 40.0,
       "valid_min": -2.0,
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "RELH_raw": {
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": [
+        "TIME"
+      ],
+      "long_name": "relative humidity ",
+      "standard_name": "relative_humidity",
+      "units": "percent",
+      "valid_max": 100,
+      "valid_min": 0,
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "AIRT_raw": {
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": [
+        "TIME"
+      ],
+      "long_name": "Air temperature",
+      "standard_name": "air_temperature",
+      "units": "degree_Celsius",
+      "valid_max": 100,
+      "valid_min": -100,
+      "coordinates": "TIME LATITUDE LONGITUDE"
+    },
+    "LabMain_sw_flow_raw": {
+      "_FillValue": -999.0,
+      "_datatype": "float64",
+      "_dimensions": [
+        "TIME"
+      ],
+      "long_name": "seawater flow in main laboratory",
+      "reference_datum": "sea surface",
+      "units": "l min-1",
       "coordinates": "TIME LATITUDE LONGITUDE"
     }
   },

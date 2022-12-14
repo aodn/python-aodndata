@@ -46,7 +46,7 @@ class TestSoopTrvHandler(HandlerTestCase):
 
         handler = self.run_handler(GOOD_NC,
                                    include_regexes=[r'IMOS_SOOP-TRV_B_.*\.nc'],
-                                   check_params={'checks': ['cf', 'imos:1.3']}
+                                   check_params={'checks': ['cf:1.6', 'imos:1.3']}
                                    )
 
         self.assertEqual(len(handler.file_collection), 3)  # total number of files handled
