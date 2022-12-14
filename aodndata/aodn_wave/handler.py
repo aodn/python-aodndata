@@ -79,7 +79,7 @@ class AodnWaveHandler(HandlerBase):
         if institution is None:
             raise InvalidFileNameError(
                 "file name: '{filename}' has incorrect institution '{institution}' which is not listed "
-                "as part of the collection".format(filename=file_basename, insitution=institution))
+                "as part of the collection".format(filename=file_basename, institution=institution))
 
         data_base_dir = os.path.join(INSTITUTION_PATHNAME[institution], WAVEBUOY_DIR, mode_dir, data_type)
 
@@ -105,7 +105,7 @@ class AodnWaveHandler(HandlerBase):
         mode = fields['mode']
         institution = fields['institution']
 
-        if len(self.file_collection)>1:
+        if len(self.file_collection) > 1:
             DuplicatePipelineFileError("ABORTING:More than one file in the file collection")
 
         input_nc_file = self.file_collection[0]
@@ -126,13 +126,13 @@ class AodnWaveHandler(HandlerBase):
                 self.logger.info("Mode '{mode}': found an existing monthly file. Generating updated aggregated "
                                  "product '{remotefile}'."
                                  .format(mode=mode, remotefile=existing_monthly_file[0].dest_path))
-                    # No need to add previous file to the Pipelinefilecollection for deletion as it will simply be overwritten.
-                    # aggregate files and add to pipeline file collection
+                # No need to add previous file to the Pipelinefilecollection for deletion as it will simply
+                # be overwritten. Aggregate files and add to pipeline file collection
                 self.state_query.download(existing_monthly_file, self.temp_dir)
                 source_file_path = existing_monthly_file[0].local_path
                 aggregated_file_path = nrt_timeseries_aggregator.file_aggregator(input_nc_file,
-                                                                            source_file_path,
-                                                                            self.products_dir, fields)
+                                                                                source_file_path,
+                                                                                self.products_dir, fields)
             else:
                 #process input_file only to rename it
                 self.logger.info("Mode '{mode}': no existing monthly file at : {remotefile}.".
