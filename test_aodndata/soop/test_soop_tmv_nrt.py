@@ -35,7 +35,7 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
         log file is ARCHIVE_ONLY
         """
         handler = self.run_handler(MOORING_LOG_10SECS_WITH_COORD_GAP,
-                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']},
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
@@ -92,7 +92,7 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
         log file is UPLOAD_ONLY
         """
         handler = self.run_handler(TRANSECT_LOG_1sec,
-                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']},
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
@@ -122,7 +122,7 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
         """
         netcdf_path = netcdf_writer(TRANSECT_LOG_1sec, self.temp_dir, 'Spirit-of-Tasmania-1')
         handler = self.run_handler(netcdf_path,
-                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']},
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
@@ -144,7 +144,7 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
         log file is UPLOAD_ONLY
         """
         handler = self.run_handler(TOO_MANY_FIELDS_1SEC_ZIP,
-                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']},
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
@@ -226,7 +226,7 @@ class TestSoopTmvNrtHandler(HandlerTestCase):
         zip is not added to the collection
         """
         handler = self.run_handler(GOOD_1SEC_ZIP,
-                                   check_params={'checks': ['cf', 'imos:1.4']},
+                                   check_params={'checks': ['cf:1.6', 'imos:1.4']},
                                    custom_params={'ship_callsign_ls': ship_callsign_ls})
 
         f_log = handler.file_collection.filter_by_attribute_value('extension', '.log')[0]
