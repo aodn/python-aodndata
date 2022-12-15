@@ -1,7 +1,7 @@
 import os
 import re
 
-from aodncore.pipeline.exceptions import InvalidFileNameError, PipelineProcessingError,DuplicatePipelineFileError
+from aodncore.pipeline.exceptions import InvalidFileNameError,DuplicatePipelineFileError
 from aodncore.pipeline import PipelineFile, HandlerBase, PipelineFilePublishType
 from aodncore.util.misc import get_pattern_subgroups_from_string
 
@@ -79,7 +79,7 @@ class AodnWaveHandler(HandlerBase):
         if institution is None:
             raise InvalidFileNameError(
                 "file name: '{filename}' has incorrect institution '{institution}' which is not listed "
-                "as part of the collection".format(filename=file_basename, insitution=institution))
+                "as part of the collection".format(filename=file_basename, institution=institution))
 
         data_base_dir = os.path.join(INSTITUTION_PATHNAME[institution], WAVEBUOY_DIR, mode_dir, data_type)
 
@@ -87,8 +87,7 @@ class AodnWaveHandler(HandlerBase):
         if mode == 'RT':
             site_dir = fields['site_name']
             year = fields['nc_time_cov_start'][0:4]
-            month = fields['nc_time_cov_start'][4:6]
-            site_dir = os.path.join(site_dir, year, month)
+            site_dir = os.path.join(site_dir, year)
 
         return os.path.join(data_base_dir, site_dir, os.path.basename(filepath))
 
@@ -106,32 +105,34 @@ class AodnWaveHandler(HandlerBase):
         mode = fields['mode']
         institution = fields['institution']
 
-        # len
-        if len(self.file_collection)>1:
+        if len(self.file_collection) > 1:
             DuplicatePipelineFileError("ABORTING:More than one file in the file collection")
 
         input_nc_file = self.file_collection[0]
-        # Specific processing of BOM-sourced files because of aggregation of hourly file into monthly product
-        if mode == 'RT' and re.match(('BOM|DOT-WA|DES-QLD|MHL|GP-VIC'),institution):
+
+        # Specific processing of BOM-sourced files because of aggregation of hourly file into monthly product -
+        # Excludes monthly files(when repushed) from aggregation
+        if mode == 'RT' and re.match(('BOM|DOT-WA|DES-QLD|MHL|GP-VIC'),institution) and not re.search('monthly_nc',file_basename):
+            # deduce target monthly file name
+            month_start = fields['nc_time_cov_start'][0:6]
+            monthly_file_regex = institution + '_' + month_start + r"\d{2}_.*" + mode + '_' + datatype + '_monthly.nc'
             # check if an aggregated monthly file exist in the destination folder.
             # If a monthly file exists, aggregate the new file
             self.upload_destination = os.path.dirname(AodnWaveHandler.dest_path(self.input_file))
             result = self.state_query.query_storage(self.upload_destination)
-            ###### add a regex step to specifically look for the input file in the upload destination.
-            if result:
-                if len(result) > 1:
-                    raise PipelineProcessingError("More than one file found in monthly folder")
-
+            
+            existing_monthly_file = result.filter_by_attribute_regex('name', monthly_file_regex)
+            if existing_monthly_file:
                 self.logger.info("Mode '{mode}': found an existing monthly file. Generating updated aggregated "
                                  "product '{remotefile}'."
-                             .format(mode=mode, remotefile=result[0].dest_path))
-                # No need to add previous file to the Pipelinefilecollection for deletion as it will simply be overwritten.
-                # aggregate files and add to pipeline file collection
-                self.state_query.download(result, self.temp_dir)
-                source_file_path = result[0].local_path
+                                 .format(mode=mode, remotefile=existing_monthly_file[0].dest_path))
+                # No need to add previous file to the Pipelinefilecollection for deletion as it will simply
+                # be overwritten. Aggregate files and add to pipeline file collection
+                self.state_query.download(existing_monthly_file, self.temp_dir)
+                source_file_path = existing_monthly_file[0].local_path
                 aggregated_file_path = nrt_timeseries_aggregator.file_aggregator(input_nc_file,
-                                                                                 source_file_path,
-                                                                                 self.products_dir, fields)
+                                                                                source_file_path,
+                                                                                self.products_dir, fields)
             else:
                 #process input_file only to rename it
                 self.logger.info("Mode '{mode}': no existing monthly file at : {remotefile}.".
