@@ -15,18 +15,21 @@ from aodncore.util.misc import get_pattern_subgroups_from_string
 
 ALTI_PREFIX_PATH = 'IMOS/SRS/Surface-Waves/Wave-Wind-Altimetry-DM00'
 ALTI_VALID_SATS = ["CRYOSAT-2",
+                   "CFOSAT",
                    "ENVISAT",
                    "ERS-1",
                    "ERS-2",
                    "GEOSAT",
                    "GFO",
                    "HY-2",
+                   "HY-2B",
                    "JASON-1",
                    "JASON-2",
                    "JASON-3",
                    "SARAL",
                    "SENTINEL-3A",
                    "SENTINEL-3B",
+                   "SENTINEL-6A",
                    "TOPEX"
                    ]
 ALTI_FILE_PATTERN = re.compile(r"""
