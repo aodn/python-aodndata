@@ -1,4 +1,6 @@
 #! /bin/env python3
+
+import logging
 from typing import Union
 
 import numpy as np
@@ -8,14 +10,19 @@ from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And, Or
 
 import pandas as pd
 
+logging.basicConfig(level=logging.DEBUG)
 
+# Variables included in the products
+INCLUDED_VARIABLES = {'TEMP', 'PSAL', 'CPHL', 'CHLF', 'CHLU', 'TURB', 'DOX1', 'DOX2', 'DOXS', 'PAR', 'VCUR'}
+
+# Geoserver details
 WFS_URL = "http://geoserver-123.aodn.org.au/geoserver/wfs"
 WFS_VERSION = '1.1.0'
-
 FILE_INDEX_LAYER = 'imos:moorings_all_map'
 
 # connect to WFS server
 WFS = WebFeatureService(WFS_URL, version=WFS_VERSION)
+logging.debug(f"Connected to {WFS_URL}")
 
 
 def get_files_dataframe(filters: list = None,
@@ -37,16 +44,19 @@ def get_files_dataframe(filters: list = None,
     if filters:
         gf_kwargs['filter'] = etree.tostring(And(filters).toXML(), encoding='unicode')
 
+    logging.debug("  Sending query to geoserver")
     with WFS.getfeature(typename=FILE_INDEX_LAYER, **gf_kwargs) as response:
         df = pd.read_csv(response, **read_csv_kwargs)
 
-    # drop useless FID column~
+    # drop useless FID column
     df.drop(columns='FID', inplace=True)
     return df
 
 
 def files_for_site(site_code: str) -> pd.DataFrame:
     """Query geoserver-123 to get a DataFrame of currently availabe FV01 source files for the given site_code"""
+
+    logging.info(f"Getting file list for site {site_code}...")
 
     filter_list = [PropertyIsEqualTo(propertyname='site_code', literal=site_code),
                    Or([PropertyIsEqualTo(propertyname='file_version', literal='1'),
@@ -62,20 +72,54 @@ def files_for_site(site_code: str) -> pd.DataFrame:
                                                      ],
                                        read_csv_kwargs={'parse_dates': ['date_created', 'date_updated']}
                                        )
-    
+    logging.info(f"  Returned {len(wfs_features)} features")
+
     return wfs_features
 
 # Get all relevant FV01 & FV02 files for site
-files_df = files_for_site('NRSMAI')
-
+site_code = 'NRSMAI'
+files_df = files_for_site(site_code)
 
 # source files
 source_index = np.logical_and(files_df.file_version == 1,
                               files_df.data_category.map(lambda s: s not in ('aggregated_timeseries', 'CO2'))
                               )
-source_files = files_df.loc[source_index, ['url', 'date_updated', 'variables']]
+source_files = files_df.loc[source_index, ['url', 'date_updated', 'variables']].set_index('url')
+logging.info(f"Found {len(source_files)} source files")
 
 # product_files
 aggregated_files = files_df.loc[files_df.data_category=='aggregated_timeseries', ['url', 'date_created']]
+logging.debug(f"Found {len(aggregated_files)} aggregated products")
 hourly_files = files_df.loc[files_df.data_category=='hourly_timeseries', ['url', 'date_created']]
-gridded_files = files_df.loc[files_df.data_category=='gridded_timeseries', ['url', 'date_created']]
+logging.debug(f"Found {len(hourly_files)} hourly products")
+
+# when were any of the products last updated? - assume they were all up to date at that time
+products_updated = max(aggregated_files.date_created.max(), hourly_files.date_created.max())
+logging.info(f"Products last updated {products_updated}")
+
+# what source files have changed since then and what variables were included?
+new_source_files = source_files[source_files.date_updated > products_updated]
+new_vars = set()
+for vars in new_source_files.variables:
+    new_vars.update(vars.split(', '))
+new_vars.intersection_update(INCLUDED_VARIABLES)
+
+if len(new_vars) == 0:
+    logging.info(f"No new data for site {site_code}")
+    exit(0)
+
+# products to generate
+# VCUR is used as a proxy for all velocity variables - if included, need to handle separately
+products = set()
+if 'VCUR' in new_vars:
+    new_vars.remove('VCUR')
+    products.update({'velocity_aggregated', 'velocity_hourly'})
+if new_vars:
+    products.update({'aggregated', 'hourly', 'gridded'})
+
+# create manifest
+manifest = {'site_code': site_code,
+            'variables': list(new_vars),
+            'products': list(products)
+            }
+print(manifest)
