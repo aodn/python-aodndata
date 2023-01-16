@@ -3,8 +3,8 @@ import os
 import shutil
 import unittest
 from unittest.mock import patch
-from datetime import datetime #to use if cannot import TemporaryDirectory
-#from aodncore.util import TemporaryDirectory
+#from datetime import datetime #to use if cannot import TemporaryDirectory
+from aodncore.util import TemporaryDirectory
 import tempfile
 
 from aodncore.pipeline import PipelineFilePublishType, FileType, PipelineFile, PipelineFileCollection, \
