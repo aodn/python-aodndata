@@ -4,7 +4,6 @@ import shutil
 import unittest
 from unittest.mock import patch
 from aodncore.util import TemporaryDirectory
-import tempfile
 
 from aodncore.pipeline import PipelineFilePublishType, FileType, PipelineFile, PipelineFileCollection, \
     PipelineFileCheckType
@@ -40,19 +39,19 @@ class TestGslaHandler(HandlerTestCase):
                 with open(good_nc_dm01, 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
 
-        handler = self.run_handler(good_nc_dm01,
+            handler = self.run_handler(good_nc_dm01,
                                    check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                    )
-        self.assertEqual(len(handler.file_collection), 2)
-        f_nc = handler.file_collection.filter_by_attribute_value('file_type', FileType.NETCDF)[0]
-        f_gz = handler.file_collection.filter_by_attribute_value('file_type', FileType.GZIP)[0]
+            self.assertEqual(len(handler.file_collection), 2)
+            f_nc = handler.file_collection.filter_by_attribute_value('file_type', FileType.NETCDF)[0]
+            f_gz = handler.file_collection.filter_by_attribute_value('file_type', FileType.GZIP)[0]
 
-        self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
-        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.NO_ACTION)
-        self.assertEqual(f_gz.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+            self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+            self.assertEqual(f_nc.publish_type, PipelineFilePublishType.NO_ACTION)
+            self.assertEqual(f_gz.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
 
-        expected_path = os.path.join(GSLA_PREFIX_PATH, "DM/2000", os.path.basename(GOOD_NC_GZ_DM02_nc))
-        self.assertEqual(expected_path, f_gz.dest_path)
+            expected_path = os.path.join(GSLA_PREFIX_PATH, "DM/2000", os.path.basename(GOOD_NC_GZ_DM02_nc))
+            self.assertEqual(expected_path, f_gz.dest_path)
 
 
     def test_good_nc(self):
