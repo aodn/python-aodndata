@@ -13,7 +13,7 @@ GSLA_PREFIX_PATH = "IMOS/OceanCurrent/GSLA"
 GSLA_REGEX = re.compile(r"""
                        IMOS_OceanCurrent_HV_
                        (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)_GSLA_FV02_
-                       (?P<product_type>NRT|DM02)\.nc(\.gz)?$
+                       (?P<product_type>NRT|DM0[1-2])\.nc(\.gz)?$
                        """, re.VERBOSE)
 
 GSLA_REGEX_YEARLY = re.compile(r"""
@@ -89,18 +89,9 @@ class GslaHandler(HandlerBase):
         # Nothing to do with *.nc. Talend can harvest *.nc.gz. Set to NO_ACTION
         netcdf_file.publish_type = PipelineFilePublishType.NO_ACTION
 
-        """ default values
-        by default we push to the storage the file landed in the pipeline (ie *.nc.gz) """
-        push_new_file = True
-        remove_previous_version = False
-
-        if push_new_file:
-            if GSLA_REGEX_YEARLY.match(netcdf_file.name):
-                # yearly file should never be harvested
-                netcdf_file_gz.publish_type = PipelineFilePublishType.UPLOAD_ONLY
-        else:
-            raise InvalidFileNameError("file name: \"{filename}\"  creation date is older than file already on "
-                                       "storage".format(filename=netcdf_file_gz.name))
+        # Yearly file should never be harvested, upload only
+        if GSLA_REGEX_YEARLY.match(netcdf_file.name):
+            netcdf_file_gz.publish_type = PipelineFilePublishType.UPLOAD_ONLY
 
     @staticmethod
     def dest_path(filepath):

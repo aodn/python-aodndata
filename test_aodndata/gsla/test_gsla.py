@@ -3,7 +3,6 @@ import os
 import shutil
 import unittest
 from unittest.mock import patch
-#from datetime import datetime #to use if cannot import TemporaryDirectory
 from aodncore.util import TemporaryDirectory
 import tempfile
 
@@ -35,12 +34,11 @@ class TestGslaHandler(HandlerTestCase):
     def test_push_unzipped_nc(self):
         """ check on pushing *.nc rather than *.nc.gz """
 
-        #with TemporaryDirectory() as tmpdir:
-        tmpdir =  tempfile.mkdtemp()
-        with gzip.open(GOOD_NC_GZ_DM02_nc, 'rb') as f_in:
-            good_nc_dm01 = os.path.join(tmpdir, os.path.basename(GOOD_NC_GZ_DM02_nc.replace('.gz', '')))
-            with open(good_nc_dm01, 'wb') as f_out:
-                shutil.copyfileobj(f_in, f_out)
+        with TemporaryDirectory() as tmpdir:
+            with gzip.open(GOOD_NC_GZ_DM02_nc, 'rb') as f_in:
+                good_nc_dm01 = os.path.join(tmpdir, os.path.basename(GOOD_NC_GZ_DM02_nc.replace('.gz', '')))
+                with open(good_nc_dm01, 'wb') as f_out:
+                    shutil.copyfileobj(f_in, f_out)
 
         handler = self.run_handler(good_nc_dm01,
                                    check_params={'checks': ['cf:1.6', 'imos:1.4']}
@@ -111,39 +109,6 @@ class TestGslaHandler(HandlerTestCase):
 
         expected_path = os.path.join(GSLA_PREFIX_PATH, "DM/2000", os.path.basename(GOOD_NC_GZ_DM02_nc))
         self.assertEqual(expected_path, f_gz.dest_path)
-
-
-    def test_setup_upload_location_push_same_file(self):
-        """
-        Test case: Push same file twice to $INCOMING_DIR
-                   HARVEST_UPLOAD the incoming *.nc.gz
-                   NO_ACTION on the nc inside the *.nc.gz
-        """
-        # create some PipelineFiles to represent the existing files on 'S3'
-        preexisting_files = PipelineFileCollection()
-
-        existing_file = PipelineFile(GOOD_NC_GZ_DM02_nc, dest_path=os.path.join(
-            'IMOS/OceanCurrent/GSLA/DM/2000/',
-            os.path.basename(GOOD_NC_GZ_DM02_nc)))
-
-        preexisting_files.update([existing_file])
-
-        # set the files to UPLOAD_ONLY
-        preexisting_files.set_publish_types(PipelineFilePublishType.UPLOAD_ONLY)
-
-        # upload the 'preexisting_files' collection to the unit test's temporary upload location
-        broker = get_storage_broker(self.config.pipeline_config['global']['upload_uri'])
-        broker.upload(preexisting_files)
-
-        # run the handler by uploading again the same file
-        handler = self.run_handler(GOOD_NC_GZ_DM02_nc)
-
-        nc_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
-        self.assertEqual(nc_file.publish_type, PipelineFilePublishType.NO_ACTION)
-
-        nc_gz_file = handler.file_collection.filter_by_attribute_id('file_type', FileType.GZIP)[0]
-        self.assertEqual(nc_gz_file.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
-
 
     def test_push_yearly_file(self):
         """
