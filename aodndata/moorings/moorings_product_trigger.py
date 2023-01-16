@@ -53,6 +53,22 @@ def get_files_dataframe(filters: list = None,
     return df
 
 
+def pivot_variables(df: pd.DataFrame) -> pd.DataFrame:
+    """Rearrange the file-list data frame so that each row lists one variable only
+     (multiple rows per file where needed)
+    """
+    assert 'variables' in df.columns
+    files_vars = []
+    for row in df.itertuples():
+              variables = set(row.variables.split(', ')) & INCLUDED_VARIABLES
+              for v in variables:
+                  files_vars.append((row.url, v))
+
+    files_vars = pd.DataFrame(files_vars, columns=['url', 'variable']).set_index('url')
+
+    return df.drop(columns='variables').join(files_vars, on='url')
+
+
 def files_for_site(site_code: str) -> pd.DataFrame:
     """Query geoserver-123 to get a DataFrame of currently availabe FV01 source files for the given site_code"""
 
@@ -74,7 +90,8 @@ def files_for_site(site_code: str) -> pd.DataFrame:
                                        )
     logging.info(f"  Returned {len(wfs_features)} features")
 
-    return wfs_features
+    return pivot_variables(wfs_features)
+
 
 # Get all relevant FV01 & FV02 files for site
 site_code = 'NRSMAI'
@@ -84,7 +101,7 @@ files_df = files_for_site(site_code)
 source_index = np.logical_and(files_df.file_version == 1,
                               files_df.data_category.map(lambda s: s not in ('aggregated_timeseries', 'CO2'))
                               )
-source_files = files_df.loc[source_index, ['url', 'date_updated', 'variables']].set_index('url')
+source_files = files_df.loc[source_index, ['url', 'date_updated', 'variable']].set_index('url')
 logging.info(f"Found {len(source_files)} source files")
 
 # product_files
@@ -99,10 +116,7 @@ logging.info(f"Products last updated {products_updated}")
 
 # what source files have changed since then and what variables were included?
 new_source_files = source_files[source_files.date_updated > products_updated]
-new_vars = set()
-for vars in new_source_files.variables:
-    new_vars.update(vars.split(', '))
-new_vars.intersection_update(INCLUDED_VARIABLES)
+new_vars = set(new_source_files.variable)
 
 if len(new_vars) == 0:
     logging.info(f"No new data for site {site_code}")
