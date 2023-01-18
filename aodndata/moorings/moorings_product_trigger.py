@@ -7,7 +7,7 @@ import os
 
 from shutil import copyfile
 from tempfile import NamedTemporaryFile
-from typing import Union
+from typing import Union, List
 
 import numpy as np
 from owslib.etree import etree
@@ -23,15 +23,17 @@ INCLUDED_VARIABLES = {'TEMP', 'PSAL', 'CPHL', 'CHLF', 'CHLU', 'TURB', 'DOX1', 'D
 WFS_URL = "http://geoserver-123.aodn.org.au/geoserver/wfs"
 WFS_VERSION = '1.1.0'
 WFS = None
-FILE_INDEX_LAYER = 'imos:moorings_all_map'
+INDEX_LAYER = 'imos:anmn_all_map'
 
 
 def get_wfs_service(url: str = WFS_URL, version: str = WFS_VERSION) -> WebFeatureService:
     """connect to WFS server"""
-    wfs = WebFeatureService(url, version=version)
-    logging.debug(f"Connected to {url}")
+    global WFS
+    if not WFS:
+        WFS = WebFeatureService(url, version=version)
+        logging.debug(f"Connected to {url}")
 
-    return wfs
+    return WFS
 
 
 def get_files_dataframe(filters: list = None,
@@ -47,16 +49,14 @@ def get_files_dataframe(filters: list = None,
     :param read_csv_kwargs: additional arguments for pandas.read_csv
     :return: DataFrame of file details
     """
-    global WFS
-    if not WFS:
-        WFS = get_wfs_service()
+    wfs = get_wfs_service()
 
     gf_kwargs = getfeature_kwargs.copy() if getfeature_kwargs else {}
     gf_kwargs.update(propertyname=propertyname, outputFormat='csv')
     if filters:
         gf_kwargs['filter'] = etree.tostring(And(filters).toXML(), encoding='unicode')
 
-    with WFS.getfeature(typename=FILE_INDEX_LAYER, **gf_kwargs) as response:
+    with wfs.getfeature(typename=INDEX_LAYER, **gf_kwargs) as response:
         df = pd.read_csv(response, **read_csv_kwargs)
 
     # drop useless FID column
@@ -64,21 +64,24 @@ def get_files_dataframe(filters: list = None,
     return df
 
 
-def files_for_site(site_code: str) -> pd.DataFrame:
-    """Query geoserver-123 to get a DataFrame of currently availabe FV01 source files for the given site_code"""
+def all_files_df() -> pd.DataFrame:
+    """Query geoserver-123 to get a DataFrame of all currently availabe FV01 source files for all sites
+     (or just the given site_codes, if specified)
+     """
 
-    logging.debug(f"Getting file list for site {site_code}...")
+    logging.debug(f"Getting file list...")
 
-    filter_list = [PropertyIsEqualTo(propertyname='site_code', literal=site_code),
-                   Or([PropertyIsEqualTo(propertyname='file_version', literal='1'),
-                       PropertyIsEqualTo(propertyname='file_version', literal='2')
-                       ]),
-                   PropertyIsEqualTo(propertyname='realtime', literal='false'),
-                   PropertyIsNotEqualTo(propertyname='data_category', literal='Biogeochem_profiles'),
-                   PropertyIsNotEqualTo(propertyname='data_category', literal='CTD_profiles'),
-                   ]
+    filter_list = [
+        Or([PropertyIsEqualTo(propertyname='file_version', literal='1'),
+            PropertyIsEqualTo(propertyname='file_version', literal='2')
+            ]),
+        PropertyIsEqualTo(propertyname='realtime', literal='false'),
+        PropertyIsNotEqualTo(propertyname='data_category', literal='Biogeochem_profiles'),
+        PropertyIsNotEqualTo(propertyname='data_category', literal='CTD_profiles'),
+    ]
+
     wfs_features = get_files_dataframe(filter_list,
-                                       propertyname=['url', 'variables', 'date_created', 'date_updated',
+                                       propertyname=['url', 'site_code', 'variables', 'date_created', 'date_updated',
                                                      'data_category', 'file_version'
                                                      ],
                                        read_csv_kwargs={'parse_dates': ['date_created', 'date_updated']}
@@ -103,26 +106,26 @@ def pivot_variables(df: pd.DataFrame) -> pd.DataFrame:
     return df.drop(columns='variables').join(files_vars)
 
 
-def make_manifest(site_code: str) -> dict:
+def make_manifest(all_files: pd.DataFrame, site_code: str) -> dict:
     """Create a manifest to trigger products creation for the given site"""
 
-    files_df = files_for_site(site_code)
+    site_files = all_files[all_files.site_code == site_code]
 
-    source_index = np.logical_and(files_df.file_version == 1,
-                                  files_df.data_category.map(lambda s: s not in ('aggregated_timeseries', 'CO2'))
+    source_index = np.logical_and(site_files.file_version == 1,
+                                  site_files.data_category.map(lambda s: s not in ('aggregated_timeseries', 'CO2'))
                                   )
-    source_files = files_df.loc[source_index, ['url', 'date_updated', 'variables']]
+    source_files = site_files.loc[source_index, ['url', 'date_updated', 'variables']]
     logging.info(f"Found {len(source_files)} source files, last updated {source_files.date_updated.max()}")
     source_files = pivot_variables(source_files)
 
     # product_files
-    aggregated_files = files_df.loc[
-        files_df.data_category == 'aggregated_timeseries', ['url', 'date_created', 'variables']]
+    aggregated_files = site_files.loc[
+        site_files.data_category == 'aggregated_timeseries', ['url', 'date_created', 'variables']]
     logging.info(f"Found {len(aggregated_files)} aggregated_timeseries files, "
                  f"last created {aggregated_files.date_created.max()}")
     aggregated_files = pivot_variables(aggregated_files)
 
-    hourly_files = files_df.loc[files_df.data_category == 'hourly_timeseries', ['url', 'date_created']]
+    hourly_files = site_files.loc[site_files.data_category == 'hourly_timeseries', ['url', 'date_created']]
     logging.info(f"Found {len(hourly_files)} hourly_timeseries files, "
                  f"last created {hourly_files.date_created.max()}")
 
@@ -167,7 +170,7 @@ def make_manifest(site_code: str) -> dict:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("site_code", nargs="+", type=str, help="site_code(s) to process")
+    parser.add_argument("site_code", nargs="*", type=str, help="site_code(s) to process")
     parser.add_argument("-d", action="store_const", dest="loglevel", const=logging.DEBUG,
                         help="Log debugging output")
     parser.add_argument("-i", action="store_const", dest="loglevel", const=logging.INFO,
@@ -179,14 +182,21 @@ def parse_args():
     if hasattr(args, 'loglevel'):
         logging.basicConfig(level=args.loglevel)
 
+    logging.debug(f"Command-line args: {args}")
     return args
 
 
 if __name__ == "__main__":
     args = parse_args()
 
-    for site_code in args.site_code:
-        manifest = make_manifest(site_code)
+    site_codes = args.site_code
+    all_files = all_files_df()
+    if len(site_codes) == 0:
+        site_codes = sorted(all_files.site_code.unique())
+        logging.debug(f"Sites: {site_codes}")
+
+    for site_code in site_codes:
+        manifest = make_manifest(all_files, site_code)
         if manifest is not None:
             logging.info(manifest)
             with NamedTemporaryFile(mode="w") as f:
