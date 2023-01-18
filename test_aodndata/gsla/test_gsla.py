@@ -34,11 +34,11 @@ class TestGslaHandler(HandlerTestCase):
 
         with TemporaryDirectory() as tmpdir:
             with gzip.open(GOOD_NC_GZ_DM02, 'rb') as f_in:
-                good_nc_dm01 = os.path.join(tmpdir, os.path.basename(GOOD_NC_GZ_DM02.replace('.gz', '')))
-                with open(good_nc_dm01, 'wb') as f_out:
+                good_nc_dm02 = os.path.join(tmpdir, os.path.basename(GOOD_NC_GZ_DM02.replace('.gz', '')))
+                with open(good_nc_dm02, 'wb') as f_out:
                     shutil.copyfileobj(f_in, f_out)
 
-            handler = self.run_handler(good_nc_dm01,
+            handler = self.run_handler(good_nc_dm02,
                                    check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                    )
             self.assertEqual(len(handler.file_collection), 2)
@@ -88,7 +88,7 @@ class TestGslaHandler(HandlerTestCase):
         self.assertEqual(fields['nc_time_cov_start'], '20000101T000000Z')
         self.assertEqual(fields['product_type'], 'DM02')
 
-    def test_good_dm01(self):
+    def test_good_dm02(self):
         handler = self.run_handler(GOOD_NC_GZ_DM02,
                                    check_params={'checks': ['cf:1.6', 'imos:1.4']}
                                    )
