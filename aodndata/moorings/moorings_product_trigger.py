@@ -68,8 +68,9 @@ def get_files_dataframe(filters: list = None,
 
 
 def all_files_df(wfs_url: str = None) -> pd.DataFrame:
-    """Return a DataFrame of all currently availabe FV01 & FV02 files for all sites
-     (or just the given site_codes, if specified)
+    """Return a DataFrame of all currently availabe FV01 & FV02 timeseries files for all sites
+     (or just the given site_codes, if specified). Also exclude CO2 files as they are currently not included
+     in the products.
      """
 
     logging.debug(f"Getting file list...")
@@ -81,6 +82,7 @@ def all_files_df(wfs_url: str = None) -> pd.DataFrame:
         PropertyIsEqualTo(propertyname='realtime', literal='false'),
         PropertyIsNotEqualTo(propertyname='data_category', literal='Biogeochem_profiles'),
         PropertyIsNotEqualTo(propertyname='data_category', literal='CTD_profiles'),
+        PropertyIsNotEqualTo(propertyname='data_category', literal='CO2')
     ]
 
     wfs_features = get_files_dataframe(filter_list,
@@ -116,7 +118,7 @@ def make_manifest(all_files: pd.DataFrame, site_code: str) -> dict:
     site_files = all_files[all_files.site_code == site_code]
 
     source_index = np.logical_and(site_files.file_version == 1,
-                                  site_files.data_category.map(lambda s: s not in ('aggregated_timeseries', 'CO2'))
+                                  site_files.data_category.map(lambda s: s != "aggregated_timeseries")
                                   )
     source_files = site_files.loc[source_index, ['url', 'date_updated', 'variables']]
     logging.info(f"Found {len(source_files)} source files, last updated {source_files.date_updated.max()}")
