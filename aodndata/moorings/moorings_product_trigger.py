@@ -26,10 +26,11 @@ WFS = None
 INDEX_LAYER = 'imos:anmn_all_map'
 
 
-def get_wfs_service(url: str = WFS_URL, version: str = WFS_VERSION) -> WebFeatureService:
+def get_wfs_service(wfs_url: str = None, version: str = WFS_VERSION) -> WebFeatureService:
     """connect to WFS server"""
     global WFS
-    if not WFS:
+    url = wfs_url or WFS_URL
+    if not WFS or WFS.url != url:
         WFS = WebFeatureService(url, version=version)
         logging.debug(f"Connected to {url}")
 
@@ -38,6 +39,7 @@ def get_wfs_service(url: str = WFS_URL, version: str = WFS_VERSION) -> WebFeatur
 
 def get_files_dataframe(filters: list = None,
                         propertyname: Union[str, list] = '*',
+                        wfs_url: str = None,
                         getfeature_kwargs: dict = None,
                         read_csv_kwargs: dict = None
                         ) -> pd.DataFrame:
@@ -45,11 +47,12 @@ def get_files_dataframe(filters: list = None,
 
     :param filters: list of filters to apply (owslib.fes.OgcExpression instances)
     :param propertyname: str or list of property name(s) to return (default all)
+    :param wfs_url: geoserver url for WFS queries (default global WFS_URL)
     :param getfeature_kwargs: additional arguments for WFS getfeature
     :param read_csv_kwargs: additional arguments for pandas.read_csv
     :return: DataFrame of file details
     """
-    wfs = get_wfs_service()
+    wfs = get_wfs_service(wfs_url)
 
     gf_kwargs = getfeature_kwargs.copy() if getfeature_kwargs else {}
     gf_kwargs.update(propertyname=propertyname, outputFormat='csv')
@@ -64,8 +67,8 @@ def get_files_dataframe(filters: list = None,
     return df
 
 
-def all_files_df() -> pd.DataFrame:
-    """Query geoserver-123 to get a DataFrame of all currently availabe FV01 source files for all sites
+def all_files_df(wfs_url: str = None) -> pd.DataFrame:
+    """Return a DataFrame of all currently availabe FV01 & FV02 files for all sites
      (or just the given site_codes, if specified)
      """
 
@@ -84,6 +87,7 @@ def all_files_df() -> pd.DataFrame:
                                        propertyname=['url', 'site_code', 'variables', 'date_created', 'date_updated',
                                                      'data_category', 'file_version'
                                                      ],
+                                       wfs_url=wfs_url,
                                        read_csv_kwargs={'parse_dates': ['date_created', 'date_updated']}
                                        )
     logging.debug(f"  Returned {len(wfs_features)} features")
@@ -177,6 +181,8 @@ def parse_args():
                         help="Log INFO output")
     parser.add_argument("-t", "--target_dir", default="/tmp",
                         help="target directory to push manifests to (default /tmp)")
+    parser.add_argument("-u", "--wfs_url", default=WFS_URL,
+                        help="geoserver URL for WFS queries")
     args = parser.parse_args()
 
     if hasattr(args, 'loglevel'):
@@ -190,7 +196,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     site_codes = args.site_code
-    all_files = all_files_df()
+    all_files = all_files_df(args.wfs_url)
     if len(site_codes) == 0:
         site_codes = sorted(all_files.site_code.unique())
         logging.debug(f"Sites: {site_codes}")
