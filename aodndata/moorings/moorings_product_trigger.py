@@ -120,10 +120,10 @@ def make_manifest(all_files: pd.DataFrame, site_code: str) -> dict:
     source_index = np.logical_and(site_files.file_version == 1,
                                   site_files.data_category.map(lambda s: s != "aggregated_timeseries")
                                   )
-    if len(source_index) == 0:
+    source_files = site_files.loc[source_index, ['url', 'date_updated', 'variables']]
+    if len(source_files) == 0:
         print(f"{site_code}: No source files")
         return None
-    source_files = site_files.loc[source_index, ['url', 'date_updated', 'variables']]
     logging.debug(f"{site_code}:  {len(source_files)} source files, last updated {source_files.date_updated.max()}")
     source_files = pivot_variables(source_files)
 
