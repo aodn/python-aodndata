@@ -120,19 +120,22 @@ def make_manifest(all_files: pd.DataFrame, site_code: str) -> dict:
     source_index = np.logical_and(site_files.file_version == 1,
                                   site_files.data_category.map(lambda s: s != "aggregated_timeseries")
                                   )
+    if len(source_index) == 0:
+        print(f"{site_code}: No source files")
+        return None
     source_files = site_files.loc[source_index, ['url', 'date_updated', 'variables']]
-    logging.info(f"Found {len(source_files)} source files, last updated {source_files.date_updated.max()}")
+    logging.debug(f"{site_code}:  {len(source_files)} source files, last updated {source_files.date_updated.max()}")
     source_files = pivot_variables(source_files)
 
     # product_files
     aggregated_files = site_files.loc[
         site_files.data_category == 'aggregated_timeseries', ['url', 'date_created', 'variables']]
-    logging.info(f"Found {len(aggregated_files)} aggregated_timeseries files, "
+    logging.debug(f"{site_code}:  {len(aggregated_files)} aggregated_timeseries files, "
                  f"last created {aggregated_files.date_created.max()}")
     aggregated_files = pivot_variables(aggregated_files)
 
     hourly_files = site_files.loc[site_files.data_category == 'hourly_timeseries', ['url', 'date_created']]
-    logging.info(f"Found {len(hourly_files)} hourly_timeseries files, "
+    logging.debug(f"{site_code}:  {len(hourly_files)} hourly_timeseries files, "
                  f"last created {hourly_files.date_created.max()}")
 
     # when were data for each variable updated?
@@ -151,7 +154,7 @@ def make_manifest(all_files: pd.DataFrame, site_code: str) -> dict:
     process_hourly = any(source_files.date_updated > products_updated) or hourly_files.empty
 
     if len(new_vars) == 0 and not process_hourly:
-        logging.info(f"No new data for site {site_code}")
+        print(f"{site_code}: All products up to date")
         return None
 
     # products to generate
@@ -176,11 +179,9 @@ def make_manifest(all_files: pd.DataFrame, site_code: str) -> dict:
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("site_code", nargs="*", type=str, help="site_code(s) to process")
+    parser.add_argument("site_code", nargs="*", type=str, help="site_code(s) to process (default all)")
     parser.add_argument("-d", action="store_const", dest="loglevel", const=logging.DEBUG,
                         help="Log debugging output")
-    parser.add_argument("-i", action="store_const", dest="loglevel", const=logging.INFO,
-                        help="Log INFO output")
     parser.add_argument("-t", "--target_dir", default="/tmp",
                         help="target directory to push manifests to (default /tmp)")
     parser.add_argument("-u", "--wfs_url", default=WFS_URL,
@@ -206,7 +207,7 @@ if __name__ == "__main__":
     for site_code in site_codes:
         manifest = make_manifest(all_files, site_code)
         if manifest is not None:
-            logging.info(manifest)
+            print(manifest)
             with NamedTemporaryFile(mode="w") as f:
                 json.dump(manifest, f, indent=4)
                 f.flush()
