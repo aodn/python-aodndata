@@ -26,8 +26,6 @@ class MmpCtdHandler(HandlerBase):
     def dest_path(filepath):
         nc_obj = Dataset(filepath, mode='r')
         year = datetime.strptime(nc_obj.time_coverage_start, '%Y-%m-%dT%H:%M:%SZ').strftime("%Y")
-        site_short_name = nc_obj.site_short_name
 
         return os.path.join('AIMS', 'Marine_Monitoring_Program', 'CTD_profiles',
-                            year, site_short_name, '{filename}'.
-                            format(filename=os.path.basename(filepath)))
+                            year, os.path.basename(filepath))
