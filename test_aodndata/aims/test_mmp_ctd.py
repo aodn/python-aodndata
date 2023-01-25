@@ -20,6 +20,10 @@ class TestMmpCtdHandler(HandlerTestCase):
         f = handler.file_collection[0]
         self.assertEqual(f.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
 
+    def test_good_path(self):
+        dest_path = MmpCtdHandler.dest_path(GOOD_NC)
+        expected_path = os.path.join("AIMS/Marine_Monitoring_Program/CTD_profiles/2006", os.path.basename(GOOD_NC))
+        self.assertEqual(expected_path, dest_path)
 
 
 if __name__ == '__main__':
