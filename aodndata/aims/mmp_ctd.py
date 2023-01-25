@@ -28,5 +28,4 @@ class MmpCtdHandler(HandlerBase):
         year = datetime.strptime(nc_obj.time_coverage_start, '%Y-%m-%dT%H:%M:%SZ').strftime("%Y")
 
         return os.path.join('AIMS', 'Marine_Monitoring_Program', 'CTD_profiles',
-                            year, '{filename}'.
-                            format(filename=os.path.basename(filepath)))
+                            year, os.path.basename(filepath))
