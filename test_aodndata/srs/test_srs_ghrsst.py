@@ -85,9 +85,13 @@ SRS_VARIOUS = {'19950309232523-ABOM-L3U_GHRSST-SSTskin-AVHRR09_D-Des_Southern.nc
                '20180131111000-ABOM-L3S_GHRSST-SSTfnd-MultiSensor-1m_dn_Southern.nc': 'SRS/SST/ghrsst/L3SM-1mS/dn/2018',
                '20180101010000-ABOM-L3U_GHRSST-SSTskin-VIIRS_NPP-Pol_Southern.nc': 'SRS/SST/ghrsst/L3U-S/snpp/2018',
                '20180101051000-ABOM-L3C_GHRSST-SSTskin-VIIRS_NPP-1d_day_Southern.nc': 'SRS/SST/ghrsst/L3C-1dS/day/snpp/2018',
-               '20180101171000-ABOM-L3C_GHRSST-SSTskin-VIIRS_NPP-1d_night_Southern.nc': 'SRS/SST/ghrsst/L3C-1dS/ngt/snpp/2018'
+               '20180101171000-ABOM-L3C_GHRSST-SSTskin-VIIRS_NPP-1d_night_Southern.nc': 'SRS/SST/ghrsst/L3C-1dS/ngt/snpp/2018',
                }
-                              
+
+SRS_VARIOUS_2 = {'20200101152000-ABOM-L3S_GHRSST-SSTskin-GeoPolar_MultiSensor-1d_night.nc': 'SRS/SST/ghrsst/L3SGM-1d/ngt/2020/20200101152000-ABOM-L3S_GHRSST-SSTskin-GeoPolar_MultiSensor-1d_night.nc',
+                 '20200101152000-ABOM-L3S_GHRSST-SSTskin-GeoPolar_MultiSensor-1d_night-v02.0-fv02.0.nc': 'SRS/SST/ghrsst/L3SGM-1d/ngt/2020/20200101152000-ABOM-L3S_GHRSST-SSTskin-GeoPolar_MultiSensor-1d_night.nc',
+                 '20150901144000-ABOM-L3C_GHRSST-SSTskin-AHI_H08-1d_night-v02.0-fv02.0.nc': 'SRS/SST/ghrsst/L3C-1d/ngt/h08/2015/20150901144000-ABOM-L3C_GHRSST-SSTskin-AHI_H08-1d_night.nc',
+                 }
 
 SRS_BAD = {'19950309232523-ABOM-UNKNOWN_GHRSST-SSTskin-AVHRR09_D-Des_Southern.nc',
            '19950309232523-ABOM-L3U_GHRSST-SSTskin-AVHRR09_D-Des_South.nc',
@@ -147,6 +151,11 @@ class TestSrsGhrsstHandler(HandlerTestCase):
         for nc_file in SRS_VARIOUS.keys():
             dest_path = SrsGhrsstHandler.dest_path(os.path.join(TEST_ROOT, nc_file))
             self.assertEqual(os.path.join('IMOS', SRS_VARIOUS[nc_file], nc_file), dest_path)
+
+        # test the dict which contains the full path in its key value
+        for nc_file in SRS_VARIOUS_2.keys():
+            dest_path = SrsGhrsstHandler.dest_path(os.path.join(TEST_ROOT, nc_file))
+            self.assertEqual(os.path.join('IMOS', SRS_VARIOUS_2[nc_file]), dest_path)
 
     def test_various_bad_path(self):
         for nc_file in SRS_BAD:
