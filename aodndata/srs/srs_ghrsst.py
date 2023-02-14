@@ -24,6 +24,24 @@ L3S_MULTISENSOR_FILE_PATTERN = re.compile(r"""
                                 \.nc$
                                 """, re.VERBOSE)
 
+L3S_GEOPOLAR_MULTISENSOR_FILE_PATTERN = re.compile(r"""
+                                (?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<product_type>L3S)_.*-GeoPolar_MultiSensor-
+                                (?P<temporal_extent>1d|3d|6d|14d|1m)_
+                                (?P<day_time>day|night|dn)
+                                (?P<version>-v0\d.0-fv0\d.0|)
+                                \.nc$
+                                """, re.VERBOSE)
+
+L3C_HIM08_FILE_PATTERN = re.compile(r"""
+                                (?P<nc_time_cov_start>[0-9]{14})-ABOM-
+                                (?P<product_type>L3C)_.*-AHI_H08-
+                                (?P<temporal_extent>1d|3d|6d|14d|1m)_
+                                (?P<day_time>day|night|dn)
+                                (?P<version>-v0\d.0-fv0\d.0|)
+                                \.nc$
+                                """, re.VERBOSE)
+
 L3U_FILE_PATTERN = re.compile(r"""
                                 (?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L3U)_.*-AVHRR
@@ -79,6 +97,16 @@ def get_info_nc(filepath):
         day_time = fields['day_time']
         temporal_extent = fields['temporal_extent']
         fields['product_type'] = '%sM' % fields['product_type']
+    elif L3S_GEOPOLAR_MULTISENSOR_FILE_PATTERN.match(file_basename):
+        fields = get_pattern_subgroups_from_string(file_basename, L3S_GEOPOLAR_MULTISENSOR_FILE_PATTERN)
+        day_time = fields['day_time']
+        temporal_extent = fields['temporal_extent']
+        fields['product_type'] = '%sGM' % fields['product_type']
+    elif L3C_HIM08_FILE_PATTERN.match(file_basename):
+        fields = get_pattern_subgroups_from_string(file_basename, L3C_HIM08_FILE_PATTERN)
+        day_time = fields['day_time']
+        temporal_extent = fields['temporal_extent']
+        fields['sat_value'] = 'h08'
     elif L3U_VIIRS_FILE_PATTERN.match(file_basename):
         fields = get_pattern_subgroups_from_string(file_basename, L3U_VIIRS_FILE_PATTERN)
         day_time = ''
@@ -134,6 +162,17 @@ class SrsGhrsstHandler(HandlerBase):
     @staticmethod
     def dest_path(filepath):
         file_basename = os.path.basename(filepath)
+
+        # remove file version from filename for Himawari and GeoPolar products
+        if L3C_HIM08_FILE_PATTERN.match(file_basename) or L3S_GEOPOLAR_MULTISENSOR_FILE_PATTERN.match(file_basename):
+            if L3C_HIM08_FILE_PATTERN.match(file_basename):
+                fields = get_pattern_subgroups_from_string(file_basename, L3C_HIM08_FILE_PATTERN)
+
+            elif L3S_GEOPOLAR_MULTISENSOR_FILE_PATTERN.match(file_basename):
+                fields = get_pattern_subgroups_from_string(file_basename, L3S_GEOPOLAR_MULTISENSOR_FILE_PATTERN)
+
+            version = fields['version']
+            file_basename = file_basename.replace(version, '')  # remove  file version from filename
 
         if L3P_FILE_PATTERN.match(file_basename):
             fields = get_pattern_subgroups_from_string(file_basename, L3P_FILE_PATTERN)
