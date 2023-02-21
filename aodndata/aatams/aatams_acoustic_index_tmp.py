@@ -17,7 +17,7 @@ def create_empty_dataframe():
     columns = [('tag_deployment_id', str),
                ('transmitter_id', str),
                ('species', str),
-               ('tag_project', str),
+               ('tagging_project', str),
                ('time_coverage_start', str),
                ('time_coverage_end', str),
                ('geom_df', str),
@@ -53,16 +53,17 @@ def extract_metadata(input_file, destination_s3):
                                           + str(df_csv_1['transmitter_deployment_id'])
     df_csv_extract['transmitter_id'] = df_csv_1['transmitter_id']
     df_csv_extract['species'] = df_csv_1['species_common_name']
-    df_csv_extract['tag_project'] = df_csv_1['tagging_project_name']
+    df_csv_extract['tagging_project'] = df_csv_1['tagging_project_name']
     df_csv_extract['time_coverage_start'] = df_csv['detection_datetime'].min()
     df_csv_extract['time_coverage_end'] = df_csv['detection_datetime'].max()
 
-    # creates a geometry using all the detection location points
-    coords = list(zip(df_csv.receiver_recovery_longitude, df_csv.receiver_recovery_latitude))
-    df_csv_extract['geom_df'] = shapely.geometry.LineString(coords)
-
+    # creates a geometry using unique detection location points
+    coords_all = list(zip(df_csv.receiver_recovery_longitude, df_csv.receiver_recovery_latitude))
+    coords = list(set(coords_all))
+    # TODO: when upgrading to shapely 2+, geometry.MultiPoint has to be called differently
+    df_csv_extract['geom_df'] = shapely.geometry.MultiPoint(coords).wkt  # to plot the detection points on the WMS
     df_csv_extract['url'] = destination_s3
     df_csv_extract['size'] = [os.path.getsize(input_file.local_path)]
-    df_csv_extract_df = pd.DataFrame.from_dict(df_csv_extract, orient='columns')
+    df_csv_extract_df = pd.DataFrame.from_dict(df_csv_extract)
 
     return df_csv_extract_df

@@ -117,4 +117,4 @@ class AnimalTrackingAcousticHandler(HandlerBase):
     @staticmethod
     def dest_path(filepath):
         """Destination path function for CSV files."""
-        return os.path.join('IMOS', 'AATAMS', 'acoustic_tagging', 'ATF_acoustic_QC_detections', os.path.basename(filepath))
+        return os.path.join('IMOS', 'AATAMS', 'acoustic_detections_QC', os.path.basename(filepath))

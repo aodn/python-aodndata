@@ -54,7 +54,7 @@ class TestAnimalTrackingAcousticHandler(HandlerTestCase):
         )
 
     @patch('aodncore.pipeline.steps.harvest.CsvHarvesterRunner')
-    def test_good_new_csv(self, mock_harvester):
+    def test_good_csv(self, mock_harvester):
         handler = self.run_handler(GOOD_CSV, harvest_params=HARVEST_PARAMS, config=self.testconfig)
 
         self.assertEqual(handler.harvest_type, 'csv')
