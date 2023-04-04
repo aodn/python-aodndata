@@ -35,7 +35,7 @@ DATA_MODE = {"RT": "REALTIME",
 
 DATA_FILE_REGEX = re.compile(r"""
                 (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|NSW-DPE|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC)_
-                (?P<nc_time_cov_start>[0-9]{8}).*_
+                (?P<nc_time_cov_start>[0-9]{8})_
                 (?P<site_name>(.*))_
                 (?P<mode>RT|DM)_
                 (?P<datatype>WAVE-PARAMETERS|WAVE-SPECTRA|WAVE-RAW-DISPLACEMENTS)_.*
@@ -60,6 +60,11 @@ class AodnWaveHandler(HandlerBase):
     @staticmethod
     def dest_path(filepath):
         file_basename = os.path.basename(filepath)
+        number_of_fields = file_basename.split('_')
+        if len(number_of_fields) > 5:
+            raise InvalidFileNameError(
+                "file name: '{filename}' invalid. Please check site name: should be - not _ separated".format(
+                    filename=file_basename))
         fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
         mode = fields['mode']
         if mode is None:

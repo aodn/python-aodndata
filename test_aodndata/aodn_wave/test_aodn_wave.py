@@ -5,7 +5,7 @@ from tempfile import mkdtemp
 
 import xarray as xr
 from aodncore.pipeline import FileType, PipelineFilePublishType, PipelineFile, PipelineFileCollection
-from aodncore.pipeline.exceptions import InvalidFileContentError
+from aodncore.pipeline.exceptions import InvalidFileContentError, InvalidFileNameError
 from aodncore.pipeline.storage import get_storage_broker
 from aodncore.testlib import make_test_file, HandlerTestCase
 from aodndata.aodn_wave.handler import AodnWaveHandler
@@ -16,12 +16,13 @@ PARAMETERS_FILE = os.path.join(TEST_ROOT, 'NSW-DPE_20160811_MAROUBRA_DM_WAVE-PAR
 
 RT_MONTHLY_FILE = os.path.join(TEST_ROOT, 'DOT-WA_20220901_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc')  # TIME = "2022-09-13 18", "2022-09-14" ;
 
-RT_INCOMING_FILE_1 = os.path.join(TEST_ROOT, 'DOT-WA_20220913T180000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220914T000000Z.nc')
-RT_INCOMING_FILE_1_MOD = os.path.join(TEST_ROOT, 'DOT-WA_20220913T180000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220914T000000Z_MODIFIED_VALUES.nc')
-RT_INCOMING_FILE_2 = os.path.join(TEST_ROOT, 'DOT-WA_20220929T120000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220929T120000Z.nc')
+RT_INCOMING_FILE_1 = os.path.join(TEST_ROOT, 'DOT-WA_20220913_MANDURAH_RT_WAVE-PARAMETERS_END-20220914T000000Z.nc')
+RT_INCOMING_FILE_1_MOD = os.path.join(TEST_ROOT,
+                                      'DOT-WA_20220913_MANDURAH_RT_WAVE-PARAMETERS_END-20220914T000000Z_MODIFIED_VALUES.nc')
+RT_INCOMING_FILE_2 = os.path.join(TEST_ROOT, 'DOT-WA_20220929_MANDURAH_RT_WAVE-PARAMETERS_END-20220929.nc')
 RT_INCOMING_FILE_3 = os.path.join(TEST_ROOT, 'DOT-WA_20220929T180000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220929T180000Z.nc')
 
-INPUT_FILE_REGEX = '^DOT-WA_[0-9]{8}T[0-9]{6}Z_.*_RT_WAVE-PARAMETERS_END-[0-9]{8}T[0-9]{6}Z.nc$'
+INPUT_FILE_REGEX = '^DOT-WA_[0-9]{8}_.*_RT_WAVE-PARAMETERS_END-[0-9]{8}.nc$'
 RT_MONTHLY_REGEX = '^DOT-WA_[0-9]{8}_.*_RT_WAVE-PARAMETERS_monthly.nc$'
 
 
@@ -241,10 +242,9 @@ class TestAodnWaveHandler(HandlerTestCase):
             realtime_nc = handler.file_collection.filter_by_attribute_id('publish_type',
                                                                     PipelineFilePublishType.ARCHIVE_ONLY)
             self.assertFalse(realtime_nc[0].is_harvested)
-            self.assertFalse(realtime_nc[0].is_harvested)
             self.assertEqual(os.path.join('Department_of_Transport-Western_Australia/WAVE-BUOYS/REALTIME/'
                                           'WAVE-PARAMETERS/MANDURAH/2022/'
-                                          'DOT-WA_20220929T120000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220929T120000Z.nc'),
+                                          'DOT-WA_20220929_MANDURAH_RT_WAVE-PARAMETERS_END-20220929.nc'),
                              realtime_nc[0].archive_path)
             self.assertTrue(realtime_nc[0].is_checked)
 
@@ -399,7 +399,7 @@ class TestAodnWaveHandler(HandlerTestCase):
         of a file in the destination path. File is simply renamed. Input file is published(harvest_upload)
         """
 
-        testfile = 'NSW-DPE_20220901T000000Z_BENGELLO_RT_WAVE-PARAMETERS_monthly.nc'
+        testfile = 'NSW-DPE_20220901_BENGELLO_RT_WAVE-PARAMETERS_monthly.nc'
         make_test_file(testfile, {'site_name': 'Bengello'},
                        WSSH={}
                        )
@@ -444,6 +444,15 @@ class TestAodnWaveHandler(HandlerTestCase):
                             '2022',
                             os.path.basename(RT_MONTHLY_FILE)))
 
+    def test_date_format_in_filename(self):
+        with self.assertRaises(InvalidFileNameError):
+            AodnWaveHandler.dest_path(RT_INCOMING_FILE_3)
+
+    def test_sitename_is_dash_separated(self):
+        testfile = 'DOT-WA_20170601_CAPE_NATURALISTE_DM_WAVE-RAW-DISPLACEMENTS_END-20170918.nc'
+        make_test_file(testfile, {'site_name': 'Cape Naturaliste'})
+        with self.assertRaises(InvalidFileNameError):
+            AodnWaveHandler.dest_path(testfile)
 
 
 if __name__ == '__main__':
