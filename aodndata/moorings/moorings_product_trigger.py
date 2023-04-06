@@ -7,39 +7,29 @@ import os
 
 from shutil import copyfile
 from tempfile import NamedTemporaryFile
-from typing import Union, List
+from typing import Union
 
 import numpy as np
 from owslib.etree import etree
-from owslib.wfs import WebFeatureService
 from owslib.fes import PropertyIsEqualTo, PropertyIsNotEqualTo, And, Or
 
 import pandas as pd
 
+from aodncore.pipeline.config import CONFIG
+from aodncore.util import wfs
+
 # Variables included in the products
 INCLUDED_VARIABLES = {'TEMP', 'PSAL', 'CPHL', 'CHLF', 'CHLU', 'TURB', 'DOX1', 'DOX2', 'DOXS', 'PAR', 'VCUR'}
 
-# Geoserver details
-WFS_URL = "http://geoserver-123.aodn.org.au/geoserver/wfs"
-WFS_VERSION = '1.1.0'
-WFS = None
+# Set up WFS broker
+WFS_URL = CONFIG.pipeline_config['global']['wfs_url']
+WFS_BROKER = wfs.WfsBroker(WFS_URL)
+
 INDEX_LAYER = 'imos:anmn_all_map'
-
-
-def get_wfs_service(wfs_url: str = None, version: str = WFS_VERSION) -> WebFeatureService:
-    """connect to WFS server"""
-    global WFS
-    url = wfs_url or WFS_URL
-    if not WFS or WFS.url != url:
-        WFS = WebFeatureService(url, version=version)
-        logging.debug(f"Connected to {url}")
-
-    return WFS
 
 
 def get_files_dataframe(filters: list = None,
                         propertyname: Union[str, list] = '*',
-                        wfs_url: str = None,
                         getfeature_kwargs: dict = None,
                         read_csv_kwargs: dict = None
                         ) -> pd.DataFrame:
@@ -47,19 +37,16 @@ def get_files_dataframe(filters: list = None,
 
     :param filters: list of filters to apply (owslib.fes.OgcExpression instances)
     :param propertyname: str or list of property name(s) to return (default all)
-    :param wfs_url: geoserver url for WFS queries (default global WFS_URL)
     :param getfeature_kwargs: additional arguments for WFS getfeature
     :param read_csv_kwargs: additional arguments for pandas.read_csv
     :return: DataFrame of file details
     """
-    wfs = get_wfs_service(wfs_url)
-
     gf_kwargs = getfeature_kwargs.copy() if getfeature_kwargs else {}
     gf_kwargs.update(propertyname=propertyname, outputFormat='csv')
     if filters:
         gf_kwargs['filter'] = etree.tostring(And(filters).toXML(), encoding='unicode')
 
-    with wfs.getfeature(typename=INDEX_LAYER, **gf_kwargs) as response:
+    with WFS_BROKER.wfs.getfeature(typename=INDEX_LAYER, **gf_kwargs) as response:
         df = pd.read_csv(response, **read_csv_kwargs)
 
     # drop useless FID column
@@ -67,7 +54,7 @@ def get_files_dataframe(filters: list = None,
     return df
 
 
-def all_files_df(wfs_url: str = None) -> pd.DataFrame:
+def all_files_df() -> pd.DataFrame:
     """Return a DataFrame of all currently availabe FV01 & FV02 timeseries files for all sites
      (or just the given site_codes, if specified). Also exclude CO2 files as they are currently not included
      in the products.
@@ -89,7 +76,6 @@ def all_files_df(wfs_url: str = None) -> pd.DataFrame:
                                        propertyname=['url', 'site_code', 'variables', 'date_created', 'date_updated',
                                                      'data_category', 'file_version'
                                                      ],
-                                       wfs_url=wfs_url,
                                        read_csv_kwargs={'parse_dates': ['date_created', 'date_updated']}
                                        )
     logging.debug(f"  Returned {len(wfs_features)} features")
@@ -184,8 +170,6 @@ def parse_args():
                         help="Log debugging output")
     parser.add_argument("-t", "--target_dir", default="/tmp",
                         help="target directory to push manifests to (default /tmp)")
-    parser.add_argument("-u", "--wfs_url", default=WFS_URL,
-                        help="geoserver URL for WFS queries")
     args = parser.parse_args()
 
     if hasattr(args, 'loglevel'):
@@ -199,7 +183,7 @@ if __name__ == "__main__":
     args = parse_args()
 
     site_codes = args.site_code
-    all_files = all_files_df(args.wfs_url)
+    all_files = all_files_df()
     if len(site_codes) == 0:
         site_codes = sorted(all_files.site_code.unique())
         logging.debug(f"Sites: {site_codes}")
