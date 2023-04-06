@@ -20,7 +20,7 @@ class MmpCtdHandler(HandlerBase):
         netcdf_file = netcdf_collection[0]
 
         if netcdf_file.name.endswith('.nc'):
-            netcdf_file.publish_type = PipelineFilePublishType.UPLOAD_ONLY
+            netcdf_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
 
     @staticmethod
     def dest_path(filepath):
