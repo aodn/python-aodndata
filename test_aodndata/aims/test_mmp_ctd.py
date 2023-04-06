@@ -18,7 +18,7 @@ class TestMmpCtdHandler(HandlerTestCase):
         handler = self.run_handler(GOOD_NC)
         self.assertEqual(len(handler.file_collection), 1)
         f = handler.file_collection[0]
-        self.assertEqual(f.publish_type, PipelineFilePublishType.UPLOAD_ONLY)
+        self.assertEqual(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
 
     def test_good_path(self):
         dest_path = MmpCtdHandler.dest_path(GOOD_NC)
