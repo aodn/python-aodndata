@@ -452,6 +452,17 @@ class TestAodnWaveHandler(HandlerTestCase):
         with self.assertRaises(InvalidFileNameError):
             AodnWaveHandler.dest_path(testfile)
 
+        testfile = 'IMOS_NTP_WAVE_20200113_CAPE_BRIDGEWATER_DM_WAVE-PARAMETERS_END-20200319.nc'
+        make_test_file(testfile, {'site_name': 'Cape Bridgewater'})
+        with self.assertRaises(InvalidFileNameError):
+            AodnWaveHandler.dest_path(testfile)
+
+    def test_mode_in_filename(self):
+        testfile = 'UWA_20170601_TORBAY_WAVE-RAW-DISPLACEMENTS_END-20170918.nc'
+        make_test_file(testfile, {'site_name': 'Torbay'})
+        with self.assertRaises(InvalidFileNameError):
+            AodnWaveHandler.dest_path(testfile)
+
 
 if __name__ == '__main__':
     unittest.main()
