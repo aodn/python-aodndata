@@ -88,11 +88,13 @@ for item in chain(ENTRY_POINTS['pipeline.handlers'], ENTRY_POINTS['pipeline.path
 
 PACKAGE_EXCLUDES = ['test_aodndata.*', 'test_aodndata']
 PACKAGE_NAME = 'aodndata'
+PACKAGE_SCRIPTS = ['aodndata/moorings/moorings_product_trigger.py']
 
 setup(
     name=PACKAGE_NAME,
     use_scm_version=True,
     setup_requires=['setuptools_scm'],
+    scripts=PACKAGE_SCRIPTS,
     packages=find_packages(exclude=PACKAGE_EXCLUDES),
     url='https://github.com/aodn',
     license='GPLv3',
