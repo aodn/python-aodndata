@@ -18,7 +18,6 @@ ENTRY_POINTS = {
         'GenericHandler = aodndata.common.generic:GenericHandler',
         'GslaHandler = aodndata.gsla.handler:GslaHandler',
         'ImosBgcDbHandler = aodndata.imos_bgc_db.handler:ImosBgcDbHandler',
-        'MmpCtdHandler = aodndata.aims.mmp_ctd:MmpCtdHandler',
         'MooringsHandler = aodndata.moorings.handlers:MooringsHandler',
         'MooringsProductsHandler = aodndata.moorings.products_handler:MooringsProductsHandler',
         'NrmnHandler = aodndata.nrmn.handler:NrmnHandler',
@@ -49,7 +48,8 @@ ENTRY_POINTS = {
         'dest_path_oa = aodndata.csiro.ocean_acidification:dest_path_oa',
         'dest_path_srs_oc_ljco_aeronet = aodndata.srs.srs_oc_ljco_aeronet:dest_path_srs_oc_ljco_aeronet',
         'dest_path_srs_surface_waves = aodndata.srs.srs_surface_waves:dest_path_srs_surface_waves',
-        'dest_path_srs_surface_waves_sar = aodndata.srs.srs_surface_waves:dest_path_srs_surface_waves_sar'
+        'dest_path_srs_surface_waves_sar = aodndata.srs.srs_surface_waves:dest_path_srs_surface_waves_sar',
+        'dest_path_aims_mmp_ctd = aodndata.aims.mmp_ctd:dest_path_aims_mmp_ctd'
     ],
     'pipeline.module_versions': [
         'aodndata = aodndata:__version__',
