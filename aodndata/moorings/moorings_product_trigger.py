@@ -90,8 +90,8 @@ def pivot_variables(df: pd.DataFrame) -> pd.DataFrame:
     assert 'variables' in df.columns
     files_vars = []
     for row in df.itertuples():
-          variables = set(row.variables.split(', ')) & INCLUDED_VARIABLES
-          files_vars.extend((row.Index, v) for v in variables)
+        variables = set(row.variables.split(', ')) & INCLUDED_VARIABLES
+        files_vars.extend((row.Index, v) for v in variables)
 
     files_vars = pd.DataFrame(files_vars, columns=['i', 'variable']).set_index('i')
 
@@ -117,12 +117,12 @@ def make_manifest(all_files: pd.DataFrame, site_code: str) -> dict:
     aggregated_files = site_files.loc[
         site_files.data_category == 'aggregated_timeseries', ['url', 'date_created', 'variables']]
     logging.debug(f"{site_code}:  {len(aggregated_files)} aggregated_timeseries files, "
-                 f"last created {aggregated_files.date_created.max()}")
+                  f"last created {aggregated_files.date_created.max()}")
     aggregated_files = pivot_variables(aggregated_files)
 
     hourly_files = site_files.loc[site_files.data_category == 'hourly_timeseries', ['url', 'date_created']]
     logging.debug(f"{site_code}:  {len(hourly_files)} hourly_timeseries files, "
-                 f"last created {hourly_files.date_created.max()}")
+                  f"last created {hourly_files.date_created.max()}")
 
     # when were data for each variable updated?
     vars_updated = source_files.groupby('variable').date_updated.max()
@@ -170,6 +170,7 @@ def parse_args():
                         help="Log debugging output")
     parser.add_argument("-t", "--target_dir", default="/tmp",
                         help="target directory to push manifests to (default /tmp)")
+    parser.add_argument("-s", "--sub_facility", help="Process all sites for given ANMN sub-facility")
     args = parser.parse_args()
 
     if hasattr(args, 'loglevel'):
@@ -184,6 +185,9 @@ if __name__ == "__main__":
 
     site_codes = args.site_code
     all_files = all_files_df()
+    if hasattr(args, 'sub_facility'):
+        idx = all_files.url.map(lambda s: s.startswith(f"IMOS/ANMN/{args.sub_facility}/"))
+        all_files = all_files.loc[idx]
     if len(site_codes) == 0:
         site_codes = sorted(all_files.site_code.unique())
         logging.debug(f"Sites: {site_codes}")
