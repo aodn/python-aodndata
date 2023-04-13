@@ -76,7 +76,7 @@ class AodnWaveHandler(HandlerBase):
         fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
         if len(fields) == 0:
             raise InvalidFileNameError(
-                "file name: '{filename}' has data mode (RT or DM) missing or incorrect".format(
+                "file name: '{filename}' has invalid filename".format(
                     filename=file_basename))
         mode = fields['mode']
         if mode is None:
