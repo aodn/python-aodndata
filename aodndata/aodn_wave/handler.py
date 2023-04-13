@@ -61,6 +61,17 @@ class AodnWaveHandler(HandlerBase):
     @staticmethod
     def dest_path(filepath):
         file_basename = os.path.basename(filepath)
+        number_of_fields = file_basename.split('_')
+        if number_of_fields[0] == 'IMOS':
+            if len(number_of_fields) > 7:
+                raise InvalidFileNameError(
+                    "file name: '{filename}' invalid. Please check site name: should be - not _ separated".format(
+                        filename=file_basename))
+        else:
+            if len(number_of_fields) > 6:
+                raise InvalidFileNameError(
+                    "file name: '{filename}' invalid. Please check site name: should be - not _ separated".format(
+                        filename=file_basename))
 
         fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
         if len(fields) == 0:
@@ -86,11 +97,6 @@ class AodnWaveHandler(HandlerBase):
             raise InvalidFileNameError(
                 "file name: '{filename}' has incorrect institution '{institution}' which is not listed "
                 "as part of the collection".format(filename=file_basename, institution=institution))
-
-        if '_' in fields['site_name']:
-            raise InvalidFileNameError(
-                "file name: '{filename}' invalid. Please check site name: should be - not _ separated".format(
-                    filename=file_basename))
 
         data_base_dir = os.path.join(INSTITUTION_PATHNAME[institution], WAVEBUOY_DIR, mode_dir, data_type)
 
