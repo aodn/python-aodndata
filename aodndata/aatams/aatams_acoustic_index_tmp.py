@@ -17,6 +17,7 @@ def create_empty_dataframe():
     columns = [('tag_deployment_id', str),
                ('transmitter_id', str),
                ('species', str),
+               ('species_scientific_name', str),
                ('tagging_project', str),
                ('time_coverage_start', str),
                ('time_coverage_end', str),
@@ -53,6 +54,7 @@ def extract_metadata(input_file, destination_s3):
                                           + str(df_csv_1['transmitter_deployment_id'])
     df_csv_extract['transmitter_id'] = df_csv_1['transmitter_id']
     df_csv_extract['species'] = df_csv_1['species_common_name']
+    df_csv_extract['species_scientific_name'] = df_csv_1['species_scientific_name']
     df_csv_extract['tagging_project'] = df_csv_1['tagging_project_name']
     df_csv_extract['time_coverage_start'] = df_csv['detection_datetime'].min()
     df_csv_extract['time_coverage_end'] = df_csv['detection_datetime'].max()
