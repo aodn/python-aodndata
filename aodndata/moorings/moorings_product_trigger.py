@@ -45,6 +45,8 @@ def get_files_dataframe(filters: list = None,
     gf_kwargs.update(propertyname=propertyname, outputFormat='csv')
     if filters:
         gf_kwargs['filter'] = etree.tostring(And(filters).toXML(), encoding='unicode')
+    if read_csv_kwargs is None:
+        read_csv_kwargs = dict()
 
     with WFS_BROKER.wfs.getfeature(typename=INDEX_LAYER, **gf_kwargs) as response:
         df = pd.read_csv(response, **read_csv_kwargs)
@@ -185,7 +187,7 @@ if __name__ == "__main__":
 
     site_codes = args.site_code
     all_files = all_files_df()
-    if hasattr(args, 'sub_facility'):
+    if args.sub_facility is not None:
         idx = all_files.url.map(lambda s: s.startswith(f"IMOS/ANMN/{args.sub_facility}/"))
         all_files = all_files.loc[idx]
     if len(site_codes) == 0:
