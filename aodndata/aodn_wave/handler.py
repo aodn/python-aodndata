@@ -1,7 +1,7 @@
 import os
 import re
 
-from aodncore.pipeline.exceptions import InvalidFileNameError,DuplicatePipelineFileError
+from aodncore.pipeline.exceptions import InvalidFileNameError, DuplicatePipelineFileError
 from aodncore.pipeline import PipelineFile, HandlerBase, PipelineFilePublishType
 from aodncore.util.misc import get_pattern_subgroups_from_string
 
@@ -35,12 +35,13 @@ DATA_MODE = {"RT": "REALTIME",
 
 DATA_FILE_REGEX = re.compile(r"""
                 (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|NSW-DPE|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC)_
-                (?P<nc_time_cov_start>[0-9]{8}).*_
+                (?P<nc_time_cov_start>[0-9]{8}|[0-9]{8}T[0-9]{6}Z)_
                 (?P<site_name>(.*))_
                 (?P<mode>RT|DM)_
                 (?P<datatype>WAVE-PARAMETERS|WAVE-SPECTRA|WAVE-RAW-DISPLACEMENTS)_.*
                 \.nc$
                 """, re.VERBOSE)
+
 
 class AodnWaveHandler(HandlerBase):
     """Handling AODN wave data files in Near Realtime or Delayed mode. It handles the following types of NetCDF files:
@@ -60,7 +61,23 @@ class AodnWaveHandler(HandlerBase):
     @staticmethod
     def dest_path(filepath):
         file_basename = os.path.basename(filepath)
+        number_of_fields = file_basename.split('_')
+        if number_of_fields[0] == 'IMOS':
+            if len(number_of_fields) > 7:
+                raise InvalidFileNameError(
+                    "file name: '{filename}' invalid. Please check site name: should be - not _ separated".format(
+                        filename=file_basename))
+        else:
+            if len(number_of_fields) > 6:
+                raise InvalidFileNameError(
+                    "file name: '{filename}' invalid. Please check site name: should be - not _ separated".format(
+                        filename=file_basename))
+
         fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
+        if len(fields) == 0:
+            raise InvalidFileNameError(
+                "file name: '{filename}' has invalid filename".format(
+                    filename=file_basename))
         mode = fields['mode']
         if mode is None:
             raise InvalidFileNameError(
@@ -112,7 +129,8 @@ class AodnWaveHandler(HandlerBase):
 
         # Specific processing of BOM-sourced files because of aggregation of hourly file into monthly product -
         # Excludes monthly files(when repushed) from aggregation
-        if mode == 'RT' and re.match(('BOM|DOT-WA|DES-QLD|MHL|GP-VIC'),institution) and not re.search('monthly_nc',file_basename):
+        if mode == 'RT' and re.match('BOM|DOT-WA|DES-QLD|MHL|GP-VIC', institution) and not re.search('monthly_nc',
+                                                                                                     file_basename):
             # deduce target monthly file name
             month_start = fields['nc_time_cov_start'][0:6]
             monthly_file_regex = institution + '_' + month_start + r"\d{2}_.*" + mode + '_' + datatype + '_monthly.nc'
@@ -120,7 +138,7 @@ class AodnWaveHandler(HandlerBase):
             # If a monthly file exists, aggregate the new file
             self.upload_destination = os.path.dirname(AodnWaveHandler.dest_path(self.input_file))
             result = self.state_query.query_storage(self.upload_destination)
-            
+
             existing_monthly_file = result.filter_by_attribute_regex('name', monthly_file_regex)
             if existing_monthly_file:
                 self.logger.info("Mode '{mode}': found an existing monthly file. Generating updated aggregated "
@@ -131,10 +149,10 @@ class AodnWaveHandler(HandlerBase):
                 self.state_query.download(existing_monthly_file, self.temp_dir)
                 source_file_path = existing_monthly_file[0].local_path
                 aggregated_file_path = nrt_timeseries_aggregator.file_aggregator(input_nc_file,
-                                                                                source_file_path,
-                                                                                self.products_dir, fields)
+                                                                                 source_file_path,
+                                                                                 self.products_dir, fields)
             else:
-                #process input_file only to rename it
+                # process input_file only to rename it
                 self.logger.info("Mode '{mode}': no existing monthly file at : {remotefile}.".
                                  format(mode=mode, remotefile=self.upload_destination))
                 aggregated_file_path = nrt_timeseries_aggregator.file_aggregator(input_nc_file, None, self.products_dir,
@@ -153,7 +171,3 @@ class AodnWaveHandler(HandlerBase):
             else:
                 raise ValueError(
                     "Invalid data type for this collection '{datatype}'".format(datatype=datatype))
-
-
-
-
