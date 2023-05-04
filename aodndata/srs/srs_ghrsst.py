@@ -36,8 +36,8 @@ L3S_GEOPOLAR_MULTISENSOR_FILE_PATTERN = re.compile(r"""
 L3C_HIM08_FILE_PATTERN = re.compile(r"""
                                 (?P<nc_time_cov_start>[0-9]{14})-ABOM-
                                 (?P<product_type>L3C)_.*-AHI_H08-
-                                (?P<temporal_extent>1d|3d|6d|14d|1m)_
-                                (?P<day_time>day|night|dn)
+                                (?P<temporal_extent>1h|4h|1d|3d|6d|14d|1m)(_|)
+                                (?P<day_time>|day|night|dn)
                                 (?P<version>-v0\d.0-fv0\d.0|)
                                 \.nc$
                                 """, re.VERBOSE)
