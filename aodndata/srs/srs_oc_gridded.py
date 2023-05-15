@@ -52,7 +52,7 @@ class SrsOcGriddedHandler(HandlerBase):
             elif data_parameter_code == 'V':
                 product_name = 'snpp'
             elif data_parameter_code == 'J':
-                product_name = 'jpss1'
+                product_name = 'noaa20'
 
             path = os.path.join(OC_GRIDDED_PREFIX_PATH, product_name, fields['time_coverage_resolution'],
                                 '%d' % nc_time_cov_start.year, '%02d' % nc_time_cov_start.month,
