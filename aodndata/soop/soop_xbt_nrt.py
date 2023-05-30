@@ -63,7 +63,7 @@ KELVIN_TO_CELSIUS = 273.15
 class SoopXbtNrtHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(SoopXbtNrtHandler, self).__init__(*args, **kwargs)
-        self.allowed_extensions = ['.nc', '.csv']
+        self.allowed_extensions = ['.nc', '.csv', '.bin']
 
         if self.custom_params is None or not self.custom_params.get('xbt_line_vocab_url'):
             self.xbt_line_vocab_url = DEFAULT_XBT_LINE_VOCAB_URL
@@ -76,6 +76,7 @@ class SoopXbtNrtHandler(HandlerBase):
         :return:
         """
         csv_file = self.file_collection.filter_by_attribute_id('file_type', FileType.CSV)
+        bin_file = self.file_collection.filter_by_attribute_regex('extension', '.bin')
 
         if csv_file:
             csv_file = csv_file[0]
@@ -93,6 +94,25 @@ class SoopXbtNrtHandler(HandlerBase):
                 nc_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
 
                 self.file_collection.add(nc_file)
+        elif bin_file:
+            bin_file = bin_file[0]
+            bin_file.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
+
+            bufr_csv_output = parse_bufr_bin_file(bin_file.src_path, self.temp_dir)
+            profiles = parse_bufr_file(bufr_csv_output)
+            profiles = return_unique_profiles(profiles)  # check for duplicate profiles within BUFR file
+            for profile in profiles:
+                profile = fzf_vessel_get_info(profile)  # fuzzy search finder for vessel name
+                profile = xbt_line_get_info(profile, self.xbt_line_vocab_url)  # get hard coded info per xbt line
+                netcdf_filepath = netcdf_writer(profile, self.temp_dir)  # convert BUFR to NetCDF
+
+                # publish
+                nc_file = PipelineFile(netcdf_filepath, file_update_callback=self._file_update_callback)
+                nc_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+
+                self.file_collection.add(nc_file)
+
+            os.remove(bufr_csv_output)
 
     @staticmethod
     def archive_path(filepath):
@@ -258,6 +278,94 @@ def parse_bufr_file(csv_path):
                                                                                    coef_b=coef_b)
 
     return profiles_data
+
+
+def parse_bufr_bin_file(bin_path, output_dir):
+    """
+    Convert BUFR bin file into text file
+    :param bin_path:
+    :param output_dir:
+    :return:
+    """
+    from pybufrkit.decoder import Decoder
+    from pybufrkit.renderer import FlatTextRenderer
+    import csv
+    import tempfile
+
+    decoder = Decoder()
+    with open(bin_path, 'rb') as ins:
+        bufr_message = decoder.process(ins.read())
+        txt_data = FlatTextRenderer().render(bufr_message)
+
+    def remove_lines(string):
+        lines = string.split('\n')
+        new_lines = []
+        found_marker = False
+
+        for line in lines:
+            if line.startswith("######"):
+                found_marker = True
+                continue
+            if found_marker:
+                new_lines.append(line)
+
+        return '\n'.join(new_lines)
+
+    txt_data = remove_lines(txt_data)
+    dd = dict()
+    bufr_csv_output = tempfile.NamedTemporaryFile(delete=False, dir=output_dir, suffix='.csv')
+
+    with open(bufr_csv_output.name, "a", newline='') as text_file:
+
+        for line in txt_data.split('\n'):
+            if '<<<<<' in line:
+                break
+
+            # now split the string into a dictionary:
+            slices = [(0, 5), (6, 12), (13, 80), (81, 179)]
+            var = [line[slice(*slc)] for slc in slices]
+            var[2] = var[2].strip()
+            var[3] = var[3].replace("\n", "")
+            var[3] = var[3].replace("\\x00", "")
+            var[3] = var[3].replace("\\x0", "")
+            var[3] = var[3].replace("\\xc1", "'A")  # for L'Astrolabe
+
+            # replace the 'b' in byte strings
+            if var[3][0] == 'b':
+                var[3] = var[3][1:]
+
+            # change kelvin to celcius
+            if '022043' in var[1] or '022045' in var[1]:
+                var[3] = float(var[3]) - 273.15
+
+            # change cm to m
+            if '(CM)' in var[2]:
+                var[2] = var[2].replace('(CM)', '(M)')
+
+            # now rename our QC flags for clarity and better handling
+            if 'GLOBAL GTSPP QUALITY FLAG' in var[2] and not 'None' in var[3]:
+                if depq == 1:
+                    var[2] = 'GLOBAL GTSPP QUALITY FLAG DEPTH'
+                else:
+                    var[2] = 'GLOBAL GTSPP QUALITY FLAG TEMPERATURE'
+
+            # append if we already have the key
+
+            if var[2] in dd:
+                dd[var[2]].append(var[3])
+            else:  # add a new key
+                dd[var[2]] = [var[3]]
+
+            w = csv.writer(text_file, quoting=csv.QUOTE_ALL)
+            w.writerow(var)
+
+            # identify which QC flag is in next line
+            if '008080' in var[1] and '13' in var[3]:
+                depq = 1  # DEPTH QC
+            elif '008080' in var[1] and '11' in var[3]:
+                depq = 0  # TEMP QC
+
+    return bufr_csv_output.name
 
 
 def xbt_line_get_info(profile, url):
