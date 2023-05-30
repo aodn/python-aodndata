@@ -11,8 +11,8 @@ from aodncore.pipeline.exceptions import (
     InvalidFileFormatError,
     InvalidFileNameError,
     ComplianceCheckFailedError,
-    InvalidInputFileError
-    )
+    InvalidInputFileError, InvalidFileContentError
+)
 from aodncore.testlib import HandlerTestCase
 from aodncore.testlib.testutil import load_runtime_patched_pipeline_config_file, TESTLIB_CONF_DIR
 
@@ -30,11 +30,12 @@ HARVEST_PARAMS = {
 }
 
 TEST_ROOT = os.path.dirname(__file__)
-GOOD_CSV = os.path.join(TEST_ROOT, 'IMOS_ATF-ACOUSTIC_TAGID_A69-1602-11653_139644515_139644714.csv')
+GOOD_CSV = os.path.join(TEST_ROOT, 'IMOS_ATF-ACOUSTIC_TAGID_A69-1602-11653_A69-1602-11654_A69-1602-11655_139644515_139644717.csv')
 GOOD_ZIP = os.path.join(TEST_ROOT, 'IMOS_ATF-ACOUSTIC_ProjectBlah_good.zip')
 BAD_CSV = os.path.join(TEST_ROOT, 'IMOS_ATF-ACOUSTIC_TAGID_A69-1602-11653_139644515_139644714_badschema.csv')
 BAD_EXTENSION = os.path.join(TEST_ROOT, 'IMOS_ATF-ACOUSTIC_TAGID_A69-1602-11653_139644515_139644714.txt')
 ZIP_NO_CSV = os.path.join(TEST_ROOT, 'IMOS_ATF-ACOUSTIC_ProjectBlah_no_csv.zip')
+CSV_multi_dep = os.path.join(TEST_ROOT, 'IMOS_ATF-ACOUSTIC_TAGID_A69-1602-11653_A69-1602-11654_A69-1602-11655_139644515_139644717_mulit_dep.csv')
 
 class TestAnimalTrackingAcousticHandler(HandlerTestCase):
     def setUp(self):
@@ -96,13 +97,13 @@ class TestAnimalTrackingAcousticHandler(HandlerTestCase):
     @patch('aodncore.pipeline.steps.harvest.CsvHarvesterRunner')
     def test_good_zip(self, mock_harvester):
         """
-        Testing with multiple (3) valid csv files
+        Testing with multiple (4) valid csv files, included multi transmitter CSV file
         Ingests the number of valid csv + tmp_index (created during the pipeline process)
         Checks the number of files in the collection is as expected
         """
         handler = self.run_handler(GOOD_ZIP, harvest_params=HARVEST_PARAMS, config=self.testconfig)
         self.assertEqual(handler.harvest_type, 'csv')
-        self.assertEqual(len(handler.file_collection), 4)
+        self.assertEqual(len(handler.file_collection), 5)
         self.assertTrue(mock_harvester.called)
 
     def test_empty_zip(self):
@@ -113,5 +114,15 @@ class TestAnimalTrackingAcousticHandler(HandlerTestCase):
 
     def test_zip_with_no_csv(self):
         self.run_handler_with_exception(InvalidFileNameError, ZIP_NO_CSV,
+                                        harvest_params=HARVEST_PARAMS, config=self.testconfig
+                                        )
+
+    def test_multi_deployment_case(self):
+        """
+        A single CSV file can have multiple transmitter IDs but the tag_id (in other words the device id, a device
+         can have multiple transmitters mounted on it) and the deployment_id (animal_release)
+        must be unique
+        """
+        self.run_handler_with_exception(InvalidFileContentError, CSV_multi_dep,
                                         harvest_params=HARVEST_PARAMS, config=self.testconfig
                                         )

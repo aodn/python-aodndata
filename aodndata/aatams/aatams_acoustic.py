@@ -17,9 +17,11 @@ from aodndata.aatams.aatams_acoustic_index_tmp import extract_metadata, create_e
 FILE_TYPE_NEED_INDEX = ('QC', 'QC_daily_summary')
 AT_ACOUSTIC_FILE_PATTERN = re.compile(r"""
                                       ^IMOS_ATF-ACOUSTIC_TAGID_
-                                      (?P<transmitter_id>A(69|180)-[0-9]{4}-[0-9]{1,5})_
+                                      (?P<transmitter_ids>(A(69|180)-[0-9]{4}-[0-9]{1,5}_)
+                                                          (A(69|180)-[0-9]{4}-[0-9]{1,5}_)?
+                                                          (A(69|180)-[0-9]{4}-[0-9]{1,5}_)?)
                                       (?P<release_id>[0-9]{1,10}_[0-9]{1,10})
-                                      (?P<product_type>.*)
+                                      (?P<product_type>(_.*)?)
                                       \.csv$""", re.VERBOSE)
 
 
@@ -58,7 +60,6 @@ class AnimalTrackingAcousticHandler(HandlerBase):
         super(AnimalTrackingAcousticHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.zip', '.csv']
         self.include_regexes = AT_ACOUSTIC_FILE_PATTERN
-        #["^IMOS_ATF-ACOUSTIC_TAGID_.*\.csv$"]
         self.check_params = {"tableschema_filename_pattern": "^IMOS_ATF-ACOUSTIC"}
         self.harvest_type = 'csv'
 
