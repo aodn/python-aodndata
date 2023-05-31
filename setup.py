@@ -67,7 +67,8 @@ INSTALL_REQUIRES = [
     'fiona>=1.8.8,<1.8.19',
     'fuzzywuzzy>=0.18.0',  # most used python fuzzy search finder
     'matplotlib>=3.0.3',
-    'pillow>=6.2.1,<7.0.0',  # provide additional image formats for matplotlib
+    'pillow>=6.2.1,<7.0.0',  # provide additional image formats for matplotlib,
+    'pybufrkit',
     'schema>=0.7.0'
 ]
 

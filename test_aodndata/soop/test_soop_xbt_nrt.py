@@ -12,13 +12,19 @@ from aodndata.soop.soop_xbt_nrt import SoopXbtNrtHandler, xbt_line_get_info, par
     fzf_vessel_get_info
 from aodndata.soop.ship_callsign import ship_callsign_list
 
-from test_aodndata.vocab import TEST_XBT_LINE_VOCAB_URL
-
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
+
+TEST_PLATFORM_VOCAB_URL = '%s%s' % ('file://',
+                                    os.path.join(TEST_ROOT, 'aodn_aodn-platform-vocabulary.rdf'))
+TEST_XBT_LINE_VOCAB_URL = '%s%s' % ('file://',
+                                    os.path.join(TEST_ROOT, 'aodn_aodn-xbt-line-vocabulary.rdf'))
+
 GOOD_BUFR_CSV = os.path.join(TEST_ROOT,
                        'IOSS01_AMMC_20201109215900_XEKXW9W.csv')
 GOOD_BUFR_CSV_PX30 = os.path.join(TEST_ROOT,
                                   'IOSS01_AMMC_20201214180200_5VULUEH.csv')
+GOOD_BUFR_BIN = os.path.join(TEST_ROOT,
+                             'IOSS01_AMMC_20221231231505_XEKXW9W.bin')
 BUFR_CSV_NO_LINE = os.path.join(TEST_ROOT,
                                   'IOSS01_AMMC_20200908051000_VLMJ.csv')
 
@@ -171,6 +177,42 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
                                    custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+
+    @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+           side_effect=mock_platform_altlabels_per_preflabel)
+    def test_handler_bufr_bin(self, mock_ship):
+        """
+        Run Handler on a BUFR Bin format which should be automatically converted into a BUFR text format, then into a NetCDF
+        :param mock_ship:
+        :return:
+        """
+        handler = self.run_handler(GOOD_BUFR_BIN,
+                                   check_params={'checks': ['cf:1.6']},
+                                   custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
+        f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        f_bin = handler.file_collection.filter_by_attribute_regex('extension', '.bin')[0]
+
+        self.assertEqual(f_bin.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME_BUFR/2022/',
+                                      os.path.basename(GOOD_BUFR_BIN)),
+                         f_bin.archive_path)
+
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME/FASB_Astrolabe/2022/',
+                                      'IMOS_SOOP-XBT_T_20221231T225500Z_IX28_FV00_ID_9797539.nc'),
+                         f_nc.dest_path)
+        self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+
+        nc_path = os.path.join(self.config.pipeline_config['global']['upload_uri'], f_nc.dest_path).replace("file://",
+                                                                                                            "")
+        with Dataset(nc_path, mode='r') as nc_obj:
+            self.assertEqual("Hobart - Dumont d'Urville", nc_obj.XBT_line_description)
+            self.assertEqual("Upper Ocean Thermal Data collected on the high density line IX28 "
+                             "(Dumont d Urville-Hobart) using XBT (expendable bathythermographs)", nc_obj.title)
+
+            self.assertEqual(6.691, nc_obj['DEPTH'].fallrate_equation_coefficient_a)
+            self.assertEqual(-2.25, nc_obj['DEPTH'].fallrate_equation_coefficient_b)
+            self.assertEqual(10282.47, nc_obj.geospatial_vertical_max)
 
 
     @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
