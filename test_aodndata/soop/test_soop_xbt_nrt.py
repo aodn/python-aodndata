@@ -12,7 +12,6 @@ from aodndata.soop.soop_xbt_nrt import SoopXbtNrtHandler, xbt_line_get_info, par
     fzf_vessel_get_info
 from aodndata.soop.ship_callsign import ship_callsign_list
 
-#from ..vocab.test_xbt_line_vocab import TEST_XBT_LINE_VOCAB_URL
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 TEST_PLATFORM_VOCAB_URL = '%s%s' % ('file://',
@@ -20,8 +19,6 @@ TEST_PLATFORM_VOCAB_URL = '%s%s' % ('file://',
 TEST_XBT_LINE_VOCAB_URL = '%s%s' % ('file://',
                                     os.path.join(TEST_ROOT, 'aodn_aodn-xbt-line-vocabulary.rdf'))
 
-
-TEST_ROOT = os.path.join(os.path.dirname(__file__))
 GOOD_BUFR_CSV = os.path.join(TEST_ROOT,
                        'IOSS01_AMMC_20201109215900_XEKXW9W.csv')
 GOOD_BUFR_CSV_PX30 = os.path.join(TEST_ROOT,
