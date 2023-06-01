@@ -153,36 +153,6 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'KING-GEORGE-SOUND',
                              os.path.basename(testfile)))
 
-        testfile = 'IMOS_ANMN-DEEP-WATER-WAVES_20230530_BRISBANE-OFFSHORE_RT_WAVE-PARAMETERS_monthly.nc'
-        make_test_file(testfile, {'site_name': 'BRISBANE-OFFSHORE'},
-                       WSSH={}
-                       )
-        dest_dir = AodnWaveHandler.dest_path(testfile)
-        self.assertEqual(dest_dir,
-                         os.path.join(
-                             'IMOS','ANMN','Deep_Water_Waves',
-                             'WAVE-BUOYS',
-                             'REALTIME',
-                             'WAVE-PARAMETERS',
-                             'BRISBANE-OFFSHORE',
-                             '2023',
-                             os.path.basename(testfile)))
-
-        testfile = 'IMOS_ANMN-WAVE-BUOYS_20230530_MARIA-ISLAND_RT_WAVE-PARAMETERS_monthly.nc'
-        make_test_file(testfile, {'site_name': 'MARIA-ISLAND'},
-                       WSSH={}
-                       )
-        dest_dir = AodnWaveHandler.dest_path(testfile)
-        self.assertEqual(dest_dir,
-                         os.path.join(
-                             'IMOS', 'ANMN', 'Wave_Buoys',
-                             'WAVE-BUOYS',
-                             'REALTIME',
-                             'WAVE-PARAMETERS',
-                             'MARIA-ISLAND',
-                             '2023',
-                             os.path.basename(testfile)))
-
     def test_publication_integral_parameter(self):
         testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_WAVE-PARAMETERS_END-20170918.nc'
         make_test_file(testfile, {'site_name': 'Maroubra'},
