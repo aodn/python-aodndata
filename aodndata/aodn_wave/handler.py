@@ -56,7 +56,6 @@ class AodnWaveHandler(HandlerBase):
     def __init__(self, *args, **kwargs):
         super(AodnWaveHandler, self).__init__(*args, **kwargs)
         self.allowed_extensions = ['.nc']
-
         # store the NC file and the subsequent upload destination calculated from it in the class for other file types
         # to access it when they need to (e.g. dest_path)
         self.upload_destination = None
@@ -105,11 +104,21 @@ class AodnWaveHandler(HandlerBase):
 
         site_dir = fields['site_name']
         if mode == 'RT':
-            site_dir = fields['site_name']
-            year = fields['nc_time_cov_start'][0:4]
-            site_dir = os.path.join(site_dir, year)
+            site_dir = os.path.join(fields['site_name'], fields['nc_time_cov_start'][0:4])
+            filebasename = nrt_timeseries_aggregator.make_monthly_product_name(fields)
+        else:
+            filebasename = file_basename
+        return os.path.join(data_base_dir, site_dir, filebasename)
 
-        return os.path.join(data_base_dir, site_dir, os.path.basename(filepath))
+    @staticmethod
+    def archive_path(filepath):
+        file_basename = os.path.basename(filepath)
+        fields = get_pattern_subgroups_from_string(file_basename, DATA_FILE_REGEX)
+        data_base_dir = os.path.join(INSTITUTION_PATHNAME[fields['institution']],
+                                     WAVEBUOY_DIR, DATA_MODE[fields['mode']], fields['datatype'])
+        site_dir = os.path.join(fields['site_name'], fields['nc_time_cov_start'][0:4])
+
+        return os.path.join(data_base_dir, site_dir,file_basename)
 
     def preprocess(self):
         """
@@ -129,12 +138,10 @@ class AodnWaveHandler(HandlerBase):
             DuplicatePipelineFileError("ABORTING:More than one file in the file collection")
 
         input_nc_file = self.file_collection[0]
-
         # Specific processing of BOM-sourced files because of aggregation of hourly file into monthly product -
         # Excludes monthly files(when repushed) from aggregation
-
         if mode == 'RT' and re.match('BOM|DOT-WA|DES-QLD|MHL|GP-VIC|IMOS_ANMN-DEEP-WATER-WAVES|IMOS_ANMN-WAVE-BUOYS',
-                                     institution) and not re.search('monthly_nc', file_basename):
+                                     institution) and not re.search('monthly.nc', file_basename):
             # deduce target monthly file name
             month_start = fields['nc_time_cov_start'][0:6]
             monthly_file_regex = institution + '_' + month_start + r"\d{2}_.*" + mode + '_' + datatype + '_monthly.nc'
@@ -155,22 +162,15 @@ class AodnWaveHandler(HandlerBase):
                 aggregated_file_path = nrt_timeseries_aggregator.file_aggregator(input_nc_file,
                                                                                  source_file_path,
                                                                                  self.products_dir, fields)
+                aggregated_file = PipelineFile(aggregated_file_path)
+                self.file_collection.add(aggregated_file)
+                aggregated_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
+                input_nc_file.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
             else:
-                # process input_file only to rename it
+                # input_file will be renamed (through dest_path)
                 self.logger.info("Mode '{mode}': no existing monthly file at : {remotefile}.".
                                  format(mode=mode, remotefile=self.upload_destination))
-                aggregated_file_path = nrt_timeseries_aggregator.file_aggregator(input_nc_file, None, self.products_dir,
-                                                                                 fields)
-            #prevent publication of files "raw" non-aggregated files(files should at least be renamed)
-            if not re.search('monthly.nc', os.path.basename(aggregated_file_path)):
-                raise InvalidFileNameError("Incorrect aggregated file name. File missing the monthly suffix: '{file}'."
-                                           .format(file=file_basename))
-
-            aggregated_file = PipelineFile(aggregated_file_path)
-            aggregated_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
-            input_nc_file.publish_type = PipelineFilePublishType.ARCHIVE_ONLY
-            self.file_collection.add(aggregated_file)
-
+                input_nc_file.publish_type = PipelineFilePublishType.HARVEST_ARCHIVE_UPLOAD
         else:
             if datatype == 'WAVE-PARAMETERS':
                 input_nc_file.publish_type = PipelineFilePublishType.HARVEST_UPLOAD
