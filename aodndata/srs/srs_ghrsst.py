@@ -190,6 +190,16 @@ class SrsGhrsstHandler(HandlerBase):
 
         file_info = get_info_nc(filepath)
 
+        if file_info['temporal_extent'] is not None:
+            if 'h' in file_info['temporal_extent']:
+                path = os.path.join(GHRSST_PREFIX_PATH,
+                                    file_info['product_path'],
+                                    file_info['sat_value'],
+                                    str(file_info['date_data'].year),
+                                    f"{file_info['date_data'].month:02d}",
+                                    file_basename)
+                return path
+
         if file_info['sat_value'] is None:
             path = os.path.join(GHRSST_PREFIX_PATH,
                                 file_info['product_path'],
