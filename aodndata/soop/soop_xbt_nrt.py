@@ -122,7 +122,10 @@ class SoopXbtNrtHandler(HandlerBase):
         :return:
         """
         filename = os.path.basename(filepath)
-        file_year = str(datetime.datetime.strptime(filename.split('_')[2], '%Y%m%d%H%M%S').year)
+        try:
+            file_year = str(datetime.datetime.strptime(filename.split('_')[2], '%Y%m%d%H%M%S').year)  # CSIRO files
+        except:
+            file_year = str(datetime.datetime.strptime(filename.split('_')[2].split('.')[0], '%Y%m%d%H%M').year)  # BOM files
         return os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME_BUFR', file_year, filename)
 
     @staticmethod
@@ -336,7 +339,10 @@ def parse_bufr_bin_file(bin_path, output_dir):
 
             # change kelvin to celcius
             if '022043' in var[1] or '022045' in var[1]:
-                var[3] = float(var[3]) - 273.15
+                if var[3] == 'None':
+                    var[3] = np.nan
+                else:
+                    var[3] = float(var[3]) - 273.15
 
             # change cm to m
             if '(CM)' in var[2]:
@@ -486,6 +492,9 @@ def netcdf_writer(profile_data, output_dir):
 
     template.add_extent_attributes()
     template.add_date_created_attribute()
+
+    if profile_data['profile_metadata']['XBT_line'].startswith('PX0'):
+        profile_data['profile_metadata']['XBT_line'] = profile_data['profile_metadata']['XBT_line'].replace('PX0', 'PX')
 
     if get_info_xbt_config(profile_data['profile_metadata']['XBT_line'].replace('-', '/')):
         info_xbt_config = get_info_xbt_config(profile_data['profile_metadata']['XBT_line'].replace('-', '/'))

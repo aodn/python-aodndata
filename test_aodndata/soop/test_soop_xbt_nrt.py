@@ -1,4 +1,5 @@
 import datetime
+import numpy as np
 import os
 import unittest
 from unittest.mock import patch
@@ -23,8 +24,10 @@ GOOD_BUFR_CSV = os.path.join(TEST_ROOT,
                        'IOSS01_AMMC_20201109215900_XEKXW9W.csv')
 GOOD_BUFR_CSV_PX30 = os.path.join(TEST_ROOT,
                                   'IOSS01_AMMC_20201214180200_5VULUEH.csv')
-GOOD_BUFR_BIN = os.path.join(TEST_ROOT,
+GOOD_BUFR_BIN_CSIRO = os.path.join(TEST_ROOT,
                              'IOSS01_AMMC_20221231231505_XEKXW9W.bin')
+GOOD_BUFR_BIN_BOM = os.path.join(TEST_ROOT,
+                             'IOSS01_AMMC_202307162000.bin')
 BUFR_CSV_NO_LINE = os.path.join(TEST_ROOT,
                                   'IOSS01_AMMC_20200908051000_VLMJ.csv')
 
@@ -41,7 +44,8 @@ def mock_platform_altlabels_per_preflabel(category_name='Vessel'):
             'VROJ8': 'Highland-Chief',
             'VROB': 'Highland-Chief',
             'D5LR9': 'Seatrade Red',
-            'VLMJ': 'Investigator'
+            'VLMJ': 'Investigator',
+            'VRDE7': 'OOCL Houston',
             }
 
 
@@ -180,13 +184,13 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
 
     @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
            side_effect=mock_platform_altlabels_per_preflabel)
-    def test_handler_bufr_bin(self, mock_ship):
+    def test_handler_bufr_bin_csiro(self, mock_ship):
         """
         Run Handler on a BUFR Bin format which should be automatically converted into a BUFR text format, then into a NetCDF
         :param mock_ship:
         :return:
         """
-        handler = self.run_handler(GOOD_BUFR_BIN,
+        handler = self.run_handler(GOOD_BUFR_BIN_CSIRO,
                                    check_params={'checks': ['cf:1.6']},
                                    custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
         f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
@@ -194,7 +198,7 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
 
         self.assertEqual(f_bin.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
         self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME_BUFR/2022/',
-                                      os.path.basename(GOOD_BUFR_BIN)),
+                                      os.path.basename(GOOD_BUFR_BIN_CSIRO)),
                          f_bin.archive_path)
 
         self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
@@ -213,6 +217,43 @@ class TestSoopXbtNrtHandler(HandlerTestCase):
             self.assertEqual(6.691, nc_obj['DEPTH'].fallrate_equation_coefficient_a)
             self.assertEqual(-2.25, nc_obj['DEPTH'].fallrate_equation_coefficient_b)
             self.assertEqual(10282.47, nc_obj.geospatial_vertical_max)
+
+    @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",
+           side_effect=mock_platform_altlabels_per_preflabel)
+    def test_handler_bufr_bin_bom(self, mock_ship):
+        """
+        Run Handler on a BUFR Bin format which should be automatically converted into a BUFR text format, then into a NetCDF
+        :param mock_ship:
+        :return:
+        """
+        handler = self.run_handler(GOOD_BUFR_BIN_BOM,
+                                   check_params={'checks': ['cf:1.6']},
+                                   custom_params={'xbt_line_vocab_url': TEST_XBT_LINE_VOCAB_URL})
+        f_nc = handler.file_collection.filter_by_attribute_id('file_type', FileType.NETCDF)[0]
+        f_bin = handler.file_collection.filter_by_attribute_regex('extension', '.bin')[0]
+
+        self.assertEqual(f_bin.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME_BUFR/2023/',
+                                      os.path.basename(GOOD_BUFR_BIN_BOM)),
+                         f_bin.archive_path)
+
+        self.assertEqual(f_nc.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(os.path.join('IMOS/SOOP/SOOP-XBT/REALTIME/VRDE7_OOCL-Houston/2023/',
+                                      'IMOS_SOOP-XBT_T_20230716T184700Z_PX2_FV00_ID_8008872.nc'),
+                         f_nc.dest_path)
+        self.assertEqual(f_nc.check_type, PipelineFileCheckType.NC_COMPLIANCE_CHECK)
+
+        nc_path = os.path.join(self.config.pipeline_config['global']['upload_uri'], f_nc.dest_path).replace("file://",
+                                                                                                            "")
+        with Dataset(nc_path, mode='r') as nc_obj:
+            self.assertEqual("Flores Sea - Torres Strait", nc_obj.XBT_line_description)
+            self.assertEqual("Upper Ocean Thermal Data collected on the line PX2 "
+                             "(Across the Banda Sea) using XBT (expendable bathythermographs)", nc_obj.title)
+
+            self.assertEqual(6.691, nc_obj['DEPTH'].fallrate_equation_coefficient_a)
+            self.assertEqual(-2.25, nc_obj['DEPTH'].fallrate_equation_coefficient_b)
+            self.assertEqual(477.0, nc_obj.geospatial_vertical_max)
+            self.assertEqual(16.0, np.round(np.mean(nc_obj['TEMP'][:])))
 
 
     @patch("aodndata.soop.ship_callsign.platform_altlabels_per_preflabel",

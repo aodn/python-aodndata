@@ -32,7 +32,6 @@ class TestDummyHandler(HandlerTestCase):
         self.assertEqual(handler.platform_vocab_helper.platform_altlabels_per_preflabel('Vessel')['9VUU'], 'Anro Asia')
 
 
-
 class TestPlatformCodeVocab(BaseTestCase):
     def setUp(self):
         self.platform_vocab_helper = PlatformVocabHelper(TEST_PLATFORM_VOCAB_URL, TEST_PLATFORM_CAT_VOCAB_URL)
