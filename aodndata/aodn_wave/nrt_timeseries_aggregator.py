@@ -108,7 +108,7 @@ def make_monthly_product_name(fields):
     :return filename string
     """
     institution = fields['institution']
-    nc_time_cov_start = fields['nc_time_cov_start'][0:8]
+    nc_time_cov_start = fields['nc_time_cov_start']
     site_name = fields['site_name']
     mode = fields['mode']
     datatype = fields['datatype']

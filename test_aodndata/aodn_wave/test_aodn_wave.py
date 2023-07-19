@@ -12,7 +12,9 @@ from aodndata.aodn_wave.handler import AodnWaveHandler
 
 TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
-RT_MONTHLY_FILE = os.path.join(TEST_ROOT, 'DOT-WA_20220901_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc')  # TIME =
+PARAMETERS_FILE = os.path.join(TEST_ROOT, 'NSW-DPE_20160811_MAROUBRA_DM_WAVE-PARAMETERS_END-20160912.nc')
+
+RT_MONTHLY_FILE = os.path.join(TEST_ROOT, 'DOT-WA_20220901T000000Z_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc')  # TIME =
 # "2022-09-13 18", "2022-09-14" ;
 
 RT_INCOMING_FILE_1 = os.path.join(TEST_ROOT, 'DOT-WA_20220913T180000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220914T000000Z.nc')
@@ -239,7 +241,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'WAVE-PARAMETERS',
                              'MANDURAH',
                              '2022',
-                             'DOT-WA_20220913_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc'))
+                             'DOT-WA_20220913T180000Z_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc'))
 
         input_nc = handler.file_collection.filter_by_attribute_regex('name', INPUT_FILE_REGEX)
         self.assertEqual(input_nc[0].publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
