@@ -139,7 +139,7 @@ class AodnWaveHandler(HandlerBase):
                 institution) and not re.search('monthly_nc', file_basename):
             # deduce target monthly file name
             month_start = fields['nc_time_cov_start'][0:6]
-            monthly_file_regex = institution + '_' + month_start + r"\d{2}_.*" + mode + '_' + datatype + '_monthly.nc'
+            monthly_file_regex = institution + '_' + month_start + r"\w{10}_.*" + mode + '_' + datatype + '_monthly.nc'
             # check if an aggregated monthly file exist in the destination folder.
             # If a monthly file exists, aggregate the new file
             self.upload_destination = os.path.dirname(AodnWaveHandler.dest_path(self.input_file))
