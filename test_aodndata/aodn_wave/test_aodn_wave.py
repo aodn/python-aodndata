@@ -23,8 +23,8 @@ RT_INCOMING_FILE_2 = os.path.join(TEST_ROOT, 'DOT-WA_20220929T120000Z_MANDURAH_R
 RT_INCOMING_FILE_3 = os.path.join(TEST_ROOT, 'DOT-WA_20220929T180000Z_MANDURAH_RT_WAVE-PARAMETERS_END'
                                              '-20220929T180000Z.nc')
 
-INPUT_FILE_REGEX = '^DOT-WA_[0-9]{8}T[0-9]{6}Z_.*_RT_WAVE-PARAMETERS_END-[0-9]{8}T[0-9]{6}Z.nc$'
-RT_MONTHLY_REGEX = '^DOT-WA_[0-9]{8}_.*_RT_WAVE-PARAMETERS_monthly.nc$'
+INPUT_FILE_REGEX = '^DOT-WA_[0-9]{8}.*_.*_RT_WAVE-PARAMETERS_END-[0-9]{8}.*.nc$'
+RT_MONTHLY_REGEX = '^DOT-WA_[0-9]{8}.*_.*_RT_WAVE-PARAMETERS_monthly.nc$'
 
 
 class TestAodnWaveHandler(HandlerTestCase):
@@ -151,7 +151,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'KING-GEORGE-SOUND',
                              os.path.basename(testfile)))
 
-        testfile = 'IMOS_ANMN-DEEP-WATER-WAVES_20230530T003000Z_BRISBANE-OFFSHORE_RT_WAVE-PARAMETERS_20230530T013000Z.nc'
+        testfile = 'IMOS_ANMN-DEEP-WATER-WAVES_20230530T013000Z_BRISBANE-OFFSHORE_RT_WAVE-PARAMETERS_monthly.nc'
         make_test_file(testfile, {'site_name': 'BRISBANE-OFFSHORE'},
                        WSSH={}
                        )
@@ -164,9 +164,9 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'WAVE-PARAMETERS',
                              'BRISBANE-OFFSHORE',
                              '2023',
-                             'IMOS_ANMN-DEEP-WATER-WAVES_20230530_BRISBANE-OFFSHORE_RT_WAVE-PARAMETERS_monthly.nc'))
+                             os.path.basename(testfile)))
 
-        testfile = 'IMOS_ANMN-WAVE-BUOYS_20230530T003000Z_MARIA-ISLAND_RT_WAVE-PARAMETERS_20230530T013000Z.nc'
+        testfile = 'IMOS_ANMN-WAVE-BUOYS_20230530T013000Z_MARIA-ISLAND_RT_WAVE-PARAMETERS_monthly.nc'
         make_test_file(testfile, {'site_name': 'MARIA-ISLAND'},
                        WSSH={}
                        )
@@ -179,7 +179,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'WAVE-PARAMETERS',
                              'MARIA-ISLAND',
                              '2023',
-                             'IMOS_ANMN-WAVE-BUOYS_20230530_MARIA-ISLAND_RT_WAVE-PARAMETERS_monthly.nc'))
+                             os.path.basename(testfile)))
 
     def test_publication_integral_parameter(self):
         testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_WAVE-PARAMETERS_END-20170918.nc'
@@ -223,9 +223,9 @@ class TestAodnWaveHandler(HandlerTestCase):
         handler = self.run_handler(RT_INCOMING_FILE_1,
                                    check_params={'checks': ['cf:1.6'],
                                                  'criteria': 'lenient'})
-        monthly_nc = handler.file_collection.filter_by_attribute_regex('name',
-                                                                       INPUT_FILE_REGEX)
-
+        monthly_nc = handler.file_collection.filter_by_attribute_id('publish_type',
+                                                                    PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(monthly_nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertTrue(monthly_nc[0].is_stored)
         self.assertTrue(monthly_nc[0].is_harvested)
         self.assertTrue(monthly_nc[0].is_checked)
@@ -240,18 +240,9 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'MANDURAH',
                              '2022',
                              'DOT-WA_20220913_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc'))
-        # check file input file is archived and has original name
-        archive_path = monthly_nc[0].archive_path
-        self.assertTrue(monthly_nc[0].is_archived)
-        self.assertEqual(archive_path,
-                         os.path.join(
-                             'Department_of_Transport-Western_Australia',
-                             'WAVE-BUOYS',
-                             'REALTIME',
-                             'WAVE-PARAMETERS',
-                             'MANDURAH',
-                             '2022',
-                             'DOT-WA_20220913T180000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220914T000000Z.nc'))
+
+        input_nc = handler.file_collection.filter_by_attribute_regex('name', INPUT_FILE_REGEX)
+        self.assertEqual(input_nc[0].publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
 
     def test_publication_bom_realtime_with_aggregation(self):
         """
@@ -278,14 +269,17 @@ class TestAodnWaveHandler(HandlerTestCase):
                                    check_params={'checks': ['cf:1.6'],
                                                  'criteria': 'lenient'})
 
-        # check input file archived under original filename
-        realtime_nc = handler.file_collection.filter_by_attribute_regex('name', INPUT_FILE_REGEX)
+        # check RT file archived only
+        realtime_nc = handler.file_collection.filter_by_attribute_id('publish_type',
+                                                                     PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertFalse(realtime_nc[0].is_harvested)
         self.assertEqual(os.path.join('Department_of_Transport-Western_Australia/WAVE-BUOYS/REALTIME/'
                                       'WAVE-PARAMETERS/MANDURAH/2022/'
                                       'DOT-WA_20220929T120000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220929T120000Z.nc'),
                          realtime_nc[0].archive_path)
+        self.assertTrue(realtime_nc[0].is_checked)
 
-        # check aggregated product (monthly file) harvested and pushed to S3
+        # check monthly file harvest and pushed to S3
         monthly_nc = handler.file_collection.filter_by_attribute_regex('name',
                                                                        RT_MONTHLY_REGEX)
         self.assertEqual(monthly_nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
@@ -303,6 +297,9 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'MANDURAH',
                              '2022',
                              os.path.basename(RT_MONTHLY_FILE)))
+
+        input_nc = handler.file_collection.filter_by_attribute_regex('name', INPUT_FILE_REGEX)
+        self.assertEqual(input_nc[0].publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
 
     def test_publication_bom_realtime_with_aggregation_not_ordered(self):
         """
@@ -408,7 +405,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                                                  'criteria': 'lenient'})
         monthly_nc = handler.file_collection.filter_by_attribute_regex('name',
                                                                        RT_MONTHLY_REGEX)
-       # self.assertEqual(monthly_nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(monthly_nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertTrue(monthly_nc[0].is_stored)
         self.assertTrue(monthly_nc[0].is_harvested)
         self.assertTrue(monthly_nc[0].is_checked)
@@ -439,11 +436,12 @@ class TestAodnWaveHandler(HandlerTestCase):
                                    check_params={'checks': ['cf:1.6'],
                                                  'criteria': 'lenient'})
 
-        nc = handler.file_collection.filter_by_attribute_regex('name','^NSW-DPE.*_RT_WAVE-PARAMETERS_monthly.nc')
-        #self.assertEqual(nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        nc = handler.file_collection.filter_by_attribute_id('publish_type',
+                                                            PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertTrue(nc[0].is_stored)
         self.assertTrue(nc[0].is_harvested)
-        self.assertFalse(nc[0].is_archived)
+
         destination = nc[0].dest_path
         self.assertEqual(destination,
                          os.path.join(
@@ -455,7 +453,6 @@ class TestAodnWaveHandler(HandlerTestCase):
                              '2022',
                              os.path.basename(testfile)))
 
-
     def test_publication_monthly_BOM_file(self):
         """
         test case when need to repush a BOM monthly file through the pipeline
@@ -463,8 +460,9 @@ class TestAodnWaveHandler(HandlerTestCase):
         handler = self.run_handler(RT_MONTHLY_FILE,
                                    check_params={'checks': ['cf:1.6'],
                                                  'criteria': 'lenient'})
-        nc = handler.file_collection.filter_by_attribute_regex('name', RT_MONTHLY_REGEX)
-        #self.assertEqual(nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        nc = handler.file_collection.filter_by_attribute_id('publish_type',
+                                                            PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(nc[0].publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         destination = nc[0].dest_path
         self.assertEqual(destination,
                          os.path.join(
@@ -493,17 +491,6 @@ class TestAodnWaveHandler(HandlerTestCase):
         with self.assertRaises(InvalidFileNameError):
             AodnWaveHandler.dest_path(testfile)
 
-    def test_rename_monthly_file(self):
-        # First agregated product for a month is simply renamed
-        mytestfile = 'NSW-DPE_20220901T000000Z_BENGELLO_RT_WAVE-PARAMETERS_monthly.nc'
-        make_test_file(mytestfile, {'site_name': 'Bengello'})
-        handler = self.run_handler(mytestfile,
-                                   check_params={'checks': ['cf:1.6'],
-                                                 'criteria': 'lenient'})
-        nc = handler.file_collection.filter_by_attribute_regex('name','^NSW-DPE.*_RT_WAVE-PARAMETERS_monthly.nc')
-        self.assertTrue(nc[0].is_stored)
-        self.assertTrue(nc[0].is_harvested)
-        self.assertEqual(os.path.basename(nc[0].dest_path),'NSW-DPE_20220901_BENGELLO_RT_WAVE-PARAMETERS_monthly.nc')
 
 if __name__ == '__main__':
     unittest.main()
