@@ -22,8 +22,7 @@ INSTITUTION_PATHNAME = {
     "VIC-DEAKIN-UNI": 'Deakin_University',
     "UWA": 'UWA',
     "PPA": "Pilbara_Ports_Authority",
-    "GP-VIC": "Gippsland-Ports-Victoria",
-    "SA-FLINDERS": "Flinders_University"
+    "GP-VIC": "Gippsland-Ports-Victoria"
 }
 
 # - Listing just the institution codes (A|B|C|...|F|G):
@@ -38,7 +37,7 @@ DATA_MODE = {"RT": "REALTIME",
 
 DATA_FILE_REGEX = re.compile(r"""
                 (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|IMOS_ANMN-DEEP-WATER-WAVES|
-                IMOS_ANMN-WAVE-BUOYS|NSW-DPE|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC|SA-FLINDERS)_
+                IMOS_ANMN-WAVE-BUOYS|NSW-DPE|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC)_
                 (?P<nc_time_cov_start>[0-9]{8}|[0-9]{8}T[0-9]{6}Z)_
                 (?P<site_name>(.*))_
                 (?P<mode>RT|DM)_
@@ -134,9 +133,8 @@ class AodnWaveHandler(HandlerBase):
         # Specific processing of BOM-sourced files because of aggregation of hourly file into monthly product -
         # Excludes monthly files(when repushed) from aggregation
 
-        if mode == 'RT' and re.match(
-                'BOM|DOT-WA|DES-QLD|MHL|GP-VIC|IMOS_ANMN-DEEP-WATER-WAVES|IMOS_ANMN-WAVE-BUOYS',
-                institution) and not re.search('monthly_nc', file_basename):
+        if mode == 'RT' and re.match('BOM|DOT-WA|DES-QLD|MHL|GP-VIC|IMOS_ANMN-DEEP-WATER-WAVES|IMOS_ANMN-WAVE-BUOYS',
+                                     institution) and not re.search('monthly_nc', file_basename):
             # deduce target monthly file name
             month_start = fields['nc_time_cov_start'][0:6]
             monthly_file_regex = institution + '_' + month_start + r"\d{2}_.*" + mode + '_' + datatype + '_monthly.nc'
@@ -163,7 +161,7 @@ class AodnWaveHandler(HandlerBase):
                                  format(mode=mode, remotefile=self.upload_destination))
                 aggregated_file_path = nrt_timeseries_aggregator.file_aggregator(input_nc_file, None, self.products_dir,
                                                                                  fields)
-            # prevent publication of files "raw" non-aggregated files(files should at least be renamed)
+            #prevent publication of files "raw" non-aggregated files(files should at least be renamed)
             if not re.search('monthly.nc', os.path.basename(aggregated_file_path)):
                 raise InvalidFileNameError("Incorrect aggregated file name. File missing the monthly suffix: '{file}'."
                                            .format(file=file_basename))
