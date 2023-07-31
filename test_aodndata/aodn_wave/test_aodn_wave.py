@@ -14,14 +14,14 @@ TEST_ROOT = os.path.join(os.path.dirname(__file__))
 
 PARAMETERS_FILE = os.path.join(TEST_ROOT, 'NSW-DPE_20160811_MAROUBRA_DM_WAVE-PARAMETERS_END-20160912.nc')
 
-RT_MONTHLY_FILE = os.path.join(TEST_ROOT, 'DOT-WA_20220901_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc')  # TIME =
+RT_MONTHLY_FILE = os.path.join(TEST_ROOT, 'DOT-WA_20220901T000000Z_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc')  # TIME =
 # "2022-09-13 18", "2022-09-14" ;
 
-RT_INCOMING_FILE_1 = os.path.join(TEST_ROOT, 'DOT-WA_20220913_MANDURAH_RT_WAVE-PARAMETERS_END-20220914T000000Z.nc')
+RT_INCOMING_FILE_1 = os.path.join(TEST_ROOT, 'DOT-WA_20220913T180000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220914T000000Z.nc')
 RT_INCOMING_FILE_1_MOD = os.path.join(TEST_ROOT,
-                                      'DOT-WA_20220913_MANDURAH_RT_WAVE-PARAMETERS_END'
-                                      '-20220914T000000Z-MODIFIED-VALUES.nc')
-RT_INCOMING_FILE_2 = os.path.join(TEST_ROOT, 'DOT-WA_20220929_MANDURAH_RT_WAVE-PARAMETERS_END-20220929.nc')
+                                      'DOT-WA_20220913T180000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220914T000000Z'
+                                      '-MODIFIED-VALUES.nc')
+RT_INCOMING_FILE_2 = os.path.join(TEST_ROOT, 'DOT-WA_20220929T120000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220929T120000Z.nc')
 RT_INCOMING_FILE_3 = os.path.join(TEST_ROOT, 'DOT-WA_20220929T180000Z_MANDURAH_RT_WAVE-PARAMETERS_END'
                                              '-20220929T180000Z.nc')
 
@@ -153,6 +153,36 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'KING-GEORGE-SOUND',
                              os.path.basename(testfile)))
 
+        testfile = 'IMOS_ANMN-DEEP-WATER-WAVES_20230530T013000Z_BRISBANE-OFFSHORE_RT_WAVE-PARAMETERS_monthly.nc'
+        make_test_file(testfile, {'site_name': 'BRISBANE-OFFSHORE'},
+                       WSSH={}
+                       )
+        dest_dir = AodnWaveHandler.dest_path(testfile)
+        self.assertEqual(dest_dir,
+                         os.path.join(
+                             'IMOS','ANMN','Deep_Water_Waves',
+                             'WAVE-BUOYS',
+                             'REALTIME',
+                             'WAVE-PARAMETERS',
+                             'BRISBANE-OFFSHORE',
+                             '2023',
+                             os.path.basename(testfile)))
+
+        testfile = 'IMOS_ANMN-WAVE-BUOYS_20230530T013000Z_MARIA-ISLAND_RT_WAVE-PARAMETERS_monthly.nc'
+        make_test_file(testfile, {'site_name': 'MARIA-ISLAND'},
+                       WSSH={}
+                       )
+        dest_dir = AodnWaveHandler.dest_path(testfile)
+        self.assertEqual(dest_dir,
+                         os.path.join(
+                             'IMOS', 'ANMN', 'Wave_Buoys',
+                             'WAVE-BUOYS',
+                             'REALTIME',
+                             'WAVE-PARAMETERS',
+                             'MARIA-ISLAND',
+                             '2023',
+                             os.path.basename(testfile)))
+
     def test_publication_integral_parameter(self):
         testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_WAVE-PARAMETERS_END-20170918.nc'
         make_test_file(testfile, {'site_name': 'Maroubra'},
@@ -211,7 +241,7 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'WAVE-PARAMETERS',
                              'MANDURAH',
                              '2022',
-                             'DOT-WA_20220913_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc'))
+                             'DOT-WA_20220913T180000Z_MANDURAH_RT_WAVE-PARAMETERS_monthly.nc'))
 
         input_nc = handler.file_collection.filter_by_attribute_regex('name', INPUT_FILE_REGEX)
         self.assertEqual(input_nc[0].publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
@@ -247,7 +277,7 @@ class TestAodnWaveHandler(HandlerTestCase):
         self.assertFalse(realtime_nc[0].is_harvested)
         self.assertEqual(os.path.join('Department_of_Transport-Western_Australia/WAVE-BUOYS/REALTIME/'
                                       'WAVE-PARAMETERS/MANDURAH/2022/'
-                                      'DOT-WA_20220929_MANDURAH_RT_WAVE-PARAMETERS_END-20220929.nc'),
+                                      'DOT-WA_20220929T120000Z_MANDURAH_RT_WAVE-PARAMETERS_END-20220929T120000Z.nc'),
                          realtime_nc[0].archive_path)
         self.assertTrue(realtime_nc[0].is_checked)
 
