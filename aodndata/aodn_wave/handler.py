@@ -10,19 +10,12 @@ from . import nrt_timeseries_aggregator
 # Defining global variables:
 # - Defining all the possible Institutions that provides us with data (the acronym and the dir name for each):
 INSTITUTION_PATHNAME = {
-    "BOM": 'Bureau_of_Meteorology',
-    "DOT-WA": 'Department_of_Transport-Western_Australia',
     "DTA": 'Defence_Technology_Agency-New_Zealand',
-    "DES-QLD": 'Department_of_Environment_and_Science-Queensland',
-    "MHL": 'Department_of_Planning_and_Environment-New_South_Wales/Manly_Hydraulics_Laboratory',
     "IMOS_NTP-WAVE": 'IMOS/NTP/Low_Cost_Wave_Buoy_Technology',
-    "IMOS_ANMN-DEEP-WATER-WAVES": 'IMOS/ANMN/Deep_Water_Waves',
-    "IMOS_ANMN-WAVE-BUOYS": 'IMOS/ANMN/Wave_Buoys',
     "NSW-DPE": 'Department_of_Planning_and_Environment-New_South_Wales',
     "VIC-DEAKIN-UNI": 'Deakin_University',
     "UWA": 'UWA',
     "PPA": "Pilbara_Ports_Authority",
-    "GP-VIC": "Gippsland-Ports-Victoria",
     "SA-FLINDERS": "Flinders_University"
 }
 
