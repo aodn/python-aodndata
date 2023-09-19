@@ -145,12 +145,13 @@ class AodnWaveHandler(HandlerBase):
         if mode == 'RT' and re.match('BOM|DOT-WA|DES-QLD|MHL|GP-VIC|IMOS_ANMN-DEEP-WATER-WAVES|IMOS_ANMN-WAVE-BUOYS',
                                      institution) and not re.search('monthly.nc', file_basename):
             # deduce target monthly file name
-            month_start = fields['nc_time_cov_start'][0:6]
-            monthly_file_regex = institution + '_' + month_start + r"\d{2}_.*" + mode + '_' + datatype + '_monthly.nc'
+            target_month = institution + '_' + fields['nc_time_cov_start'][0:6]
+
+            monthly_file_regex = target_month + r"\d{2}_.*" + mode + '_' + datatype + '_monthly.nc'
             # check if an aggregated monthly file exist in the destination folder.
             # If a monthly file exists, aggregate the new file
             self.upload_destination = os.path.dirname(AodnWaveHandler.dest_path(self.input_file))
-            result = self.state_query.query_storage(self.upload_destination)
+            result = self.state_query.query_storage(os.path.join(self.upload_destination,target_month))
 
             existing_monthly_file = result.filter_by_attribute_regex('name', monthly_file_regex)
             if existing_monthly_file:
