@@ -15,7 +15,7 @@ TEST_ROOT = os.path.join(os.path.dirname(__file__))
 TEST_MISSION_LIST = os.path.join(TEST_ROOT, 'HarvestmissionList.csv')
 GOOD_NC = os.path.join(TEST_ROOT, 'IMOS_ANFOG_BCEOPSTUV_20180503T080042Z_SL210_FV01_timeseries_END-20180505T054942Z.nc')
 DSTG = os.path.join(TEST_ROOT, 'DSTO_MD_CEPSTUV_20130706T122916Z_SL090_FV01_timeseries_END-20130715T040955Z.nc')
-
+ZIP_DSTG = os.path.join(TEST_ROOT, 'TalismanSaberB20130706.zip')
 ZIP_ADAPTER = os.path.join(TEST_ROOT, 'AdapterNWS20120415.zip')
 GOOD_ZIP_DM = os.path.join(TEST_ROOT,
                            'IMOS_ANFOG_BCEOPSTUV_20180503T080042Z_SL210_FV01_timeseries_END-20180505T054942Z.zip')
@@ -143,14 +143,20 @@ class TestAnfogHandler(HandlerTestCase):
         broker.upload(preexisting_file)
 
         # test processing of DSTG and NRL NetCDF files
-        handler = self.run_handler(DSTG)
+        handler = self.run_handler(ZIP_DSTG)
+        fv01 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
+        fv00 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RAW_DATA_REGEX)
+        # self.assertEqual(fv01.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
+        self.assertEqual(fv01[0].dest_path,
+                         'Department_of_Defence/DSTG/slocum_glider/TalismanSaberB20130706/' + fv01[0].name)
+        self.assertTrue(fv01[0].is_stored)
+        self.assertTrue(fv01[0].is_harvested)
 
-        f = handler.file_collection[0]
-        self.assertEqual(f.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
-        self.assertEqual(f.dest_path,
-                         'Department_of_Defence/DSTG/slocum_glider/TalismanSaberB20130706/' + f.name)
-        self.assertTrue(f.is_stored)
-        self.assertTrue(f.is_harvested)
+        for a in fv00:
+            self.assertEqual(a.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+            self.assertEqual(a.archive_path,
+                             'Department_of_Defence/DSTG/slocum_glider/TalismanSaberB20130706/' + a.name)
+            self.assertTrue(a.is_archived)
 
     def test_adapter(self):
         # test processing of NRL file collection. Collection containn FV01 and FV00

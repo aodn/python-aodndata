@@ -18,13 +18,15 @@ class AnfogFileClassifier(FileClassifier):
     ANFOG_NC_REGEX = \
         '^IMOS_ANFOG_([^R]+)_.*[0-9]{8}T[0-9]{6}Z.*_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     DSTG_REGEX = '^DSTO_.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
+    DSTG_RAW = '^DSTO_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     DSTG_BASE = 'Department_of_Defence/DSTG'
     ADAPTER_REGEX = '^IMOS_UWA_.*_FV01_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     ADAPTER_BASE = 'UWA'
     DM_REGEX = '%s|%s|%s' % (ANFOG_DM_REGEX, DSTG_REGEX, ADAPTER_REGEX)
     RAW_DATA_REGEX = '^IMOS_.*R.*_[0-9]{8}T[0-9]{6}Z_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
     RAW_BATTERY_REGEX = '^ANFOG_E_[0-9]{8}T[0-9]{6}Z_.*_FV00_timeseries_END-[0-9]{8}T[0-9]{6}Z.nc$'
-    RAW_FILES_REGEX = '%s|%s|%s|%s' % ('.*rawfiles.zip$', '.*rawfiles.rar$', RAW_DATA_REGEX, RAW_BATTERY_REGEX)
+    RAW_FILES_REGEX = '%s|%s|%s|%s|%s' % ('.*rawfiles.zip$', '.*rawfiles.rar$',
+                                          RAW_DATA_REGEX, RAW_BATTERY_REGEX, DSTG_RAW)
     PLATFORM_CODES = {'SG': 'seaglider',
                       'SL': 'slocum_glider',
                       'RU': 'slocum_glider'
