@@ -145,18 +145,18 @@ class TestAnfogHandler(HandlerTestCase):
         # test processing of DSTG and NRL NetCDF files
         handler = self.run_handler(ZIP_DSTG)
         fv01 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.DM_REGEX)
-        fv00 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RAW_DATA_REGEX)
+        fv00 = handler.file_collection.filter_by_attribute_regex('name', AnfogFileClassifier.RAW_FILES_REGEX)
         # self.assertEqual(fv01.publish_type, PipelineFilePublishType.HARVEST_UPLOAD)
         self.assertEqual(fv01[0].dest_path,
                          'Department_of_Defence/DSTG/slocum_glider/TalismanSaberB20130706/' + fv01[0].name)
         self.assertTrue(fv01[0].is_stored)
         self.assertTrue(fv01[0].is_harvested)
 
-        for a in fv00:
-            self.assertEqual(a.publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
-            self.assertEqual(a.archive_path,
-                             'Department_of_Defence/DSTG/slocum_glider/TalismanSaberB20130706/' + a.name)
-            self.assertTrue(a.is_archived)
+
+        self.assertEqual(fv00[0].publish_type, PipelineFilePublishType.ARCHIVE_ONLY)
+        self.assertEqual(fv00[0].archive_path,
+                             'Department_of_Defence/DSTG/slocum_glider/TalismanSaberB20130706/' + fv00[0].name)
+        self.assertTrue(fv00[0].is_archived)
 
     def test_adapter(self):
         # test processing of NRL file collection. Collection containn FV01 and FV00
