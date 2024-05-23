@@ -35,7 +35,7 @@ def dest_path_soop_fishsoop(filepath, file_pattern=FISHSOOP_FILE_PATTERN):
         else:
             return ValueError(f"{qc_level} not matching expected qc_level")
 
-        return os.path.join('IMOS', 'SOOP', 'SOOP-FishSoop', data_mode, str(serial_number),
+        return os.path.join('IMOS', 'SOOP', 'SOOP-FishSoop', data_mode,
                             str(nc_time_cov_start.year),
                             str('%02d' % nc_time_cov_start.month),
                             os.path.basename(filepath))

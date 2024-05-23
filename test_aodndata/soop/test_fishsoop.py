@@ -12,13 +12,13 @@ class TestSoopFishSoop(unittest.TestCase):
     def test_dest_path_soop_fishsoop(self):
         good_nc_nrt = os.path.join(TEST_ROOT, 'IMOS_SOOP-FishSOOP_T_20240310T094642Z_FV00_786.nc')
         self.assertEqual(dest_path_soop_fishsoop(good_nc_nrt),
-                         'IMOS/SOOP/SOOP-FishSoop/REALTIME/786/2024/03/{basename}'.format(
+                         'IMOS/SOOP/SOOP-FishSoop/REALTIME/2024/03/{basename}'.format(
                              basename=os.path.basename(good_nc_nrt)),
         )
 
         good_nc_dm = os.path.join(TEST_ROOT, 'IMOS_SOOP-FishSOOP_T_20240310T094642Z_FV01_786.nc')
         self.assertEqual(dest_path_soop_fishsoop(good_nc_dm),
-                         'IMOS/SOOP/SOOP-FishSoop/DELAYED/786/2024/03/{basename}'.format(
+                         'IMOS/SOOP/SOOP-FishSoop/DELAYED/2024/03/{basename}'.format(
                              basename=os.path.basename(good_nc_dm)),
         )
 
