@@ -235,7 +235,7 @@ class AnfogHandler(HandlerBase):
                                               AnfogFileClassifier.RT_POSITION_SUMMARY)
         elif mode == 'DM' and deployment_status == 'update':
             destination = self.upload_destination
-            delete_file_regex = AnfogFileClassifier.DM_REGEX
+            delete_file_regex = AnfogFileClassifier.ANFOG_DM_REGEX
         elif mode == 'RT' and deployment_status in ['renamed', 'clear-files']:
             destination = self.upload_destination
             delete_file_regex = '%s|%s|%s' % (AnfogFileClassifier.ANFOG_RT_REGEX,
