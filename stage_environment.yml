@@ -13,9 +13,9 @@ channels:
   - defaults
   - pypi
 dependencies:
-  - cython
+  - cython==0.29.30
   - cf-units  # force cf-units to be installed from conda-forge. packaged failed otherwise
-  - python=3.8
+  - python=3.8.13
   - cartopy=0.20.3
   - pip
   - pip:
