@@ -11,7 +11,8 @@ from netCDF4 import Dataset
 from numpy import ma
 
 FISHSOOP_FILE_PATTERN = re.compile(r"""
-                              IMOS_SOOP-FishSOOP_T_
+                              IMOS_SOOP-FishSOOP_
+                              (?P<data_code>[TP]{2})_
                               (?P<nc_time_cov_start>[0-9]{8}T[0-9]{6}Z)_
                               (?P<qc_level>FV00|FV01)_
                               (?P<serial_number>[0-9].*)
@@ -35,7 +36,7 @@ def dest_path_soop_fishsoop(filepath, file_pattern=FISHSOOP_FILE_PATTERN):
         else:
             return ValueError(f"{qc_level} not matching expected qc_level")
 
-        return os.path.join('IMOS', 'SOOP', 'SOOP-FishSoop', data_mode,
+        return os.path.join('IMOS', 'SOOP', 'SOOP-FishSOOP', data_mode,
                             str(nc_time_cov_start.year),
                             str('%02d' % nc_time_cov_start.month),
                             os.path.basename(filepath))
