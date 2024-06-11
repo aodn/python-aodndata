@@ -466,7 +466,7 @@ DIVE_SCHEMA = {
     "travel_r": Or(CSV_EMPTY, CSV_FLOAT),
     "homedist": Or(CSV_EMPTY, CSV_FLOAT),
     "bottom": Or(CSV_EMPTY, CSV_FLOAT),
-    **{"t" + str(x): CSV_FLOAT for x in range(1, 5)},
+    **{"t" + str(x): Or(CSV_EMPTY, CSV_POSITIVE_FLOAT) for x in range(1, 5)},
     "d_speed": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
     "n_depths": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "n_speeds": Or(CSV_EMPTY, CSV_POSITIVE_INT),
