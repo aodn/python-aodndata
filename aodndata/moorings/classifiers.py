@@ -279,6 +279,8 @@ class DwmFileClassifier(MooringsFileClassifier):
           'IMOS/DWM/SOTS/calibration'
           or
           'IMOS/DWM/SOTS/images'
+          or
+          'IMOS/DWM/SOTS/derived_products'
 
         where
         <platform_code> is the value of the platform_code global attribute
@@ -324,9 +326,17 @@ class DwmFileClassifier(MooringsFileClassifier):
             dir_list += ['ASFS', 'SOFS', cat, 'Real-time', rt_folder_name]
         elif subfac in ('SOTS', 'ASFS'):
             dir_list.append('SOTS')
-            dir_list.append(cls._get_deployment_year(input_file))
-            if cls._is_realtime(input_file):
-                dir_list.append('real-time')
+            data_product_type = cls._get_nc_att(input_file, 'data_product_type', default=False)
+            if data_product_type:
+                dir_list.append('derived_products')
+                if data_product_type == 'gridded_data':
+                    dir_list.append('gridded')
+                else:
+                    dir_list.append(data_product_type)
+            else:
+                dir_list.append(cls._get_deployment_year(input_file))
+                if cls._is_realtime(input_file):
+                    dir_list.append('real-time')
         else:
             raise InvalidFileNameError(
                 "Unknown DWM sub-facility '{subfac}' for file '{input_file}'".format(subfac=subfac,
