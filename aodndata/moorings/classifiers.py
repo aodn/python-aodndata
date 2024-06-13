@@ -326,13 +326,18 @@ class DwmFileClassifier(MooringsFileClassifier):
             dir_list += ['ASFS', 'SOFS', cat, 'Real-time', rt_folder_name]
         elif subfac in ('SOTS', 'ASFS'):
             dir_list.append('SOTS')
-            # Check for data_product_type attribute
-            if cls._get_nc_att(input_file, 'data_product_type'):
-                dir_list.append('derived_products')
-            else:
-                dir_list.append(cls._get_deployment_year(input_file))
-                if cls._is_realtime(input_file):
-                    dir_list.append('real-time')
+            # Open the NetCDF file
+            dataset = cls._open_nc_file(input_file)
+            try:
+                # Check for data_product_type attribute
+                if hasattr(dataset, 'data_product_type'):
+                    dir_list.append('derived_products')
+                else:
+                    dir_list.append(cls._get_deployment_year(input_file))
+                    if cls._is_realtime(input_file):
+                        dir_list.append('real-time')
+            finally:
+                dataset.close()
         else:
             raise InvalidFileNameError(
                 "Unknown DWM sub-facility '{subfac}' for file '{input_file}'".format(subfac=subfac,

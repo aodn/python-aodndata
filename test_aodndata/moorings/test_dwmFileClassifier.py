@@ -328,5 +328,19 @@ class TestDwmFileClassifier(BaseTestCase):
         self.assertEqual(dest_dir, 'IMOS/DWM/DA/CSIRO_gridded_all_variables')
         self.assertEqual(dest_filename, filename)
 
+    def test_sots_derived_product(self):
+        filename = 'IMOS_DWM-SOTS_BCOPSTUW_20210420_SOFS_FV02_SOFS-10-2021-hourly-gridded-product_END-20220512_C-20221117.nc'
+        testfile = os.path.join(self.tempdir, filename)
+        make_test_file(testfile, {
+            'site_code': 'SOTS',
+            'platform_code': 'SOFS',
+            'data_product_type': 'derived'
+        })
+        dest_dir, dest_filename = os.path.split(DwmFileClassifier.dest_path(testfile))
+        expected_dir = 'IMOS/DWM/SOTS/derived_products'
+        self.assertEqual(dest_dir, expected_dir)
+        self.assertEqual(dest_filename, filename)
+
+
 if __name__ == '__main__':
     unittest.main()
