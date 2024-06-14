@@ -474,7 +474,7 @@ DIVE_SCHEMA = {
     "speed_str": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
     "propn_str": Or(CSV_EMPTY, CSV_LIST_OF_FLOAT),
     "percent_area": Or(CSV_EMPTY, CSV_FLOAT),
-    "residual": CSV_POSITIVE_INT,
+    "residual": Or(CSV_EMPTY, CSV_POSITIVE_INT),
     "grp_number": CSV_POSITIVE_INT,
     "d5": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),  # wtf...
     "t5": Or(CSV_EMPTY, CSV_POSITIVE_FLOAT),
