@@ -18,7 +18,7 @@ INSTITUTION_PATHNAME = {
     "IMOS_NTP-WAVE": 'IMOS/NTP/Low_Cost_Wave_Buoy_Technology',
     "IMOS_ANMN-DEEP-WATER-WAVES": 'IMOS/ANMN/Deep_Water_Waves',
     "IMOS_ANMN-WAVE-BUOYS": 'IMOS/ANMN/Wave_Buoys',
-    "NSW-DPE": 'Department_of_Planning_and_Environment-New_South_Wales',
+    "NSW": 'Department_of_Planning_and_Environment-New_South_Wales',
     "VIC-DEAKIN-UNI": 'Deakin_University',
     "UWA": 'UWA',
     "PPA": "Pilbara_Ports_Authority",
