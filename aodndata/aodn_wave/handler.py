@@ -19,6 +19,7 @@ INSTITUTION_PATHNAME = {
     "IMOS_ANMN-DEEP-WATER-WAVES": 'IMOS/ANMN/Deep_Water_Waves',
     "IMOS_ANMN-WAVE-BUOYS": 'IMOS/ANMN/Wave_Buoys',
     "NSW-DPE": 'Department_of_Planning_and_Environment-New_South_Wales',
+    "NSW": 'Department_of_Planning_and_Environment-New_South_Wales',
     "VIC-DEAKIN-UNI": 'Deakin_University',
     "UWA": 'UWA',
     "PPA": "Pilbara_Ports_Authority",
@@ -38,7 +39,7 @@ DATA_MODE = {"RT": "REALTIME",
 
 DATA_FILE_REGEX = re.compile(r"""
                 (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|IMOS_ANMN-DEEP-WATER-WAVES|
-                IMOS_ANMN-WAVE-BUOYS|NSW-DPE|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC|SA-FLINDERS)_
+                IMOS_ANMN-WAVE-BUOYS|NSW|NSW-DPE|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC|SA-FLINDERS)_
                 (?P<nc_time_cov_start>[0-9]{8}|[0-9]{8}T[0-9]{6}Z)_
                 (?P<site_name>(.*))_
                 (?P<mode>RT|DM)_
