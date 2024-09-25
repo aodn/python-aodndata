@@ -65,7 +65,7 @@ INSTALL_REQUIRES = [
     'proj',  # needed for cartopy
     'cartopy>=0.20.3',  # see requirements.txt file installing shapely --no-binary shapely
     'cc-plugin-imos>=1.3.0',
-    'gdal',   # fix fiona installation issue
+    'gdal<=3.5.2',   # fix fiona installation issue
     'fiona>=1.8.8,<1.8.19',
     'fuzzywuzzy>=0.18.0',  # most used python fuzzy search finder
     'matplotlib>=3.0.3',
