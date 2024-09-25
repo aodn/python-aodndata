@@ -2,7 +2,7 @@ name: python-aodndata
 
 on:
   push:
-    branches: [ master , fix_dependency_install_issue_fiona]
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
