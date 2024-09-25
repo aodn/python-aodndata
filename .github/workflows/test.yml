@@ -2,7 +2,7 @@ name: python-aodndata
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master , fix_dependency_install_issue_fiona ]
   pull_request:
     branches: [ master ]
 
@@ -19,7 +19,7 @@ jobs:
         stage: [ 'build', 'rc', 'production']
       fail-fast: false
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     - name: update apt-cache
       run: |
         sudo apt-get update &&
@@ -39,12 +39,12 @@ jobs:
         curl \
         libcurl4-openssl-dev
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
-        python -m pip install --upgrade pip==24.0
+        python -m pip install --upgrade pip
         pip install pytest-runner
         pip install pyshp
         pip install scipy
