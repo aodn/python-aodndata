@@ -32,6 +32,7 @@ jobs:
         libproj-dev \
         libgeos-dev \
         libffi-dev \
+        libgdal-dev \
         cmake \
         libgtest-dev \
         build-essential \
