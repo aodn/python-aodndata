@@ -10,6 +10,7 @@ HERE=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 echo "##### Creating/updating virtual environment #####"
 virtualenv -p /usr/bin/python3 ${VIRTUALENV_DIR}
 source ${VIRTUALENV_DIR}/bin/activate
+python -m pip install --upgrade pip==24.0
 pip install -r stage_requirements.txt
 
 cat<<EOF
