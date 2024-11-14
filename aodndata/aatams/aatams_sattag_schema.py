@@ -28,7 +28,6 @@ AATAMS_QC_FILE_TYPE_NAMES = (
     "ctd",
     "diag",
     "dive",
-    "gps",
     "haulout",
     "ssmoutputs",
     "summary",
@@ -190,7 +189,7 @@ def check_len_list(alen, alist):
       bool: True or False
 
     """
-    return alen >= len(alist)
+    return alen == len(alist)
 
 
 def check_csv_tablename(table_names, csv_filenames):
@@ -528,41 +527,6 @@ DIVE_SCHEMA = {
     "cid": METADATA_SCHEMA["sattag_program"],
 }
 
-GPS_SCHEMA = {
-    "ref": METADATA_SCHEMA["sattag_program"],
-    "ptt": METADATA_SCHEMA["ptt"],
-    "d_date": Or(CSV_DATE_ISO),
-    "nsats_detected": CSV_POSITIVE_INT,
-    "nsats_transmitted": CSV_POSITIVE_INT,
-    "gps_mode": CSV_POSITIVE_INT,
-    "pseudoranges": str, 
-    "max_csn": str,
-    "cnt": CSV_POSITIVE_INT,
-    "lat": Or(CSV_EMPTY, CSV_LATITUDE),
-    "lon": Or(CSV_EMPTY, CSV_LONGITUDE),
-    "residual": Or(CSV_EMPTY, CSV_FLOAT),
-    "timeshift": Or(CSV_EMPTY, CSV_FLOAT),
-    "submitted": Or(CSV_EMPTY, CSV_DATE_ISO),
-    "nsats_healthy": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "nbits": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "deleted": str,
-    "v_mask": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "km_from_home": Or(CSV_EMPTY, CSV_FLOAT),
-    "est_speed": Or(CSV_EMPTY, CSV_FLOAT),
-    "gps_number": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "tx_date": Or(CSV_EMPTY, CSV_DATE_ISO),
-    "uplink_number": Or(CSV_EMPTY, CSV_POSITIVE_INT),
-    "tagging_id": Or(CSV_EMPTY, CSV_INT),
-    "d_date_tag": Or(CSV_EMPTY, CSV_DATE_ISO),
-    "ssm_lon": Or(CSV_EMPTY, CSV_LONGITUDE),
-    "ssm_lat": Or(CSV_EMPTY, CSV_LATITUDE),
-    "ssm_x": Or(CSV_EMPTY, CSV_FLOAT),
-    "ssm_y": Or(CSV_EMPTY, CSV_FLOAT),
-    "ssm_x_se": Or(CSV_EMPTY, CSV_FLOAT),
-    "ssm_y_se": Or(CSV_EMPTY, CSV_FLOAT),
-    "cid": METADATA_SCHEMA["sattag_program"],
-}
-
 HAULOUT_SCHEMA = {
     "ref": METADATA_SCHEMA["sattag_program"],
     "ptt": METADATA_SCHEMA["ptt"],
@@ -705,7 +669,6 @@ class AatamsSattagQcSchema(CSVSchema):
             "ctd": CTD_SCHEMA,
             "diag": DIAG_SCHEMA,
             "dive": DIVE_SCHEMA,
-            "gps": GPS_SCHEMA,
             "haulout": HAULOUT_SCHEMA,
             "ssmoutputs": SSMOUTPUTS_SCHEMA,
             "summary": SUMMARY_SCHEMA,
@@ -717,7 +680,6 @@ class AatamsSattagQcSchema(CSVSchema):
                 "ctd": "cid",
                 "diag": "cid",
                 "dive": "cid",
-                "gps": "cid",
                 "haulout": "cid",
                 "ssmoutputs": "cid",
                 "summary": "cid",
@@ -728,7 +690,6 @@ class AatamsSattagQcSchema(CSVSchema):
         self.ctd = {}
         self.diag = {}
         self.dive = {}
-        self.gps = {}
         self.haulout = {}
         self.ssmoutputs = {}
         self.summary = {}
