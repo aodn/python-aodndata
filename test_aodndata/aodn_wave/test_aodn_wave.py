@@ -181,6 +181,21 @@ class TestAodnWaveHandler(HandlerTestCase):
                              '2023',
                              'IMOS_ANMN-WAVE-BUOYS_20230530_MARIA-ISLAND_RT_WAVE-PARAMETERS_monthly.nc'))
 
+        testfile = 'IMOS_COASTAL-WAVE-BUOYS_20241112T003000Z_CORAL-BAY_RT_WAVE-PARAMETERS_20241112T003000Z.nc'
+        make_test_file(testfile, {'site_name': 'CORAL-BAY'},
+                       WSSH={}
+                       )
+        dest_dir = AodnWaveHandler.dest_path(testfile)
+        self.assertEqual(dest_dir,
+                         os.path.join(
+                             'IMOS', 'COASTAL-WAVE-BUOYS',
+                             'WAVE-BUOYS',
+                             'REALTIME',
+                             'WAVE-PARAMETERS',
+                             'CORAL-BAY',
+                             '2024',
+                             'IMOS_COASTAL-WAVE-BUOYS_20241112_CORAL-BAY_RT_WAVE-PARAMETERS_monthly.nc'))
+
     def test_publication_integral_parameter(self):
         testfile = 'DOT-WA_20170601_CAPE-NATURALISTE_DM_WAVE-PARAMETERS_END-20170918.nc'
         make_test_file(testfile, {'site_name': 'Maroubra'},
