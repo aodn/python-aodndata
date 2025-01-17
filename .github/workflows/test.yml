@@ -2,7 +2,8 @@ name: python-aodndata
 
 on:
   push:
-    branches: [ master ]
+    - master
+    - fix_unit_tests
   pull_request:
     branches: [ master ]
 
@@ -48,13 +49,14 @@ jobs:
         pip install pyshp
         pip install scipy
         pip install -r stage_requirements.txt
-        pip install pytest-cov
+#        pip install pytest-cov
       env:
         STAGE: ${{ matrix.stage }}
     - name: Test with pytest
       run: |
-        pytest --cov=./ --cov-report=xml
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        file: ./coverage.xml
+        pytest
+#        pytest --cov=./ --cov-report=xml
+#    - name: Upload coverage to Codecov
+#      uses: codecov/codecov-action@v1
+#      with:
+#        file: ./coverage.xml
