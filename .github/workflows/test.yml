@@ -2,6 +2,7 @@ name: python-aodndata
 
 on:
   push:
+    branches:
     - master
     - fix_unit_tests
   pull_request:
