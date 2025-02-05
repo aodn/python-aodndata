@@ -151,6 +151,20 @@ class TestAodnWaveHandler(HandlerTestCase):
                              'KING-GEORGE-SOUND',
                              os.path.basename(testfile)))
 
+        testfile = 'SA-DEW_20210701_NORTH-HAVEN_DM_WAVE-PARAMETERS_END-20210801.nc'
+        make_test_file(testfile, {'site_name': 'North Haven'},
+                       WSSH={}
+                       )
+        dest_dir = AodnWaveHandler.dest_path(testfile)
+        self.assertEqual(dest_dir,
+                         os.path.join(
+                             'Department_for_Environment_and_Water-South_Australia',
+                             'WAVE-BUOYS',
+                             'DELAYED',
+                             'WAVE-PARAMETERS',
+                             'NORTH-HAVEN',
+                             os.path.basename(testfile)))
+
         testfile = 'IMOS_ANMN-DEEP-WATER-WAVES_20230530T003000Z_BRISBANE-OFFSHORE_RT_WAVE-PARAMETERS_20230530T013000Z.nc'
         make_test_file(testfile, {'site_name': 'BRISBANE-OFFSHORE'},
                        WSSH={}

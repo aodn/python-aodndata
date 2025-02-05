@@ -25,7 +25,8 @@ INSTITUTION_PATHNAME = {
     "UWA": 'UWA',
     "PPA": "Pilbara_Ports_Authority",
     "GP-VIC": "Gippsland-Ports-Victoria",
-    "SA-FLINDERS": "Flinders_University"
+    "SA-FLINDERS": "Flinders_University",
+    "SA-DEW": "Department_for_Environment_and_Water-South_Australia"
 }
 
 # - Listing just the institution codes (A|B|C|...|F|G):
@@ -40,7 +41,8 @@ DATA_MODE = {"RT": "REALTIME",
 
 DATA_FILE_REGEX = re.compile(r"""
                 (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|IMOS_ANMN-DEEP-WATER-WAVES|
-                IMOS_ANMN-WAVE-BUOYS|IMOS_COASTAL-WAVE-BUOYS|NSW|NSW-DPE|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC|SA-FLINDERS)_
+                IMOS_ANMN-WAVE-BUOYS|IMOS_COASTAL-WAVE-BUOYS|NSW|NSW-DPE|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC|SA-FLINDERS|
+                SA-DEW)_
                 (?P<nc_time_cov_start>[0-9]{8}|[0-9]{8}T[0-9]{6}Z)_
                 (?P<site_name>(.*))_
                 (?P<mode>RT|DM)_
