@@ -18,6 +18,10 @@ import pandas as pd
 from aodncore.pipeline.config import CONFIG
 from aodncore.util import wfs
 
+# import config json
+with open("aodndata/moorings/skip_sites.json", "r") as f:
+    SKIP_SITES = json.load(f)
+
 # Variables included in the products
 INCLUDED_VARIABLES = {'TEMP', 'PSAL', 'CPHL', 'CHLF', 'CHLU', 'TURB', 'DOX1', 'DOX2', 'DOXS', 'PAR', 'VCUR'}
 
@@ -162,6 +166,16 @@ def make_manifest(all_files: pd.DataFrame, site_code: str) -> dict:
                 'variables': list(new_vars),
                 'products': list(products)
                 }
+    
+    # skip products for sites listed in the skip_sites.json file
+    if site_code in SKIP_SITES:
+        products_to_skip = SKIP_SITES[site_code]
+        for product in products_to_skip:
+            if product in manifest["products"]:
+                manifest["products"].remove(product)
+        print(f"{site_code}  |  Skipping the following product/s:")
+        print(f"{site_code}  |  {', '.join(products_to_skip)}")
+    
     return manifest
 
 
