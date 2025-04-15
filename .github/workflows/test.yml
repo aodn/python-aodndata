@@ -45,17 +45,19 @@ jobs:
       run: |
         python -m pip install --upgrade pip==24.0
 
+        # patch to solve dependency issues with celery / fiona / click
+        # download troublesome celery package 
         wget https://files.pythonhosted.org/packages/source/c/celery/celery-5.1.2.tar.gz
         tar -xzf celery-5.1.2.tar.gz
         cd celery-5.1.2
-
+        # patch the requirements to use pytz>=2020.1 instead of known bug pytz>dev
         sed -i "s/pytz>dev/pytz>=2020.1/g" requirements/default.txt
         sed -i "s/pytz>dev/pytz>=2020.1/g" celery.egg-info/requires.txt
         sed -i "s/pytz>dev/pytz>=2020.1/g" requirements/dev.txt
-
+        # install the package
         python setup.py install
         cd ..
-
+        # remove downlaoded copy of celery
         rm -rf celery-5.1.2 celery-5.1.2.tar.gz
 
         pip install pytest-runner
@@ -63,7 +65,7 @@ jobs:
         pip install scipy
         pip install -r stage_requirements.txt
         pip install pytest-cov
-        pip list
+
       env:
         STAGE: ${{ matrix.stage }}
     - name: Test with pytest
