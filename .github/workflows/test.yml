@@ -49,7 +49,9 @@ jobs:
         tar -xzf celery-5.1.2.tar.gz
         cd celery-5.1.2
 
-        sed -i "s/'pytz>dev'/'pytz>=2020.1'/" setup.py
+        sed -i "s/pytz>dev/pytz>=2020.1/g" requirements/default.txt
+        sed -i "s/pytz>dev/pytz>=2020.1/g" celery.egg-info/requires.txt
+        sed -i "s/pytz>dev/pytz>=2020.1/g" requirements/dev.txt
 
         python setup.py install
         cd ..
