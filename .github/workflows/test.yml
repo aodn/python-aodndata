@@ -45,14 +45,13 @@ jobs:
       run: |
         python -m pip install --upgrade pip==24.0
 
-        pip download celery==5.1.2 --no-binary :all:
+        wget https://files.pythonhosted.org/packages/source/c/celery/celery-5.1.2.tar.gz
         tar -xzf celery-5.1.2.tar.gz
         cd celery-5.1.2
 
         sed -i "s/'pytz>dev'/'pytz>=2020.1'/" setup.py
 
-        python setup.py bdist_wheel
-        pip install dist/celery-5.1.2-*.whl
+        python setup.py install
         cd ..
 
         pip install pytest-runner
