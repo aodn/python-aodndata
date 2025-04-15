@@ -44,14 +44,22 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip==24.0
+
+        pip download celery==5.1.2 --no-binary :all:
+        tar -xzf celery-5.1.2.tar.gz
+        cd celery-5.1.2
+
+        sed -i "s/'pytz>dev'/'pytz>=2020.1'/" setup.py
+
+        python setup.py bdist_wheel
+        pip install dist/celery-5.1.2-*.whl
+        cd ..
+
         pip install pytest-runner
         pip install pyshp
         pip install scipy
         pip install -r stage_requirements.txt
         pip install pytest-cov
-        pip install fiona>=1.8.8,<1.8.19
-        pip install click==8.1.8
-        pip install celery==5.4.0
         pip list
       env:
         STAGE: ${{ matrix.stage }}
