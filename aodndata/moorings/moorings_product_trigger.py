@@ -178,7 +178,6 @@ def make_manifest(all_files: pd.DataFrame, site_code: str) -> dict:
     
     return manifest
 
-
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("site_code", nargs="*", type=str, help="site_code(s) to process (default all)")
