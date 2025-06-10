@@ -1,0 +1,23 @@
+{
+    "NRSDAR": ["gridded"],
+    "NRSMAI": ["gridded"],
+    "NRSNSI": ["gridded"],
+    "NRSYON": ["gridded","hourly"],
+    "DARBGF": ["gridded"],
+    "WATR04": ["gridded"],
+    "PAPCA":  ["gridded"],
+    "PAPOR":  ["gridded"],
+    "PATUN":  ["gridded"],
+    "SAM1DS": ["gridded"],
+    "SAM2CP": ["gridded"],
+    "SAM3MS": ["gridded"],
+    "SAM4CY": ["gridded"],
+    "SAM5CB": ["gridded"],
+    "SAM6IS": ["gridded"],
+    "SAM7DS": ["gridded"],
+    "SAM8SG": ["gridded"],
+    "SAMUSG": ["gridded"],
+    "SR030":  ["gridded"],
+    "SR050":  ["gridded"]
+}
+  
