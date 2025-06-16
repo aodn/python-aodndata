@@ -5,3 +5,4 @@
 -e .
 -e .[testing]
 shapely==1.8.5.post1  # binary wheel, avoids numpy compatibility issues
+cartopy==0.20.3
