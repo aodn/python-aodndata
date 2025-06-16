@@ -63,6 +63,7 @@ jobs:
         rm -rf celery-5.1.2 celery-5.1.2.tar.gz
 
         # Install shapely and cartopy manually with build isolation OFF
+        pip install "numpy<1.24.0"     # to match your constraints
         pip install shapely==1.8.5.post1
         pip install --no-build-isolation cartopy==0.20.3
 
