@@ -4,4 +4,4 @@
 -c constraints.txt
 -e .
 -e .[testing]
-shapely --no-binary shapely  # needed to install cartopy for compatibility
+shapely==1.8.5.post1  # binary wheel, avoids numpy compatibility issues
