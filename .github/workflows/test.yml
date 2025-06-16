@@ -43,6 +43,8 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        # Ensure compatible setuptools version for cartopy 0.20.3 (requires distutils)
+        pip install setuptools==65.5.1
         python -m pip install --upgrade pip==24.0
 
         # patch to solve dependency issues with celery / fiona / click / pytz
