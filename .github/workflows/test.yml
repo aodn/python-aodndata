@@ -43,7 +43,12 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        # Ensure compatible setuptools version for cartopy 0.20.3 (requires distutils)
+        pip install setuptools==65.5.1
         python -m pip install --upgrade pip==24.0
+
+        # Ensure cartopy's version tools are available
+        pip install wheel setuptools_scm
 
         # patch to solve dependency issues with celery / fiona / click / pytz
         # download celery package 
@@ -59,6 +64,12 @@ jobs:
         cd ..
         # remove downlaoded copy of celery
         rm -rf celery-5.1.2 celery-5.1.2.tar.gz
+
+        # Install shapely and cartopy manually with build isolation OFF
+        pip install "numpy<1.24.0"     # to match your constraints
+        pip install shapely==1.8.5.post1
+        # install cartopy without isolated build env
+        pip install --no-build-isolation cartopy==0.20.3
 
         pip install pytest-runner
         pip install pyshp
