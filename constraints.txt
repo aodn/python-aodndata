@@ -8,3 +8,5 @@ numpy<1.24.0
 # Limit pandas version until we update our code for the changes in v2.0
 # see https://pandas.pydata.org/docs/whatsnew/v2.0.0.html#backwards-incompatible-api-changes
 pandas<2.0
+
+matplotlib<3.6  # Cartopy 0.20.3 requires matplotlib < 3.6
