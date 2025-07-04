@@ -37,6 +37,7 @@ jobs:
         build-essential \
         curl \
         libcurl4-openssl-dev
+        python3-shapely python3-cartopy
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
@@ -66,12 +67,7 @@ jobs:
         popd
         rm -rf celery-5.1.2 celery-5.1.2.tar.gz
 
-        # 5. Install Shapely & Cartopy exactly how they need it
-        python -m pip install --only-binary shapely,cartopy \
-        shapely==1.8.5.post1 cartopy==0.20.3 \
-        --extra-index-url https://pypi.org/simple/
-
-        # 6. Install your own package (and its private deps) + test extras & tools
+        # 5. Install your own package (and its private deps) + test extras & tools
         python -m pip install -e .[testing]
         python -m pip install pytest-runner pyshp scipy pytest-cov
       env:
