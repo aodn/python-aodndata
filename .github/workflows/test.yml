@@ -37,7 +37,9 @@ jobs:
         build-essential \
         curl \
         libcurl4-openssl-dev
-        python3-shapely python3-cartopy
+        python3-numpy \
+        python3-shapely \
+        python3-cartopy
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
