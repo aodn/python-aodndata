@@ -70,7 +70,14 @@ jobs:
         popd
         rm -rf celery-5.1.2 celery-5.1.2.tar.gz
 
-        # 5. Install your own package (and its private deps) + test extras & tools
+        # 5. build Shapely against system GEOS, but use Cartopy’s binary wheel
+        python -m pip install --no-binary shapely \
+        shapely==1.8.5.post1
+        python -m pip install --only-binary cartopy \
+        cartopy==0.20.3 \
+        --extra-index-url https://pypi.org/simple/
+
+        # 6. Install your own package (and its private deps) + test extras & tools
         python -m pip install -e .[testing]
         python -m pip install pytest-runner pyshp scipy pytest-cov
       env:
