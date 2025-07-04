@@ -67,10 +67,8 @@ jobs:
         rm -rf celery-5.1.2 celery-5.1.2.tar.gz
 
         # 5. Install Shapely & Cartopy exactly how they need it
-        python -m pip install shapely==1.8.5.post1
-        python -m pip install \
-          --no-build-isolation \
-          --no-binary cartopy cartopy==0.20.3
+        python -m pip install --only-binary shapely,cartopy \
+        shapely==1.8.5.post1 cartopy==0.20.3
 
         # 6. Install your own package (and its private deps) + test extras & tools
         python -m pip install -e .[testing]
