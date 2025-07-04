@@ -72,10 +72,10 @@ jobs:
 
         # 5. build Shapely against system GEOS, but use Cartopy’s binary wheel
         python -m pip install --no-binary shapely \
-        shapely==1.8.5.post1
-        python -m pip install --only-binary cartopy \
-        cartopy==0.20.3 \
-        --extra-index-url https://pypi.org/simple/
+          shapely==1.8.5.post1
+        # Cartopy has no Linux wheel on PyPI—build from source against system GEOS/PROJ:
+        python -m pip install --no-build-isolation --no-binary cartopy \
+          cartopy==0.20.3
 
         # 6. Install your own package (and its private deps) + test extras & tools
         python -m pip install -e .[testing]
