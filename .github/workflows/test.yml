@@ -81,6 +81,9 @@ jobs:
         # 6. Install your own package (and its private deps) + test extras & tools
         python -m pip install -e .[testing]
         python -m pip install pytest-runner pyshp scipy pytest-cov
+
+        # Debug: show all installed Python packages
+        python -m pip freeze
       env:
         STAGE: ${{ matrix.stage }}
 
