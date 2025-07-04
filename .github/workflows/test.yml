@@ -46,33 +46,38 @@ jobs:
         # 1. Pin pip & setuptools so distutils & flags work
         python -m pip install --upgrade pip==24.0 setuptools==65.5.1 wheel setuptools_scm
 
-        # 2. Pre-install build-time deps so Cartopy/Matplotlib metadata steps pass
+        # 2. Point pip at your IMOS PyPI repo (so aodntools>=1.3.1 is found)
+        export PIP_INDEX_URL="http://imos-artifacts.s3-website-ap-southeast-2.amazonaws.com/repo/pypi/${STAGE}/"
+        export PIP_EXTRA_INDEX_URL="https://pypi.python.org/simple/"
+        export PIP_TRUSTED_HOST="imos-artifacts.s3-website-ap-southeast-2.amazonaws.com"
+
+        # 3. Pre-install build-time deps so Cartopy/Matplotlib metadata steps pass
         python -m pip install \
           "numpy<1.24.0" \
           "matplotlib>=3.1,<3.6" --only-binary matplotlib
 
-        # 3. Patch & install Celery 5.1.2 (locks in click==7.1.2 & sane pytz)
+        # 4. Patch & install Celery 5.1.2 (locks in click==7.1.2 & sane pytz)
         wget https://files.pythonhosted.org/packages/source/c/celery/celery-5.1.2.tar.gz
         tar -xzf celery-5.1.2.tar.gz
         pushd celery-5.1.2
         sed -i "s/pytz>dev/pytz>=2020.1/g" requirements/default.txt
         sed -i "s/pytz>dev/pytz>=2020.1/g" requirements/dev.txt
-        # install Celery into this venv
         python setup.py install
         popd
         rm -rf celery-5.1.2 celery-5.1.2.tar.gz
 
-        # 4. Install Shapely & Cartopy exactly how they need it
+        # 5. Install Shapely & Cartopy exactly how they need it
         python -m pip install shapely==1.8.5.post1
         python -m pip install \
           --no-build-isolation \
           --no-binary cartopy cartopy==0.20.3
 
-        # 5. Install your package (editable) with testing extras, plus misc tools
+        # 6. Install your own package (and its private deps) + test extras & tools
         python -m pip install -e .[testing]
         python -m pip install pytest-runner pyshp scipy pytest-cov
       env:
         STAGE: ${{ matrix.stage }}
+
     - name: Test with pytest
       run: |
         pytest --cov=./ --cov-report=xml
