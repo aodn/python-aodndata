@@ -8,6 +8,9 @@ on:
 
 env:
   MPLBACKEND: agg
+  PIP_INDEX_URL: "http://imos-artifacts.s3-website-ap-southeast-2.amazonaws.com/repo/pypi/${{ matrix.stage }}/"
+  PIP_EXTRA_INDEX_URL: "https://pypi.org/simple/"
+  PIP_TRUSTED_HOST: "imos-artifacts.s3-website-ap-southeast-2.amazonaws.com"
 
 jobs:
   build:
@@ -68,7 +71,8 @@ jobs:
 
         # 5. Install Shapely & Cartopy exactly how they need it
         python -m pip install --only-binary shapely,cartopy \
-        shapely==1.8.5.post1 cartopy==0.20.3
+        shapely==1.8.5.post1 cartopy==0.20.3 \
+        --extra-index-url https://pypi.org/simple/
 
         # 6. Install your own package (and its private deps) + test extras & tools
         python -m pip install -e .[testing]
