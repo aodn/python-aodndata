@@ -11,6 +11,7 @@ from . import nrt_timeseries_aggregator
 # - Defining all the possible Institutions that provides us with data (the acronym and the dir name for each):
 INSTITUTION_PATHNAME = {
     "BOM": 'Bureau_of_Meteorology',
+    "CSIRO": 'CSIRO',
     "DOT-WA": 'Department_of_Transport-Western_Australia',
     "DTA": 'Defence_Technology_Agency-New_Zealand',
     "DES-QLD": 'Department_of_Environment_and_Science-Queensland',
@@ -21,6 +22,7 @@ INSTITUTION_PATHNAME = {
     "IMOS_COASTAL-WAVE-BUOYS": 'IMOS/COASTAL-WAVE-BUOYS',
     "NSW-DPE": 'Department_of_Planning_and_Environment-New_South_Wales',
     "NSW": 'Department_of_Planning_and_Environment-New_South_Wales',
+    "OLDENDORFF": 'Oldendorff-Carriers',
     "VIC-DEAKIN-UNI": 'Deakin_University',
     "UWA": 'UWA',
     "PPA": "Pilbara_Ports_Authority",
@@ -40,8 +42,8 @@ DATA_MODE = {"RT": "REALTIME",
              "DM": "DELAYED"}
 
 DATA_FILE_REGEX = re.compile(r"""
-                (?P<institution>BOM|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|IMOS_ANMN-DEEP-WATER-WAVES|
-                IMOS_ANMN-WAVE-BUOYS|IMOS_COASTAL-WAVE-BUOYS|NSW|NSW-DPE|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC|SA-FLINDERS|
+                (?P<institution>BOM|CSIRO|DOT-WA|DTA|DES-QLD|MHL|IMOS_NTP-WAVE|IMOS_ANMN-DEEP-WATER-WAVES|
+                IMOS_ANMN-WAVE-BUOYS|IMOS_COASTAL-WAVE-BUOYS|NSW|NSW-DPE|OLDENDORFF|VIC-DEAKIN-UNI|UWA|PPA|GP-VIC|SA-FLINDERS|
                 SA-DEW)_
                 (?P<nc_time_cov_start>[0-9]{8}|[0-9]{8}T[0-9]{6}Z)_
                 (?P<site_name>(.*))_
