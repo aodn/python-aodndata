@@ -55,11 +55,14 @@ SCAT_PREFIX_PATH = "IMOS/SRS/Surface-Waves/Wind-Scatterometry-DM00"
 SCAT_VALID_SATS = [
     "ERS-1",
     "ERS-2",
-    "QUIKSCAT",
+    "HY-2B",
+    "HY-2C",
     "METOP-A",
-    "OCEANSAT-2",
     "METOP-B",
     "METOP-C",
+    "OCEANSAT-2",
+    "OceanSat-3",
+    "QUIKSCAT",
     "RAPIDSCAT",
 ]
 SCAT_FILE_PATTERN = re.compile(
